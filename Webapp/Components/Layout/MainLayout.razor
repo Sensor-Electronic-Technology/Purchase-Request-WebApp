@@ -1,0 +1,67 @@
+﻿@using Webapp.Authentication
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+<RadzenComponents @rendermode="@InteractiveServer" />
+<RadzenLayout Style="position: relative">
+    <RadzenHeader>
+        <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5">
+                    <RadzenSidebarToggle Click="@SidebarToggleClick"/>
+                    <RadzenImage Path="images/seti_logo.png" style="width: 100px; height: 48px;" AlternateText="Application logo"></RadzenImage>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn >
+                <RadzenStack AlignItems="AlignItems.End" 
+                             Orientation="Orientation.Horizontal" 
+                             JustifyContent="JustifyContent.End" 
+                             Style="padding: 0.5rem">
+                    <AuthorizeView>
+                        <Authorized>
+                            <a @onclick="Logout" href="javascript:void(0)">Logout</a>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="/login">Login</a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    <RadzenBody Expanded="@sidebarExpanded">
+        @Body
+    </RadzenBody>
+    <RadzenSidebar style="z-index: 2; width:max-content;">
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
+            <RadzenPanelMenuItem Text="Dashboard" Image="images/seti_logo.png" Path="/"/>
+            <AuthorizeView Roles="Administrator, User">
+                <Authorized>
+                    <RadzenPanelMenuItem Text="Purchase Requests" Icon="event_seat" Path="/purchase-requests"/>
+                </Authorized>
+            </AuthorizeView>
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+</RadzenLayout>
+
+@code {
+   bool sidebarExpanded = false;
+
+   void SidebarToggleClick() {
+       sidebarExpanded = !sidebarExpanded;
+   }
+   
+   private async Task Logout()
+   {
+       var customAuthStateProvider = (LdapAuthStateProvider)authStateProvider;
+       await customAuthStateProvider.UpdateAuthenticationState(null);
+       navManager.NavigateTo("/", true);
+   }
+}
