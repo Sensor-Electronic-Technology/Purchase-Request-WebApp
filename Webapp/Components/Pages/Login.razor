@@ -1,11 +1,10 @@
 ﻿@page "/login"
-@using Visus.Ldap
 @using Webapp.Authentication
-@inject UserAccountService userAccountService
+@using Webapp.Services
+@inject AuthService _authService
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
-@inject ILdapAuthenticationService<LdapUser> _authService;
 
 <div class="row">
     <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
@@ -27,29 +26,17 @@
 </div>
 
 @code {
-    private class Model
-    {
+    private class Model {
         public string UserName { get; set; }
         public string Password { get; set; }
     }
     private Model model = new Model(); 
 
-    private async Task Authenticate()
-    {
-        var user = _authService.LoginUser("aelmendo", "Drizzle123!");
-        Console.WriteLine($"User: {user.DistinguishedName} - {user.DisplayName} - {user.AccountName}");
-        var userAccount = userAccountService.GetByUserName(model.UserName);
-        if (userAccount == null || userAccount.Password != model.Password)
-        {
-            await js.InvokeVoidAsync("alert", "Invalid user Name or password");
-            return;
-        }
-        var customAuthStateProvider = (LdapAuthStateProvider)authStateProvider;
-        await customAuthStateProvider.UpdateAuthenticationState(new UserSession
-        {
-            Username = userAccount.Username,
-            Role = userAccount.Role
-        });
+    private async Task Authenticate() {
+        
+        var session =await this._authService.Login(model.UserName, model.Password, false);
+        var customAuthStateProvider = (SetiAuthStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(session);
         // true, indicates that the navigation should be done with a full page refresh.
         navManager.NavigateTo("/", true);
     }

@@ -1,8 +1,10 @@
 ﻿@using Webapp.Authentication
+@using Webapp.Services
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
+@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 @inject DialogService DialogService
 @inject ContextMenuService ContextMenuService
@@ -58,10 +60,12 @@
        sidebarExpanded = !sidebarExpanded;
    }
    
-   private async Task Logout()
-   {
-       var customAuthStateProvider = (LdapAuthStateProvider)authStateProvider;
-       await customAuthStateProvider.UpdateAuthenticationState(null);
+   private async Task Logout() {
+       var authProvider = (SetiAuthStateProvider)authStateProvider;
+       var state=await authProvider.GetAuthenticationStateAsync();
+       var token=state.User.Claims.FirstOrDefault(e => e.Type == "Token")?.Value;
+       await AuthService.Logout(token);
+       await authProvider.UpdateAuthenticationState(null);
        navManager.NavigateTo("/", true);
    }
 }

@@ -1,22 +1,16 @@
-﻿using Domain.Authentication;
-using Visus.Ldap;
+﻿using Webapp.Services;
 
 namespace Webapp.Authentication;
 
-public class UserAccountService {
-    private List<UserAccount> _users;
+/*public class UserAccountService {
+    private AuthService _authService;
 
-    public UserAccountService()
-    {
-        _users = new List<UserAccount>
-        {
-            new UserAccount{ Username = "admin", Password = "admin", Role = "Administrator" },
-            new UserAccount{ Username = "user", Password = "user", Role = "User" },
-        };
+    public UserAccountService(AuthService authService) {
+        this._authService = authService;
     }
 
     //UserAccount? means that the method GetByUserName can return a valid UserAccount object or null. 
-    public UserAccount? GetByUserName(string userName) {
-        return _users.FirstOrDefault(x => x.Username == userName);
+    public UserSessionDto? GetByUserName(string userName) {
+       
     }
-}
+}*/
