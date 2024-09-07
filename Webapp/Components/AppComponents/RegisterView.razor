@@ -1,0 +1,38 @@
+﻿@using System.Security.Claims
+@using Domain.Users
+@using Infrastructure.Services
+@using Webapp.Services.Authentication
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+
+<AuthorizeView>
+    <Authorized>
+        <ProfileView @bind-UserProfile="@this._userProfile"
+                     OnSubmit="@this.Submit"/>
+    </Authorized>
+</AuthorizeView>
+@code {
+    private UserProfile _userProfile=new UserProfile();
+    
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+    
+    protected override async Task OnInitializedAsync() {
+        var profile = this.UserService.GetProfile();
+        if (profile != null) {
+            this._userProfile = profile;
+        } else {
+            this._userProfile = new UserProfile();
+            var state = await authenticationState;
+            var username=state.User.Claims.FirstOrDefault(e=>e.Type==ClaimTypes.Name)?.Value;
+            this._userProfile._id=username ?? "";
+            this._userProfile.Email=state.User.Claims.FirstOrDefault(e=>e.Type==ClaimTypes.Email)?.Value;
+        }
+    }
+    
+    private async Task Submit() {
+        await this.UserService.CreateProfile(this._userProfile);
+        this.DialogService.Close();
+    }
+}

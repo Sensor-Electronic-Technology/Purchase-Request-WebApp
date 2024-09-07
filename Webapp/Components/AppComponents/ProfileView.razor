@@ -1,0 +1,52 @@
+﻿@using Domain.Users
+
+<RadzenCard>
+    <RadzenStack>
+        <RadzenCard class="rz-background-color-primary">
+            <RadzenStack Orientation="Orientation.Vertical" >
+                <RadzenText Text="User Information"/>
+                <RadzenText Visible="@IsEditMode" TextStyle="TextStyle.Body1">Enter your first name and email then press continue</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+        <RadzenCard class="rz-background-color-info-lighter">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="5">
+                <RadzenFormField Text="Username">
+                    <RadzenTextBox Value="@this.UserProfile._id" ReadOnly="true"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Email">
+                    <RadzenTextBox Value="@this.UserProfile.Email"
+                                   ValueChanged="@this.EmailChangedHandler"
+                                   ReadOnly="@(!IsEditMode)"/>
+                </RadzenFormField>
+                <RadzenFormField Text="First Name">
+                    <RadzenTextBox Value="@this.UserProfile.FirstName" 
+                                   ValueChanged="@this.FirstNameChangedHandler"
+                                   ReadOnly="@(!IsEditMode)"/>
+                </RadzenFormField>
+                <RadzenStack Orientation="Orientation.Horizontal"
+                             JustifyContent="JustifyContent.Center" Visible="@(this.IsEditMode)">
+                    <RadzenButton ButtonType="ButtonType.Submit"
+                                  Click="@(async Task ()=>await this.OnSubmit.InvokeAsync(this.UserProfile))"
+                                  Size="ButtonSize.Large" Icon="save" Text="Continue"/>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</RadzenCard>
+@code {
+    [Parameter] public UserProfile UserProfile { get; set; }
+    [Parameter] public EventCallback<UserProfile> UserProfileChanged { get; set; }
+    [Parameter] public EventCallback<UserProfile> OnSubmit { get; set; }
+    [Parameter] public bool IsEditMode { get; set; } = true;
+
+    private async Task FirstNameChangedHandler(string? email) {
+        this.UserProfile.FirstName = email;
+        await this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+    
+    private async Task EmailChangedHandler(string? name) {
+        this.UserProfile.Email = name;
+        await this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+
+}

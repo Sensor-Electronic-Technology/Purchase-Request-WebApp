@@ -2,32 +2,65 @@
 @inject IJSRuntime js
 <PageTitle>Home</PageTitle>
 
-<AuthorizeView>
-    <Authorized>
-        <h1>Hello, @context.User.Identity?.Name! </h1>
-    </Authorized>
-    <NotAuthorized>
-        <h1>Hello, Guest!</h1>
-    </NotAuthorized>
+<AuthorizeView Roles="User">
+    <RadzenText Text="This is a User View" TextStyle="TextStyle.H1"/>
 </AuthorizeView>
 
-<AuthorizeView>
-    <Authorized>
-        <br /> <br />
-        <button class="btn btn-outline-primary" @onclick="DisplayGreetingAlert">Display greeting alert</button>
-    </Authorized>
+<AuthorizeView Roles="Admin">
+    <RadzenText Text="This is a Admin View" TextStyle="TextStyle.H1"/>
 </AuthorizeView>
+
+<AuthorizeView Roles="Approver">
+    <RadzenText Text="This is a Approver View" TextStyle="TextStyle.H1"/>
+</AuthorizeView>
+
+
+
+@*<RadzenRow Gap="2rem" RowGap="2rem" class="rz-m-0 rz-m-md-12">
+    <RadzenColumn Size="12">
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+            <RadzenUpload id="upload" @ref="upload" 
+                          ChooseText="Drag and drop here or click to choose files" 
+                          Auto="false" 
+                          Multiple="false" 
+                          InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "select file" }})"
+                          Progress=@(args => OnProgress(args, "Drag and drop files to upload")) 
+                          Style="width: 100%" />
+            <RadzenButton Text="Upload" Click=@(args => upload.Upload()) class="rz-mt-4" />
+        </RadzenCard>
+    </RadzenColumn>
+</RadzenRow>*@
+
 
 @code {
-
     [CascadingParameter]
     private Task<AuthenticationState> authenticationState { get; set; }
+    
+    private string fileName="";
+    private long? fileSize=0;
+    private string? value;
+    
+    RadzenUpload upload;
 
-    private async Task DisplayGreetingAlert()
-    {
-        var authState = await authenticationState;
-        var message = $"Hello {authState.User.Identity.Name}";
-        await js.InvokeVoidAsync("alert", message);
+    int progress;
+    bool showProgress;
+    bool showComplete;
+    string completionMessage;
+    bool cancelUpload = false;
+    
+
+
+    void OnError(UploadErrorEventArgs args, string name) {
+        
     }
-
+    
+    void OnProgress(UploadProgressArgs args, string name) {
+        if (args.Progress == 100) {
+            foreach (var file in args.Files) {
+                
+            }
+        }
+    }
+    
 }

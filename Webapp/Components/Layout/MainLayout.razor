@@ -1,5 +1,5 @@
-﻿@using Webapp.Authentication
-@using Webapp.Services
+﻿@using Webapp.Services
+@using Webapp.Services.Authentication
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider authStateProvider
@@ -21,19 +21,34 @@
                     <RadzenImage Path="images/seti_logo.png" style="width: 100px; height: 48px;" AlternateText="Application logo"></RadzenImage>
                 </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn >
-                <RadzenStack AlignItems="AlignItems.End" 
-                             Orientation="Orientation.Horizontal" 
-                             JustifyContent="JustifyContent.End" 
+            <RadzenColumn>
+                <RadzenStack AlignItems="AlignItems.End"
+                             Orientation="Orientation.Horizontal"
+                             JustifyContent="JustifyContent.End"
                              Style="padding: 0.5rem">
-                    <AuthorizeView>
-                        <Authorized>
-                            <a @onclick="Logout" href="javascript:void(0)">Logout</a>
-                        </Authorized>
-                        <NotAuthorized>
-                            <a href="/login">Login</a>
-                        </NotAuthorized>
-                    </AuthorizeView>
+                    <RadzenProfileMenu Click="@this.MenuClickHandler">
+                        <Template>
+                            <AuthorizeView>
+                                <Authorized>
+                                    <RadzenGravatar Email="@context.User.Identity?.Name"/>
+                                </Authorized>
+                                <NotAuthorized>
+                                    <RadzenGravatar Email="guest"/>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                        </Template>
+                        <ChildContent>
+                            <AuthorizeView>
+                                <Authorized>
+                                    <RadzenProfileMenuItem Text="Logout" Icon="exit_to_app"/>
+                                </Authorized>
+                                <NotAuthorized>
+                                    <RadzenProfileMenuItem Text="Login" Path="login" Icon="account_circle"></RadzenProfileMenuItem>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                            <RadzenProfileMenuItem Text="Profile" Path="user_profile" Icon="account_box"></RadzenProfileMenuItem>
+                        </ChildContent>
+                    </RadzenProfileMenu>
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -58,6 +73,12 @@
 
    void SidebarToggleClick() {
        sidebarExpanded = !sidebarExpanded;
+   }
+
+   private async Task MenuClickHandler(RadzenProfileMenuItem item) {
+       if (item.Text == "Logout") {
+           await Logout();
+       }
    }
    
    private async Task Logout() {

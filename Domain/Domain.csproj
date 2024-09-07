@@ -11,8 +11,4 @@
       <PackageReference Include="MongoDB.Bson" Version="2.28.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Settings\" />
-    </ItemGroup>
-
 </Project>

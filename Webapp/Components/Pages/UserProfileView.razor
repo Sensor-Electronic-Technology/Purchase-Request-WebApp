@@ -1,0 +1,53 @@
+﻿@page "/user_profile"
+@using Domain.Users
+@using Webapp.Services.Authentication
+@inject UserService UserService
+<PageTitle>User Profile</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <RadzenRow JustifyContent="JustifyContent.Start">
+            @if (this._userProfile == null) {
+                <RadzenText Text="Internal Error: No Profile Available"
+                            TextStyle="TextStyle.H5"/>
+            } else {
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                    <RadzenFieldset Text="@this._label"  Style="width: 100px">
+                        <RadzenSwitch @bind-Value="@_switchValue" Change=@(args => OnChange(args, "Switch"))></RadzenSwitch>
+                    </RadzenFieldset>
+                    <ProfileView @bind-UserProfile="@this._userProfile"
+                                 OnSubmit="@this.Submit" IsEditMode="@this._switchValue"/>
+                </RadzenStack>
+            }
+        </RadzenRow>
+    </Authorized>
+    <NotAuthorized>
+        <h1>Guest Accounts Have No Profile</h1>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private UserProfile? _userProfile;
+    private bool _switchValue=false;
+    private string _label="Enable";
+    
+    protected override Task OnInitializedAsync() {
+        this._userProfile = this.UserService.GetProfile();
+        return base.OnInitializedAsync();
+    }
+    
+    private async Task Submit(UserProfile profile) {
+        await this.UserService.CreateProfile(profile);
+    }
+    
+    void OnChange(bool? value, string name) {
+        if (value.HasValue) {
+            this._switchValue = value.Value;
+            this._label = value.Value ? "Disable" : "Enable";
+        }
+    }
+
+}
