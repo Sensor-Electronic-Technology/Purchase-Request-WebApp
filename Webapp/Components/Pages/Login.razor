@@ -3,7 +3,7 @@
 @using Webapp.Components.AppComponents
 @using Webapp.Services
 @using Webapp.Services.Authentication
-@inject AuthService _authService
+@inject AuthApiService AuthApiService
 @inject IJSRuntime js
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
@@ -28,7 +28,7 @@
 
 @code {
     private async Task OnLogin(LoginArgs args) {
-        var session =await this._authService.Login(args.Username, args.Password, args.RememberMe);
+        var session =await this.AuthApiService.Login(args.Username, args.Password, args.RememberMe);
         if(session==null) {
             return;
         }

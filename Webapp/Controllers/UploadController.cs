@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.IO;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Webapp.Controllers;
 
@@ -21,7 +25,7 @@ public partial class UploadController : Controller {
         try {
             var fileName = file.FileName;
             Console.WriteLine(fileName);
-
+            Console.WriteLine(environment.WebRootPath);
             using var stream = new FileStream(Path.Combine(environment.WebRootPath, fileName), FileMode.Create);
             // Save the file
             file.CopyTo(stream);

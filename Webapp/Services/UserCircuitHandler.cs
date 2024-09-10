@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Infrastructure.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Webapp.Services.Authentication;
 
@@ -8,14 +9,14 @@ internal sealed class UserCircuitHandler:CircuitHandler,IDisposable {
     
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly UserService _userService;
-    private readonly AuthService _authService;
+    private readonly AuthApiService _authApiService;
     private readonly ILogger<UserCircuitHandler> _logger;
     
     public UserCircuitHandler(AuthenticationStateProvider authenticationStateProvider, UserService userService, 
-        AuthService authService,ILogger<UserCircuitHandler> logger) {
+        AuthApiService authApiService,ILogger<UserCircuitHandler> logger) {
         this._authenticationStateProvider = authenticationStateProvider;
         this._userService = userService;
-        this._authService = authService;
+        this._authApiService = authApiService;
         this._logger = logger;
     }
     

@@ -1,10 +1,11 @@
-﻿@using Webapp.Services
+﻿@using Infrastructure.Services
+@using Webapp.Services
 @using Webapp.Services.Authentication
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager navManager
-@inject AuthService AuthService
+@inject AuthApiService AuthApiService
 @inject NavigationManager NavigationManager
 @inject DialogService DialogService
 @inject ContextMenuService ContextMenuService
@@ -85,7 +86,7 @@
        var authProvider = (SetiAuthStateProvider)authStateProvider;
        var state=await authProvider.GetAuthenticationStateAsync();
        var token=state.User.Claims.FirstOrDefault(e => e.Type == "Token")?.Value;
-       await AuthService.Logout(token);
+       await AuthApiService.Logout(token);
        await authProvider.UpdateAuthenticationState(null);
        navManager.NavigateTo("/", true);
    }
