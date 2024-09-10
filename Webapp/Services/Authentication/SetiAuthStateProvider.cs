@@ -21,15 +21,16 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
             var userSessionStorageResult = await _sessionStorage.GetAsync<UserSessionDto>("UserSession");
             var userSession = userSessionStorageResult.Success ? userSessionStorageResult.Value : null;
             if (userSession == null) {
+                await this._userService.SetUser(_anonymous);
                 return await Task.FromResult(new AuthenticationState(_anonymous));
             }
             var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(
                 new List<Claim> {
-                    new Claim(ClaimTypes.Name, userSession.Username), 
-                    new Claim(ClaimTypes.Role, userSession.Role),
+                    new Claim(ClaimTypes.Name, userSession.UserAccount.Username), 
+                    new Claim(ClaimTypes.Role, userSession.UserAccount.Role),
                     new Claim("Token", userSession.Token),
                 },"CustomAuth"));
-            await this._userService.SetUser(claimsPrincipal);
+            await this._userService.SetUser(claimsPrincipal,userSession);
             return await Task.FromResult(new AuthenticationState(claimsPrincipal));
         } catch {
             return await Task.FromResult(new AuthenticationState(_anonymous));
@@ -40,11 +41,10 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
         ClaimsPrincipal claimsPrincipal;
         if (userSession != null) {
             await _sessionStorage.SetAsync("UserSession", userSession);
-            
             claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(
                 new List<Claim> {
-                    new Claim(ClaimTypes.Name, userSession.Username), 
-                    new Claim(ClaimTypes.Role, userSession.Role),
+                    new Claim(ClaimTypes.Name, userSession.UserAccount.Username), 
+                    new Claim(ClaimTypes.Role, userSession.UserAccount.Role),
                     new Claim("Token", userSession.Token),
                 },"CustomAuth"));
             await this._userService.SetUser(claimsPrincipal);

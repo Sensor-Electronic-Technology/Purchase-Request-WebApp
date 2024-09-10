@@ -3,17 +3,18 @@
 @using Webapp.Services.Authentication
 @inject UserService UserService
 <PageTitle>User Profile</PageTitle>
-
 <AuthorizeView>
     <Authorized>
-        <RadzenRow JustifyContent="JustifyContent.Start">
+        <RadzenRow JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
             @if (this._userProfile == null) {
                 <RadzenText Text="Internal Error: No Profile Available"
                             TextStyle="TextStyle.H5"/>
             } else {
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                <RadzenStack Orientation="Orientation.Vertical" 
+                             AlignItems="AlignItems.Center">
                     <RadzenFieldset Text="@this._label"  Style="width: 100px">
-                        <RadzenSwitch @bind-Value="@_switchValue" Change=@(args => OnChange(args, "Switch"))></RadzenSwitch>
+                        <RadzenSwitch @bind-Value="@_switchValue" 
+                                      Change="@(args => OnChange(args, "Switch"))"/>
                     </RadzenFieldset>
                     <ProfileView @bind-UserProfile="@this._userProfile"
                                  OnSubmit="@this.Submit" IsEditMode="@this._switchValue"/>
@@ -39,8 +40,10 @@
         return base.OnInitializedAsync();
     }
     
-    private async Task Submit(UserProfile profile) {
-        await this.UserService.CreateProfile(profile);
+    private async Task Submit() {
+        await this.UserService.UpdateProfile(this._userProfile);
+        this._switchValue=!this._switchValue;
+        await InvokeAsync(StateHasChanged);
     }
     
     void OnChange(bool? value, string name) {

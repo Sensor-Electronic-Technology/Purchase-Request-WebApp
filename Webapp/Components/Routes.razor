@@ -3,12 +3,12 @@
     <Router AppAssembly="typeof(Program).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(Layout.MainLayout)">
-                <NotAuthorized>
+                @*<NotAuthorized>
                     You are not authorized (This is a custom message)
                 </NotAuthorized>
                 <Authorizing>
                     You are getting authorized (This is a custom message)
-                </Authorizing>
+                </Authorizing>*@
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="routeData" Selector="h1"/>
         </Found>

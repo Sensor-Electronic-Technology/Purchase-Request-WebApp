@@ -32,13 +32,13 @@
         if(session==null) {
             return;
         }
-        var exists = await this.UserService.ProfileExists(session.Username);
+        var exists = await this.UserService.ProfileExists(session.UserAccount.Username);
         var customAuthStateProvider = (SetiAuthStateProvider)authStateProvider;
         await customAuthStateProvider.UpdateAuthenticationState(session);
         if (exists) {
             navManager.NavigateTo("/", true);
         }else {
-            await this.DialogService.OpenAsync<RegisterView>("Register");
+            await this.DialogService.OpenAsync<RegisterView>("Register", new Dictionary<string, object> { { "UserSession", session } });
             //navManager.NavigateTo("/register");
             navManager.NavigateTo("/");
         }

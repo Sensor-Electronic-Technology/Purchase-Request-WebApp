@@ -1,36 +1,29 @@
 ﻿@using System.Security.Claims
 @using Domain.Users
 @using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Services.Authentication
 @inject UserService UserService
 @inject NavigationManager NavigationManager
 @inject DialogService DialogService
 
-<AuthorizeView>
-    <Authorized>
-        <ProfileView @bind-UserProfile="@this._userProfile"
-                     OnSubmit="@this.Submit"/>
-    </Authorized>
-</AuthorizeView>
+<ProfileView @bind-UserProfile="@this._userProfile"
+             OnSubmit="@this.Submit"/>
+
 @code {
-    private UserProfile _userProfile=new UserProfile();
+    private UserProfile _userProfile=new();
+    [Parameter] public UserSessionDto? UserSession { get; set; }
     
-    [CascadingParameter]
-    private Task<AuthenticationState> authenticationState { get; set; }
-    
-    protected override async Task OnInitializedAsync() {
-        var profile = this.UserService.GetProfile();
-        if (profile != null) {
-            this._userProfile = profile;
-        } else {
-            this._userProfile = new UserProfile();
-            var state = await authenticationState;
-            var username=state.User.Claims.FirstOrDefault(e=>e.Type==ClaimTypes.Name)?.Value;
-            this._userProfile._id=username ?? "";
-            this._userProfile.Email=state.User.Claims.FirstOrDefault(e=>e.Type==ClaimTypes.Email)?.Value;
+    protected override Task OnParametersSetAsync() {
+        if (this.UserSession != null) {
+            this._userProfile._id = this.UserSession.UserAccount.Username;
+            this._userProfile.Email = this.UserSession.UserAccount.Email;
+            this._userProfile.FirstName = this.UserSession.UserAccount.FirstName;
+            this._userProfile.LastName = this.UserSession.UserAccount.LastName;
         }
+        return base.OnParametersSetAsync();
     }
-    
+
     private async Task Submit() {
         await this.UserService.CreateProfile(this._userProfile);
         this.DialogService.Close();

@@ -9,24 +9,44 @@
             </RadzenStack>
         </RadzenCard>
         <RadzenCard class="rz-background-color-info-lighter">
-            <RadzenStack Orientation="Orientation.Vertical" Gap="5">
-                <RadzenFormField Text="Username">
-                    <RadzenTextBox Value="@this.UserProfile._id" ReadOnly="true"/>
-                </RadzenFormField>
-                <RadzenFormField Text="Email">
-                    <RadzenTextBox Value="@this.UserProfile.Email"
-                                   ValueChanged="@this.EmailChangedHandler"
-                                   ReadOnly="@(!IsEditMode)"/>
-                </RadzenFormField>
-                <RadzenFormField Text="First Name">
-                    <RadzenTextBox Value="@this.UserProfile.FirstName" 
-                                   ValueChanged="@this.FirstNameChangedHandler"
-                                   ReadOnly="@(!IsEditMode)"/>
-                </RadzenFormField>
+            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" Gap="10">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <RadzenFormField Text="Username">
+                        <RadzenTextBox Value="@this.UserProfile._id" 
+                                       ReadOnly="true"/>
+                    </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceEvenly" >
+                        <RadzenFormField Text="Email">
+                            <RadzenTextBox Value="@this.UserProfile.Email"
+                                           ValueChanged="@this.EmailChangedHandler"
+                                           ReadOnly="@(!IsEditMode)" Style="font-size: 18px;"/>
+                        </RadzenFormField>
+                        <RadzenButton Text="Test Email" 
+                                      Click="SendTestEmailHandler"
+                                      ButtonStyle="ButtonStyle.Info"/>
+                    </RadzenStack>
+
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenFormField Text="First Name">
+                        <RadzenTextBox Value="@this.UserProfile.FirstName"
+                                       ValueChanged="@this.FirstNameChangedHandler"
+                                       ReadOnly="@(!IsEditMode)"
+                                       Style="font-size: 18px; width: 150px;"/>
+
+                    </RadzenFormField>
+                    <RadzenFormField Text="First Name">
+                        <RadzenTextBox Value="@this.UserProfile.LastName"
+                                       ValueChanged="@this.LastNameChangedHandler"
+                                       ReadOnly="@(!IsEditMode)"
+                                       Style="font-size: 18px; width: 150px;"/>
+
+                    </RadzenFormField>
+                </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal"
                              JustifyContent="JustifyContent.Center" Visible="@(this.IsEditMode)">
                     <RadzenButton ButtonType="ButtonType.Submit"
-                                  Click="@(async Task ()=>await this.OnSubmit.InvokeAsync(this.UserProfile))"
+                                  Click="@this.OnSubmit"
                                   Size="ButtonSize.Large" Icon="save" Text="Continue"/>
                 </RadzenStack>
             </RadzenStack>
@@ -36,7 +56,7 @@
 @code {
     [Parameter] public UserProfile UserProfile { get; set; }
     [Parameter] public EventCallback<UserProfile> UserProfileChanged { get; set; }
-    [Parameter] public EventCallback<UserProfile> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public bool IsEditMode { get; set; } = true;
 
     private async Task FirstNameChangedHandler(string? email) {
@@ -44,9 +64,18 @@
         await this.UserProfileChanged.InvokeAsync(this.UserProfile);
     }
     
+    private async Task LastNameChangedHandler(string? name) {
+        this.UserProfile.LastName = name;
+        await this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+    
     private async Task EmailChangedHandler(string? name) {
         this.UserProfile.Email = name;
         await this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+
+    private Task SendTestEmailHandler() {
+        return Task.CompletedTask;
     }
 
 }

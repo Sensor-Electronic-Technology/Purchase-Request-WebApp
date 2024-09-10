@@ -1,15 +1,16 @@
 ﻿using System.Security.Claims;
 using Domain.Users;
 using Infrastructure.Services;
+using SETiAuth.Domain.Shared.Authentication;
 
 namespace Webapp.Services.Authentication;
 public class UserService {
     private readonly UserProfileService _profileService;
+    private UserSessionDto _session;
     private UserProfile? _profile;
     private ClaimsPrincipal currentUser = new(new ClaimsIdentity());
     
     public UserService(UserProfileService profileService) {
-
         this._profileService = profileService;
     }
     
@@ -39,8 +40,13 @@ public class UserService {
         return await this._profileService.UpdateProfile(profile);
     }
     
-    internal async Task SetUser(ClaimsPrincipal user) {
+    internal async Task SetUser(ClaimsPrincipal user,UserSessionDto? session=null) {
         if (currentUser != user) {
+            this._session = session ?? new UserSessionDto() {
+                UserAccount=new UserAccountDto() {
+                    Username="Anonymous",Role="Anonymous"
+                }
+            };
             var name = user.Claims.FirstOrDefault(e => e.Type == ClaimTypes.Name)?.Value;
             if (name != null) {
                 if (name != "Anonymous") {
