@@ -1,5 +1,14 @@
 ﻿@using Domain.Users
 
+<style>
+    .button-style{
+        background-color: #3f51b5;
+        width: 150px;
+        height: 100px;
+        font-size: 16px;
+    }
+</style>
+
 <RadzenCard>
     <RadzenStack>
         <RadzenCard class="rz-background-color-primary">
@@ -22,10 +31,9 @@
                                            ReadOnly="@(!IsEditMode)" Style="font-size: 18px;"/>
                         </RadzenFormField>
                         <RadzenButton Text="Test Email" 
-                                      Click="SendTestEmailHandler"
+                                      Click="@this.SendTestEmailHandler"
                                       ButtonStyle="ButtonStyle.Info"/>
                     </RadzenStack>
-
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal">
                     <RadzenFormField Text="First Name">

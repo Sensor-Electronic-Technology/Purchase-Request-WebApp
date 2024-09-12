@@ -2,13 +2,19 @@
 using Domain.Users;
 using MongoDB.Driver;
 using SETiAuth.Domain.Shared.Constants;
+using Infrastructure.Services;
 
-Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
+//Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
 //await TestMongoIdString();
-await TestMongoQueryIdString();
+//await TestMongoQueryIdString();
+await TestSendEmail();
+
+async Task TestSendEmail() {
+    EmailService emailService = new();
+    await emailService.SendEmail(["rakesh@s-et.com"], ["aelmendorf@s-et.com","space@s-et.com"]);
+}
 
 async Task TestMongoIdString() {
-    
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
     var collection = database.GetCollection<UserProfile>("user_profiles");

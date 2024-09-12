@@ -10,12 +10,17 @@
                 <RadzenText Text="Internal Error: No Profile Available"
                             TextStyle="TextStyle.H5"/>
             } else {
-                <RadzenStack Orientation="Orientation.Vertical" 
+                <RadzenStack Orientation="Orientation.Vertical"
                              AlignItems="AlignItems.Center">
-                    <RadzenFieldset Text="@this._label"  Style="width: 100px">
-                        <RadzenSwitch @bind-Value="@_switchValue" 
-                                      Change="@(args => OnChange(args, "Switch"))"/>
+                    <RadzenFieldset Text="Edit?">
+                            <RadzenSwitch @bind-Value="@_switchValue"
+                                          Change="@(args => OnChange(args, "Switch"))" Name="EditEnable"/>
+                            <RadzenLabel Text="@this._label" Component="EditEnable" class="rz-ms-2"/>
                     </RadzenFieldset>
+
+                    @*<RadzenFieldset Text="@this._label" Style="width: 100px">
+/>
+                    </RadzenFieldset>*@
                     <ProfileView @bind-UserProfile="@this._userProfile"
                                  OnSubmit="@this.Submit" IsEditMode="@this._switchValue"/>
                 </RadzenStack>
