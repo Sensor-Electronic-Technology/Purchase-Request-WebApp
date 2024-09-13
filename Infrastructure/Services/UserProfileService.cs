@@ -1,13 +1,15 @@
-﻿using Domain.Users;
+﻿using Domain.Settings;
+using Domain.Users;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace Infrastructure.Services;
 
 public class UserProfileService {
     private readonly IMongoCollection<UserProfile> _userProfiles;
-    public UserProfileService(IMongoClient client) {
-        var database = client.GetDatabase("purchase_req_db");
-        _userProfiles = database.GetCollection<UserProfile>("user_profiles");
+    public UserProfileService(IMongoClient client,IOptions<DatabaseSettings> options) {
+        var database = client.GetDatabase(options.Value.PurchaseRequestDatabase ?? "purchase_req_db");
+        this._userProfiles = database.GetCollection<UserProfile>(options.Value.UserProfileCollection ?? "user_profiles");
     }
     
     public async Task<UserProfile?> GetProfile(string username) {

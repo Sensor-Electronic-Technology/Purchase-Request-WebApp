@@ -1,6 +1,9 @@
-﻿namespace Domain.PurchaseRequests;
+﻿using MongoDB.Bson;
+
+namespace Domain.PurchaseRequests;
 
 public class PurchaseRequestInput {
+    public ObjectId? Id { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
@@ -10,5 +13,6 @@ public class PurchaseRequestInput {
     public string? ApproverName { get; set; }
     public string? ApproverEmail { get; set; }
     public string? RequesterName { get; set; }
+    public string? RequesterUsername { get; set; }
     public string? RequesterEmail { get; set; }
 }

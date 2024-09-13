@@ -1,24 +1,26 @@
 ﻿@page "/RequesterView"
 @using Domain.Authentication
 @using Domain.PurchaseRequests
-@attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}, {nameof(PurchaseRequestRole.Approver)}")]
+@using Infrastructure.Services
+@attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
+
 <RadzenStack Orientation="Orientation.Vertical">
-        <RadzenAccordion Multiple="false" Style="font-size: 36px !important;">
-            <Items>
-                <RadzenAccordionItem Text="Create Purchase Request"
-                                     Icon="account_balance_wallet" Style="font-size: 36px !important;">
-                    <PurchaseRequestForm/>
-                </RadzenAccordionItem>
-            </Items>
-        </RadzenAccordion>
+    <RadzenButton Text="Create Purchase Request" 
+                  ButtonStyle="ButtonStyle.Info"
+                  Click="CreatePurchaseRequestHandler"
+                  Icon="add_shopping_cart"
+                  Style="width: 150px; height: 90px;"/>
     <RadzenCard Style="width: 100%">
         <RadzenStack>
             <RadzenCard>
                 <RadzenText Text="Purchase Requests"/>
             </RadzenCard>
             <RadzenCard>
-                <RadzenDataGrid Data="@this._purchaseRequests">
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedBy)"/>
+                <RadzenDataGrid Data="@this._purchaseRequests"
+                                AllowGrouping="true"
+                                AllowFiltering="true"
+                                AllowColumnResize="true">
+                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)"/>
                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)"/>
                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)"/>
                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approved)"/>
@@ -35,5 +37,28 @@
 
 
 @code {
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
     private List<PurchaseRequest> _purchaseRequests = new();
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        await this._purchaseRequestService.GetUserPurchaseRequest(pr=>!pr.Approved);
+    }
+
+    private async Task CreatePurchaseRequestHandler() {
+        /*this._dialogService.Open<PurchaseRequestForm>("Create Purchase Request",options: new DialogOptions() {
+            Draggable = true,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = true,
+            Width = "50%",
+            Height = "fit-content"
+        });*/
+        await this._dialogService.OpenSideAsync<PurchaseRequestForm>("Create Purchase Request",options: new SideDialogOptions() {
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false,
+            Width = "50%",
+            Position = DialogPosition.Right
+        });
+    }
+
 }

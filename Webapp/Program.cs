@@ -24,6 +24,7 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
 builder.Services.AddScoped<AuthApiService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<PurchaseRequestService>();
 /*builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<CircuitHandler, UserCircuitHandler>());*/
 var app = builder.Build();
 // Configure the HTTP request pipeline.
