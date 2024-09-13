@@ -18,13 +18,15 @@ public class UserService {
         return currentUser;
     }
     
-    public UserProfile? GetProfile() {
+    public UserProfile? GetSessionUserProfile() {
         return _profile;
     }
     
+    /*
     public async Task<UserProfile?> GetProfile(string username) {
         return await this._profileService.GetProfile(username);
     }
+    */
     
     public async Task<bool> ProfileExists(string username) {
         return await this._profileService.ProfileExists(username);

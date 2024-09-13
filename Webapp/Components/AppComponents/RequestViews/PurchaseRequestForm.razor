@@ -1,0 +1,158 @@
+﻿@using Domain.PurchaseRequests
+@using Domain.Users
+@using Infrastructure.Services
+@using Microsoft.Extensions.Options
+@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Services.Authentication
+
+@if (this._userAccount==null) {
+    <RadzenText Text="Loading User Profile"/>
+} else {
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenCard Style="width: 40%;">
+            <RadzenStack>
+                <RadzenCard class="rz-background-color-series-4">
+                    <RadzenText Text="Purchase Request Form" TextStyle="TextStyle.H6"/>
+                    <RadzenText Text="Please fill out the form below to submit a purchase request."
+                                TextStyle="TextStyle.Body1"/>
+                </RadzenCard>
+                <RadzenCard class="rz-background-color-info">
+                    <RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                            <RadzenFieldset Text="Approver">
+                                <RadzenDropDown TValue="UserAccountDto"
+                                                Data="@_approvers"
+                                                Value="@this._selectedApprover"
+                                                ValueChanged="@SelectedApproverChanged"
+                                                TextProperty="FirstName" ValueProperty="Username"
+                                                Placeholder="Select an approver" AllowClear="true"/>
+                            </RadzenFieldset>
+                            <div class="rz-p-12 rz-text-align-center">
+                                <RadzenCheckBox TriState=false @bind-Value="@this._isUrgent" Name="IsUrgent"/>
+                                <RadzenLabel Text="Urgent" Component="IsUrgent" class="rz-ms-2"/>
+                            </div>
+                        </RadzenStack>
+                        <RadzenFieldset>
+                            <RadzenTextBox Value=""/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Purchase Request Title" Style="align-self:start;width: 100%">
+                            <RadzenTextBox Placeholder="Enter the title of the purchase request"
+                                           @bind-Value="@this._purchaseReqInput.Title" 
+                                           Style="width: 100%"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Purchase Request Description">
+                            <RadzenTextArea Placeholder="Enter a brief description of the purchase request" @bind-Value="@this._purchaseReqInput.Description"
+                                            Style="width: 100%; height:100px;"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Additional Comments">
+                            <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
+                                            @bind-Value="@this._purchaseReqInput.AdditionalComments"
+                                            Style="width: 100%; height:100px;"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Update Purchase Request Form">
+                            <RadzenUpload Multiple="false" Progress=@(args => OnProgress(args, "Single file upload")) Change="@this.OnClientChange"/>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+        <RadzenCard Style="width: 50%">
+            <RadzenStack>
+                <RadzenCard>
+                    <RadzenText Text="Message Preview"/>
+                    <RadzenButton Text="Refresh" Icon="cached" Click="OnPreviewRefresh"/>
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenHtmlEditor @bind-Value=@htmlValue style="height: 450px;"
+                                      ShowToolbar="false" Mode="HtmlEditorMode.Design" />
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+}
+
+@code {
+    [Inject] private AuthApiService _authApiService { get; set; }
+    [Inject] private IWebHostEnvironment environment { get; set; }
+    [Inject] private UserService _userService { get; set; }
+    private PurchaseRequestInput _purchaseReqInput = new();
+    private string? _selectedApprover;
+    private bool _isUrgent = false;
+    private string _messagePreview = "";
+    private List<UserAccountDto> _approvers = [];
+    private UserProfile? _userAccount = new();
+    private string htmlValue = "<p>Enter your message here</p>";
+    private string emailTemplate="";
+    
+    
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._approvers = await this._authApiService.GetApprovers();
+        this._userAccount = this._userService.GetSessionUserProfile();
+        
+        await this.LoadEmailTemplate();
+    }
+    
+    void OnProgress(UploadProgressArgs args, string name) {
+        Console.WriteLine($"{args.Progress}% '{name}' / {args.Loaded} of {args.Total} bytes.");
+        if (args.Progress == 100) {
+            
+            foreach (var file in args.Files) {
+                Console.WriteLine($"Uploaded: {file.Name} / {file.Size} bytes");
+            }
+        }
+    }
+    
+    async Task OnClientChange(UploadChangeEventArgs args) {
+        Console.WriteLine($"Client-side upload changed");
+
+        foreach (var file in args.Files) {
+            Console.WriteLine($"File: {file.Name} / {file.Size} bytes");
+            try {
+                long maxFileSize = 10 * 1024 * 1024;
+                // read file
+                var stream = file.OpenReadStream(maxFileSize);
+                this._userAccount = this._userService.GetSessionUserProfile();
+                string filePath = Path.Combine(environment.WebRootPath,this._userAccount?._id ?? "Unknown");
+                DirectoryInfo info = new DirectoryInfo(filePath);
+                if (!info.Exists) {
+                    info.Create();
+                }
+
+                file.Name=file.Name.Replace(".",$"{DateTime.Now:yyMMddHHmm}.");
+                string path = Path.Combine(filePath, file.Name);
+                await using FileStream outputFileStream = new FileStream(path, FileMode.Create);
+                await stream.CopyToAsync(outputFileStream);
+                stream.Close();
+            } catch (Exception ex) {
+                Console.WriteLine($"Client-side file read error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task LoadEmailTemplate() {
+        using StreamReader reader = new StreamReader(@"wwwroot\EmailTemplateV2\EmailTemplateV2.htm");
+        emailTemplate = await reader.ReadToEndAsync();
+    }
+    
+    private async Task OnPreviewRefresh() {
+        this.htmlValue=emailTemplate.Replace("{approver}",this._selectedApprover)
+                                    .Replace("{requester}","Andrew Elmendorf")
+                                    .Replace("{title}", this._purchaseReqInput.Title)
+                                    .Replace("{description}", this._purchaseReqInput.Description)
+                                    .Replace("{additional}", this._purchaseReqInput.AdditionalComments);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectedApproverChanged(UserAccountDto selected) {
+        /*this._selectedApprover = selected;
+        var approver = this._approvers.FirstOrDefault(a => a.Username == selected);
+        if (approver != null) {
+            this._purchaseReqInput.RequesterName=approver.FirstName+" "+approver.LastName;
+            this._purchaseReqInput.RequesterEmail=approver.Email;
+        }*/
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

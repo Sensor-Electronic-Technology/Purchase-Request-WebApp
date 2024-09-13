@@ -41,7 +41,7 @@
     private string _label="Enable";
     
     protected override Task OnInitializedAsync() {
-        this._userProfile = this.UserService.GetProfile();
+        this._userProfile = this.UserService.GetSessionUserProfile();
         return base.OnInitializedAsync();
     }
     

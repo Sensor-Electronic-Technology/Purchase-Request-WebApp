@@ -1,6 +1,27 @@
 ﻿services:
   webapp:
     image: webapp
+    container_name: purchase-requests-app
+    pull_policy: always
+    restart: unless-stopped
+    expose:
+      - 8080
+    ports:
+      - "80:8080"
     build:
       context: .
       dockerfile: Webapp/Dockerfile
+    volumes:
+      - "C:/Users/aelmendo/Documents/PR_Volume:/purchase_requests"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+#  watchtower:
+#    image: containrrr/watchtower
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    restart: unless-stopped
+#    command: --cleanup 
+#    labels:
+#      - "com.centurylinklabs.watchtower.enable=false"
+#    ports:
+#      - "8080:8080"

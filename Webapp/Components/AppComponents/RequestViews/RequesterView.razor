@@ -1,12 +1,7 @@
 ﻿@page "/RequesterView"
+@using Domain.Authentication
 @using Domain.PurchaseRequests
-
-@*<style>
-    .rz-accordion rz-accordion-header > a {
-        font-size: 36px !important;
-    }
-</style>*@
-
+@attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}, {nameof(PurchaseRequestRole.Approver)}")]
 <RadzenStack Orientation="Orientation.Vertical">
         <RadzenAccordion Multiple="false" Style="font-size: 36px !important;">
             <Items>

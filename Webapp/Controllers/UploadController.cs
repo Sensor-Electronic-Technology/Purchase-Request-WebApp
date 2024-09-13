@@ -13,10 +13,10 @@ public class PathResponse {
 }
 
 public partial class UploadController : Controller {
-    private readonly IWebHostEnvironment environment;
+    private readonly IWebHostEnvironment _environment;
 
     public UploadController(IWebHostEnvironment environment) {
-        this.environment = environment;
+        this._environment = environment;
     }
 
     // Single file upload
@@ -25,19 +25,19 @@ public partial class UploadController : Controller {
         try {
             var fileName = file.FileName;
             Console.WriteLine(fileName);
-            Console.WriteLine(environment.WebRootPath);
-            using var stream = new FileStream(Path.Combine(environment.WebRootPath, fileName), FileMode.Create);
+            Console.WriteLine(_environment.WebRootPath);
+            using var stream = new FileStream(Path.Combine(_environment.WebRootPath, fileName), FileMode.Create);
             // Save the file
             file.CopyTo(stream);
             // Return the URL of the file
             //var url = Url.Content($"~/{fileName}");
-            var path = Path.Combine(environment.WebRootPath, fileName);
+            var path = Path.Combine(_environment.WebRootPath, fileName);
             return Ok(new PathResponse() { Path = path });
         } catch (Exception ex) {
             return StatusCode(500, ex.Message);
         }
     }
-
+    
     // Multiple files upload
     [HttpPost("upload/multiple")]
     public IActionResult Multiple(IFormFile[] files) {
@@ -66,7 +66,7 @@ public partial class UploadController : Controller {
         try {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
-            using (var stream = new FileStream(Path.Combine(environment.WebRootPath, fileName), FileMode.Create)) {
+            using (var stream = new FileStream(Path.Combine(_environment.WebRootPath, fileName), FileMode.Create)) {
                 // Save the file
                 file.CopyTo(stream);
 

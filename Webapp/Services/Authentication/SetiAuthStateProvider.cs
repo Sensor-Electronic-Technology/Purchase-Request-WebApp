@@ -6,19 +6,19 @@ using SETiAuth.Domain.Shared.Authentication;
 namespace Webapp.Services.Authentication;
 
 public class SetiAuthStateProvider : AuthenticationStateProvider {
-    private readonly ProtectedSessionStorage _sessionStorage;
+    private readonly ProtectedLocalStorage _localStorage;
     private readonly UserService _userService;
 
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
     
-    public SetiAuthStateProvider(ProtectedSessionStorage sessionStorage,UserService userService) {
-        this._sessionStorage = sessionStorage;
+    public SetiAuthStateProvider(ProtectedLocalStorage localStorage,UserService userService) {
+        this._localStorage = localStorage;
         this._userService=userService;
     }
     
     public override async Task<AuthenticationState> GetAuthenticationStateAsync() {
         try {
-            var userSessionStorageResult = await _sessionStorage.GetAsync<UserSessionDto>("UserSession");
+            var userSessionStorageResult = await _localStorage.GetAsync<UserSessionDto>("UserSession");
             var userSession = userSessionStorageResult.Success ? userSessionStorageResult.Value : null;
             if (userSession == null) {
                 await this._userService.SetUser(_anonymous);
@@ -40,7 +40,7 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
     public async Task UpdateAuthenticationState(UserSessionDto? userSession) {
         ClaimsPrincipal claimsPrincipal;
         if (userSession != null) {
-            await _sessionStorage.SetAsync("UserSession", userSession);
+            await _localStorage.SetAsync("UserSession", userSession);
             claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(
                 new List<Claim> {
                     new Claim(ClaimTypes.Name, userSession.UserAccount.Username), 
@@ -50,7 +50,7 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
             await this._userService.SetUser(claimsPrincipal);
         } else {
             await this._userService.SetUser(this._anonymous);
-            await _sessionStorage.DeleteAsync("UserSession");
+            await this._localStorage.DeleteAsync("UserSession");
             claimsPrincipal = _anonymous;
         }
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));

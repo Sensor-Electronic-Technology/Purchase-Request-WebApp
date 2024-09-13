@@ -11,7 +11,7 @@ await TestSendEmail();
 
 async Task TestSendEmail() {
     EmailService emailService = new();
-    await emailService.SendEmail(["rakesh@s-et.com"], ["aelmendorf@s-et.com","space@s-et.com"]);
+    //await emailService.SendEmail(["rakesh@s-et.com"], ["aelmendorf@s-et.com","space@s-et.com"]);
 }
 
 async Task TestMongoIdString() {

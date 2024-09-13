@@ -1,0 +1,20 @@
+﻿@page "/approve/{id}"
+@using Domain.PurchaseRequests
+
+<AuthorizeView>
+    <Authorized>
+        @*Show Approver View Here*@
+    </Authorized>
+    <NotAuthorized>
+        <RadzenButton Text="Login" Click="LoginHandler" />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private DialogService _dialogService { get; set; }
+
+    private Task LoginHandler() {
+        return Task.CompletedTask;
+    }
+
+}

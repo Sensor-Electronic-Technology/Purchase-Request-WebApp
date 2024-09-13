@@ -1,6 +1,7 @@
 ﻿@page "/login"
 @using Infrastructure.Services
 @using Webapp.Components.AppComponents
+@using Webapp.Components.AppComponents.AuthViews
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @inject AuthApiService AuthApiService
@@ -39,7 +40,6 @@
             navManager.NavigateTo("/", true);
         }else {
             await this.DialogService.OpenAsync<RegisterView>("Register", new Dictionary<string, object> { { "UserSession", session } });
-            //navManager.NavigateTo("/register");
             navManager.NavigateTo("/");
         }
     }
