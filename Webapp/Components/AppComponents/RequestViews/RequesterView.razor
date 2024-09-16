@@ -1,48 +1,58 @@
 ﻿@page "/RequesterView"
 @using Domain.Authentication
 @using Domain.PurchaseRequests
+@using Domain.Users
 @using Infrastructure.Services
+@using Webapp.Services.Authentication
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-<RadzenStack Orientation="Orientation.Vertical">
-    <RadzenButton Text="Create Purchase Request" 
-                  ButtonStyle="ButtonStyle.Info"
-                  Click="CreatePurchaseRequestHandler"
-                  Icon="add_shopping_cart"
-                  Style="width: 150px; height: 90px;"/>
-    <RadzenCard Style="width: 100%">
-        <RadzenStack>
-            <RadzenCard>
-                <RadzenText Text="Purchase Requests"/>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenDataGrid Data="@this._purchaseRequests"
-                                AllowGrouping="true"
-                                AllowFiltering="true"
-                                AllowColumnResize="true">
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approved)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Ordered)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Received)"/>
-                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)"/>
-                </RadzenDataGrid>
-            </RadzenCard>
-        </RadzenStack>
-    </RadzenCard>
-</RadzenStack>
+<RadzenContent>
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+        <RadzenButton Text="Create Purchase Request"
+                      ButtonStyle="ButtonStyle.Info"
+                      Click="CreatePurchaseRequestHandler"
+                      Icon="add_shopping_cart"
+                      Style="width: 500px; height: 70px;"/>
+        <RadzenCard Style="width: 100%">
+            <RadzenStack>
+                <RadzenCard>
+                    <RadzenText Text="Purchase Requests"/>
+                </RadzenCard>
+                <RadzenCard>
+                    <RadzenDataGrid Data="@this._purchaseRequests"
+                                    AllowGrouping="true"
+                                    AllowFiltering="true"
+                                    AllowColumnResize="true">
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approved)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Ordered)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Received)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)"/>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</RadzenContent>
+
 
 
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
+    [Inject] private UserService _userService { get; set; }
     private List<PurchaseRequest> _purchaseRequests = new();
+    private UserProfile? _userAccount = new();
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        await this._purchaseRequestService.GetUserPurchaseRequest(pr=>!pr.Approved);
+        this._userAccount = this._userService.GetSessionUserProfile();
+        if(this._userAccount != null) {
+            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Username == this._userAccount._id);
+        }
     }
 
     private async Task CreatePurchaseRequestHandler() {

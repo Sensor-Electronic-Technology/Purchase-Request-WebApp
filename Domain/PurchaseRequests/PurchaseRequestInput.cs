@@ -8,6 +8,7 @@ public class PurchaseRequestInput {
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
     public string? FilePath { get; set; }
+    public string? PrUrl { get; set; }
     public string? LinkText { get; set; }
     public bool Urgent { get; set; }
     public string? ApproverName { get; set; }

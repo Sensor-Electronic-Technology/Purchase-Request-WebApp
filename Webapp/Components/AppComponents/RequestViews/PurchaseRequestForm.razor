@@ -19,13 +19,16 @@
                 </RadzenCard>
                 <RadzenCard class="rz-background-color-info">
                     <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                        <RadzenStack Orientation="Orientation.Horizontal" 
+                                     AlignItems="AlignItems.Center" 
+                                     JustifyContent="JustifyContent.Center">
                             <RadzenFormField Text="Approver">
                                 <RadzenDropDown TValue="string"
                                                 Data="@this._approverSelectList"
                                                 Value="@this._selectedApprover"
                                                 ValueChanged="@SelectedApproverChanged"
-                                                Placeholder="Select an approver" AllowClear="true"/>
+                                                Placeholder="Select an approver"
+                                                AllowClear="true"/>
                             </RadzenFormField>
                             <div class="rz-p-12 rz-text-align-center">
                                 <RadzenCheckBox TriState=false @bind-Value="@this._isUrgent" Name="IsUrgent"/>
@@ -35,13 +38,14 @@
                         <RadzenFormField Text="Requester">
                             <RadzenTextBox @bind-Value="@this._userAccount.FirstName"/>
                         </RadzenFormField>
-                        <RadzenFormField Text="Purchase Request Title" Style="width: fit-content">
+                        <RadzenFormField Text="Purchase Request Title">
                             <RadzenTextBox Placeholder="Enter the title of the purchase request"
                                            @bind-Value="@this._purchaseReqInput.Title"
                                            Style="width: 100%"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Purchase Request Description">
-                            <RadzenTextArea Placeholder="Enter a brief description of the purchase request" @bind-Value="@this._purchaseReqInput.Description"
+                            <RadzenTextArea Placeholder="Enter a brief description of the purchase request" 
+                                            @bind-Value="@this._purchaseReqInput.Description"
                                             Style="width: 100%; height:100px;"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Additional Comments">
@@ -98,7 +102,7 @@
             this._purchaseReqInput = new PurchaseRequestInput() {
                 RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
                 RequesterEmail = this._userAccount?.Email,
-                RequesterUsername = this._userAccount?.Email,
+                RequesterUsername = this._userAccount?._id,
                 Id=ObjectId.GenerateNewId(),
             };
         }
@@ -132,22 +136,18 @@
                 if (!info.Exists) {
                     info.Create();
                 }
-                file.Name=file.Name.Replace(".",$"_{this._purchaseReqInput.Id.ToString()}.");
+                file.Name=file.Name.Replace(".",$"_{this._purchaseReqInput?.Id.ToString()}.");
                 string path = Path.Combine(filePath, file.Name);
                 await using FileStream outputFileStream = new FileStream(path, FileMode.Create);
                 await stream.CopyToAsync(outputFileStream);
                 stream.Close();
                 this._purchaseReqInput.FilePath=path;
+                Console.WriteLine(path);
             } catch (Exception ex) {
                 Console.WriteLine($"Client-side file read error: {ex.Message}");
             }
         }
     }
-
-    /*private async Task LoadEmailTemplate() {
-        using StreamReader reader = new StreamReader(@"wwwroot\EmailTemplateV2\EmailTemplateV2.htm");
-        emailTemplate = await reader.ReadToEndAsync();
-    }*/
     
     private async Task SelectedApproverChanged(string? selected) {
         this._selectedApprover = selected;
@@ -158,7 +158,7 @@
     }
 
     private async Task SavePurchaseRequestHandler() {
-        await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
         this._dialogService.CloseSide();
     }
 
