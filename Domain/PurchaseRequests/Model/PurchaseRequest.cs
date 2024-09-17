@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace Domain.PurchaseRequests;
+namespace Domain.PurchaseRequests.Model;
 
 public class PurchaseRequest {
     public ObjectId _id { get; set; }
@@ -9,6 +9,10 @@ public class PurchaseRequest {
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
+    public string? PaymentTerms { get; set; }
+    public string? ShippingType { get; set; }
+    public ObjectId DepartmentId { get; set; }
+    public ObjectId VendorId { get; set; }
     public DateTime Created { get; set; }
     public bool Approved { get; set; }
     public DateTime ApprovedDate { get; set; }

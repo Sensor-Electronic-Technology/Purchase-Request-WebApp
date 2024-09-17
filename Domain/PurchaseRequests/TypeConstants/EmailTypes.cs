@@ -1,5 +1,6 @@
 ﻿using Ardalis.SmartEnum;
-namespace Domain.PurchaseRequests;
+
+namespace Domain.PurchaseRequests.TypeConstants;
 
 public class EmailType:SmartEnum<EmailType,string> {
     public static readonly EmailType NeedsApproval=new(nameof(NeedsApproval),"Purchase Request Needs Approval");

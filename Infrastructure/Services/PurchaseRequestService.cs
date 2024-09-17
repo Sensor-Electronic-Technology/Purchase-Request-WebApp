@@ -1,5 +1,8 @@
 ﻿using System.Linq.Expressions;
 using Domain.PurchaseRequests;
+using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.Model;
+using Domain.PurchaseRequests.TypeConstants;
 using Domain.Settings;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;

@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace Domain.PurchaseRequests;
+namespace Domain.PurchaseRequests.Dto;
 
 public class PurchaseRequestInput {
     public ObjectId? Id { get; set; }

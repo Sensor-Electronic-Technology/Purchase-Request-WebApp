@@ -2,6 +2,8 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Domain.PurchaseRequests;
+using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.TypeConstants;
 using Domain.Settings;
 using MailKit.Net.Smtp;
 using MimeKit.Utils;
