@@ -12,6 +12,7 @@ namespace Infrastructure.Services;
 
 public class PurchaseRequestService {
     private readonly IMongoCollection<PurchaseRequest> _purchaseRequestCollection;
+    private readonly IMongoCollection<Vendor> _vendorCollection;
     private readonly UserProfileService _userProfileService;
     private readonly AuthApiService _authApiService;
     private readonly EmailService _emailService;
@@ -20,6 +21,7 @@ public class PurchaseRequestService {
         EmailService emailService,AuthApiService authService,IOptions<DatabaseSettings> options) {
         var database = client.GetDatabase(options.Value.PurchaseRequestDatabase ?? "purchase_req_db");
         this._purchaseRequestCollection=database.GetCollection<PurchaseRequest>(options.Value.PurchaseRequestCollection ?? "purchase_requests");
+        this._vendorCollection = database.GetCollection<Vendor>(options.Value.VendorCollection ?? "vendors");
         this._emailService = emailService;
         this._authApiService = authService;
         this._userProfileService=userProfileService;
@@ -78,6 +80,10 @@ public class PurchaseRequestService {
             }
             await this._purchaseRequestCollection.ReplaceOneAsync(e => e._id == id, pr);
         }
+    }
+
+    public async Task<List<Vendor>> GetVendors() {
+        return await this._vendorCollection.Find(_ => true).ToListAsync();
     }
     
     private void HandleApprove(PurchaseRequest purchaseRequest) {
