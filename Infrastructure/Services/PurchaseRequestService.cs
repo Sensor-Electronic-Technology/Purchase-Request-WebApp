@@ -72,10 +72,10 @@ public class PurchaseRequestService {
                     this.HandleCancel(pr);
                     break;
                 case nameof(PurchaseRequestAction.Order):
-                    this.HandleOrder(pr);
+                    //this.HandleOrder(pr);
                     break;
                 case nameof(PurchaseRequestAction.Receive):
-                    this.HandleReceive(pr);
+                    //this.HandleReceive(pr);
                     break;
             }
             await this._purchaseRequestCollection.ReplaceOneAsync(e => e._id == id, pr);
@@ -100,14 +100,14 @@ public class PurchaseRequestService {
         //Send Rejected Email
     }
     private void HandleOrder(PurchaseRequest purchaseRequest) {
-        purchaseRequest.Ordered = true;
-        purchaseRequest.OrderedDate = DateTime.Now;
+        /*purchaseRequest.Ordered = true;
+        purchaseRequest.OrderedDate = DateTime.Now;*/
         //Send Ordered Email
     }
     
     private void HandleReceive(PurchaseRequest purchaseRequest) {
-        purchaseRequest.Received = true;
-        purchaseRequest.ReceivedDate = DateTime.Now;
+        /*purchaseRequest.Received = true;
+        purchaseRequest.ReceivedDate = DateTime.Now;*/
         //Send Received Email
     }
     

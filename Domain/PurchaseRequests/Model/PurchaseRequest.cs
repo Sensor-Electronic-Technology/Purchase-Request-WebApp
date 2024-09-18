@@ -11,17 +11,14 @@ public class PurchaseRequest {
     public string? AdditionalComments { get; set; }
     public string? PaymentTerms { get; set; }
     public string? ShippingType { get; set; }
-    public ObjectId DepartmentId { get; set; }
-    public ObjectId VendorId { get; set; }
+    public Department? Department { get; set; }
+    public Vendor? Vendor { get; set; }
+    public List<PurchaseItem> Items { get; set; }
+    public string? FilePath { get; set; }
+    public bool Urgent { get; set; }
     public DateTime Created { get; set; }
     public bool Approved { get; set; }
     public DateTime ApprovedDate { get; set; }
     public bool Rejected { get; set; }
     public DateTime RejectedDate { get; set; }
-    public bool Ordered { get; set; }
-    public DateTime OrderedDate { get; set; }
-    public bool Received { get; set; }
-    public DateTime ReceivedDate { get; set; }
-    public string? FilePath { get; set; }
-    public bool Urgent { get; set; }
 }
