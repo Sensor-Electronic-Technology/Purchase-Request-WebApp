@@ -19,15 +19,15 @@ public class ExcelMap:SmartEnum<ExcelMap, string>{
     
     public static readonly ExcelMap PurchaseReason = new(nameof(PurchaseReason), "A22",21,2);
     public static readonly ExcelMap DeliveryMethod = new(nameof(DeliveryMethod), "B25",25,6);
-    public static readonly ExcelMap  QuantityLines= new(nameof(QuantityLines), "A29",29,1,37,1,true,9,"A37");
-    public static readonly ExcelMap  ProductDescription= new(nameof(ProductDescription), "B29",29,2,37,2,true,9,"B37");
-    public static readonly ExcelMap  UnitCost= new(nameof(UnitCost), "C29",29,5,37,5,true,9,"C37");
-    public static readonly ExcelMap  ProductTotal= new(nameof(QuantityLines), "D29",29,6,37,6,true,9,"D37");
+    public static readonly ExcelMap  QuantityLines= new(nameof(QuantityLines), "A29",29,1,37,1,true,"A37");
+    public static readonly ExcelMap  ProductDescription= new(nameof(ProductDescription), "B29",29,2,37,2,true,"B37");
+    public static readonly ExcelMap  UnitCost= new(nameof(UnitCost), "C29",29,5,37,5,true,"C37");
+    public static readonly ExcelMap  ProductTotal= new(nameof(QuantityLines), "D29",29,6,37,6,true,"D37");
     /*public static readonly ExcelMap  Approver= new(nameof(Approver), "F38");
     public static readonly ExcelMap  DateApproved= new(nameof(DateApproved), "F38");*/
 
     public bool IsMultiLine { get; set; } = false;
-    public int RowCount { get; set; } = 1;
+    public int RowCount => this.IsMultiLine ? this.EndRow - this.Row : 1;
     public string? EndingAddress { get; set; }=default;
     public bool IsChild { get; set; } = false;
     public string? ParentName { get; set; } = default;
@@ -38,9 +38,8 @@ public class ExcelMap:SmartEnum<ExcelMap, string>{
     public int EndRow { get; set; } = 0;
     public int EndCol { get; set; } = 0;
     
-    public ExcelMap(string name, string value,int row,int column,int endRow,int endCol,bool isMultiLine,int rowCount,string? endAddress) : base(name, value) {
+    public ExcelMap(string name, string value,int row,int column,int endRow,int endCol,bool isMultiLine,string? endAddress) : base(name, value) {
         this.IsMultiLine = isMultiLine;
-        this.RowCount = rowCount;
         this.EndingAddress = endAddress;
         this.IsChild = false;
         this.ParentName = null;
@@ -52,7 +51,6 @@ public class ExcelMap:SmartEnum<ExcelMap, string>{
     
     public ExcelMap(string name, string value,int row,int column) : base(name, value) {
         this.IsMultiLine = false;
-        this.RowCount = 1;
         this.EndingAddress = null;
         this.IsChild = false;
         this.ParentName = null;

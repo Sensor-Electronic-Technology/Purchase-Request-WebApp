@@ -10,10 +10,11 @@
         <PackageReference Include="ClosedXML" Version="0.102.3" />
         <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
         <PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.6.0" />
+        <PackageReference Include="QuestPDF" Version="2024.10.0-rc3" />
         <PackageReference Include="setiauth.domain.shared" Version="1.3.6" />
         <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
         <PackageReference Include="System.DirectoryServices.Protocols" Version="8.0.0" />
-        <PackageReference Include="Visus.LdapAuthentication" Version="2.0.0" />
+        <PackageReference Include="Verify.QuestPDF" Version="2.3.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Domain\Domain.csproj" />
@@ -23,6 +24,12 @@
       <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
         <HintPath>..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.8\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
       </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Update="seti_logo.png">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
