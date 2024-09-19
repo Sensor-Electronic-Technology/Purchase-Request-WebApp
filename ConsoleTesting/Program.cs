@@ -6,8 +6,10 @@ using MongoDB.Driver;
 using SETiAuth.Domain.Shared.Constants;
 using Infrastructure.Services;
 using ClosedXML.Excel;
+using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
+using MongoDB.Bson;
 using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -18,24 +20,34 @@ using QuestPDF.Companion;
 //await TestMongoQueryIdString();
 //await TestSendEmail();
 //await CreateVendors();
+//await CreateDepartments();
 //await TestExcel();
+await PdfWork();
 
-QuestPDF.Settings.License = LicenseType.Community;
 
-/*var model = await GetPurchaseRequest();
-var document = new PurchaseRequestDocument(model);
-document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");*/
 
-var model = await GetPurchaseOrderDto();
-var document = new PurchaseOrderDocument(model);
-document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseOrder.pdf");
-//await document.ShowInCompanionAsync();
+async Task PdfWork() {
+    QuestPDF.Settings.License = LicenseType.Community;
+
+    
+    var model = await GetPurchaseRequest();
+    var document = new PurchaseRequestDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
+    /*var documentMetadata = document.GetMetadata();
+    Console.WriteLine($"Width: {documentMetadata.}");*/
+    /*document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");*/
+    await document.ShowInCompanionAsync();
+    
+    /*var model = await GetPurchaseOrderDto();
+    var document = new PurchaseOrderDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
+    //document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseOrder.pdf");
+    await document.ShowInCompanionAsync();*/
+}
 
 async Task<PurchaseRequest> GetPurchaseRequest() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var collection = database.GetCollection<Vendor>("vendors");
+    var collection = database.GetCollection<Contact>("contacts");
     var purchaseRequest=new PurchaseRequest();
     List<PurchaseItem> items = new();
     items.Add(new PurchaseItem() {
@@ -48,14 +60,14 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
         ProductName = "Intel I7 546214 mini pc", Quantity = 3, UnitCost = 459.45m
     });
     purchaseRequest.Items = items;
-    var vendor = await collection.Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();
+    var vendor = await collection.OfType<Vendor>().Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();
     if (vendor != null) {
+        Console.WriteLine("Vendor Found");
         purchaseRequest.Department = new Department(){Name = "Epi"};
         purchaseRequest.Description = "Consultant Computers";
         purchaseRequest.Vendor = vendor;
         purchaseRequest.ShippingType = ShippingType.Ground.Value;
-        purchaseRequest.PaymentTerms = PaymentTerm.NetTerms.Value;
-        purchaseRequest.Username = "Amanda Elmore";
+        purchaseRequest.Requester = "Amanda Elmore";
         purchaseRequest.Urgent = true;
         purchaseRequest.Approver = "Rakesh Jain";
         purchaseRequest.Title = "Consultant Computers";
@@ -67,8 +79,8 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
                                             " I want to make sure the wrapping works when writing to a single cell";
         purchaseRequest.Approved = false;
         purchaseRequest.Rejected = false;
+        purchaseRequest.TotalCost = items.Sum(e => e.Quantity * e.UnitCost);
     }
-
     return purchaseRequest;
 }
 
@@ -76,7 +88,7 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var collection = database.GetCollection<Vendor>("vendors");
+    var collection = database.GetCollection<Contact>("contacts");
     var purchaseOrder=new PurchaseOrderDto();
     List<PurchaseItem> items = new();
     items.Add(new PurchaseItem() {
@@ -89,8 +101,11 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
         ProductName = "Intel I7 546214 mini pc", Quantity = 3, UnitCost = 459.45m
     });
     purchaseOrder.Items = items;
-    var vendor = await collection.Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();
+    var vendor = await collection.OfType<Vendor>().Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();
+    var contact =await collection.OfType<InternalContact>().Find(e => e.Type==InternalContactType.CompanyMainContact).FirstOrDefaultAsync();
     if (vendor != null) {
+        purchaseOrder.Date = DateTime.Now;
+        purchaseOrder.PoNumber="2024-AE-1621";
         purchaseOrder.Department = "Support";
         purchaseOrder.Description = "Consultant Computers";
         purchaseOrder.Vendor = vendor;
@@ -101,10 +116,14 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
         purchaseOrder.FOB = "Destination";
         purchaseOrder.TotalCost = items.Sum(e => e.Quantity * e.UnitCost);
     }
+
+    if (contact != null) {
+        purchaseOrder.ToAddress = contact;
+    }
     return purchaseOrder;
 }
 
-async Task TestExcel() {
+/*async Task TestExcel() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
@@ -156,13 +175,14 @@ async Task TestExcel() {
     } else {
         Console.WriteLine("Vendor not found");
     }
-}
+}*/
 
 async Task CreateVendors() {
-    string path =@"C:\Users\aelmendo\Documents\PurchaseRequestItems\Vendors.txt";
+    string path =@"C:\Users\aelme\Documents\PurchaseRequestData\Vendors.txt";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
-    var database = client.GetDatabase("purchase_req_db");
-    var collection = database.GetCollection<Vendor>("vendors");
+    var contactDataService = new ContactDataService(client);
+    /*var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<Vendor>("vendors");*/
     await using var stream=File.OpenRead(path);
     using var reader=new StreamReader(stream);
     List<Vendor> vendors = [];
@@ -173,16 +193,49 @@ async Task CreateVendors() {
             Vendor vendor = new() {
                 Name = items[0], 
                 StreetAddress = items[1], 
-                CityStateZip = items[2],
-                Contact = items[3],
+                Attention = items[3],
                 Phone = items[4], 
                 Fax = items[5],
                 Email = items[6]
             };
+            var cityStateZip = items[2].Split(',');
+            if (cityStateZip.Length == 3) {
+                vendor.City = cityStateZip[0];
+                vendor.State = cityStateZip[1];
+                vendor.Zip = cityStateZip[2];
+            }
             vendors.Add(vendor);
         }
     }
-    await collection.InsertManyAsync(vendors);
+    await contactDataService.InsertMany(vendors);
+
+    InternalContact internalContact = new() {
+        _id=ObjectId.GenerateNewId(),
+        Type = InternalContactType.CompanyMainContact,
+        Name="Sensor Electronic Technology, Inc.",
+        StreetAddress="110 Atlas Ct",
+        City="Columbia",
+        State="SC",
+        Zip="29209",
+        Phone="(803) 647-9757",
+        Fax="(803) 647-9772",
+        Email="ap@s-et.com"
+    };
+    await contactDataService.InsertOne(internalContact);
+    Console.WriteLine("Check database");
+}
+
+async Task CreateDepartments() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var departmentDataService = new DepartmentDataService(client);
+    List<Department> departmentList = [
+        new Department(){ Name="Support", Description="IT and Engineering Support"}, 
+        new Department(){ Name="Sales", Description="Sales Purchases"}, 
+        new Department(){ Name="Application", Description="Application Purchases"}, 
+        new Department(){ Name="Epi-R&D", Description="Epi R&D"}, 
+        new Department(){ Name="Epi-Prod", Description="Epi Production"}, 
+    ];
+    await departmentDataService.InsertMany(departmentList);
     Console.WriteLine("Check database");
 }
 

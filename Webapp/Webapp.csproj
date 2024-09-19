@@ -28,6 +28,7 @@
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR2409131508.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\AndrewFiles\AElmendorf_HW6.pdf" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,15 @@
+﻿
+
+@if(!string.IsNullOrEmpty(this.PdfPath)) {
+    <iframe class="pdf"
+            src="@this.PdfPath"
+            allow="fullscreen"
+            width="1000"
+            height="800">
+    </iframe>
+}
+@code {
+    [Parameter]
+    public string? PdfPath { get; set; }
+
+}

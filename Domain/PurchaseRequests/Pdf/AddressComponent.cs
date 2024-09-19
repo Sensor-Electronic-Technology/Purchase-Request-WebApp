@@ -1,14 +1,17 @@
-﻿using Domain.PurchaseRequests.Pdf;
-using QuestPDF.Fluent;
+﻿using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+
+namespace Domain.PurchaseRequests.Pdf;
 
 public class AddressComponent : IComponent {
     private Address VendorAddress { get; }
     private Address ToAddress { get; }
-    public AddressComponent(Address vendorAddress,Address toAddress) {
+    private string _attention;
+    public AddressComponent(Address vendorAddress,Address toAddress,string attention) {
         this.VendorAddress = vendorAddress;
         this.ToAddress = toAddress;
+        this._attention=attention;
     }
 
     public void Compose(IContainer container) {
@@ -34,6 +37,7 @@ public class AddressComponent : IComponent {
             });
             
             table.Cell().ShowEntire().Column(column => {
+                column.Item().PaddingLeft(2).Text(this._attention);
                 column.Item().Text(ToAddress.CompanyName);
                 column.Item().Text(ToAddress.Street);
                 column.Item().Text(ToAddress.CityStateZip);

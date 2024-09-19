@@ -29,10 +29,10 @@
                         <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)"/>
                         <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approved)"/>
                         <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Ordered)"/>
+                        @*<RadzenDataGridColumn Property="@nameof(PurchaseRequest.Ordered)"/>
                         <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)"/>
                         <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Received)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)"/>*@
                     </RadzenDataGrid>
                 </RadzenCard>
             </RadzenStack>
@@ -52,7 +52,7 @@
         await base.OnInitializedAsync();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
-            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Username == this._userAccount._id);
+            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
         }
     }
 

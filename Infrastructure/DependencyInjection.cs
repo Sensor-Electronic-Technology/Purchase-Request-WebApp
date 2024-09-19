@@ -9,6 +9,9 @@ public static class DependencyInjection {
         services.AddScoped<PurchaseRequestService>();
         services.AddScoped<EmailService>();
         services.AddScoped<AuthApiService>();
+        services.AddScoped<ContactDataService>();
+        services.AddScoped<DepartmentDataService>();
+        services.AddScoped<PurchaseRequestDataService>();
         return services;
     }
 }
