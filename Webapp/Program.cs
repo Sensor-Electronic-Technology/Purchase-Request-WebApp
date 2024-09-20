@@ -20,8 +20,8 @@ builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
-                                                            ?? "mongodb://172.20.3.41:27017"));
+builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("LocalConnection") 
+                                                            ?? "mongodb://localhost:27017"));
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ProtectedSessionStorage>();

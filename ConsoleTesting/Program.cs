@@ -22,7 +22,7 @@ using QuestPDF.Companion;
 //await CreateVendors();
 //await CreateDepartments();
 //await TestExcel();
-await PdfWork();
+//await PdfWork();
 
 
 

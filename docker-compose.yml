@@ -1,20 +1,43 @@
 ﻿services:
   webapp:
-    image: webapp
+    build:
+      context: .
+      dockerfile: Webapp/Dockerfile
     container_name: purchase-requests-app
-    pull_policy: always
-    restart: unless-stopped
     expose:
       - 8080
     ports:
       - "80:8080"
-    build:
-      context: .
-      dockerfile: Webapp/Dockerfile
+    environment:
+        - MONGODB_URI=mongodb://mongodb:27017/
     volumes:
-      - "C:/Users/aelmendo/Documents/PR_Volume:/purchase_requests"
+      - C:/Users/aelmendo/Documents/PR_Volume/Files:/purchase_requests
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+    networks:
+      station_net:
+        ipv4_address: 10.5.0.11
+  mongodb:
+    image: mongodb/mongodb-community-server:5.0.12-ubuntu2004
+    container_name: mongodb
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - C:/Users/aelmendo/Documents/PR_Volume/db:/data/db
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    networks:
+      station_net:
+        ipv4_address: 10.5.0.12
+networks:
+  station_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
 #  watchtower:
 #    image: containrrr/watchtower
 #    volumes:
