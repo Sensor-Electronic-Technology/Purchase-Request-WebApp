@@ -29,6 +29,15 @@
     <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR2409131508.xlsb" />
       <_ContentIncludedByDefault Remove="wwwroot\AndrewFiles\AElmendorf_HW6.pdf" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87591c71f108e3a34c325.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e877d61076e45a0985988c.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e8782e330e6a5f4f428d9b.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e878ca330e6a5f4f428d9d.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87a26330e6a5f4f428d9f.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87b78330e6a5f4f428da1.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87c66330e6a5f4f428da3.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87d75330e6a5f4f428da5.xlsb" />
+      <_ContentIncludedByDefault Remove="wwwroot\aelmendo\ConsultantComputers-PR_66e87e13cd134307d729a73a.xlsb" />
     </ItemGroup>
 
 </Project>

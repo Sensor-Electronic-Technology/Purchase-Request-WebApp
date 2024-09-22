@@ -1,13 +1,14 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
+USER root
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
+EXPOSE 8080
+RUN apt-get update \
+  && apt-get install -y curl 
+USER $APP_UID
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ./Nuget.config .
+COPY ./NuGet.Config .
 COPY ["Webapp/Webapp.csproj", "Webapp/"]
 RUN dotnet restore "Webapp/Webapp.csproj"
 COPY . .

@@ -121,6 +121,7 @@
     [Inject] private DialogService _dialogService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
+    [Inject] private IConfiguration configuration { get; set; }
     private RadzenUpload _upload;
     private PurchaseRequestInput? _purchaseReqInput;
     private string? _selectedApprover;
@@ -164,7 +165,8 @@
                 // read file
                 var stream = file.OpenReadStream(maxFileSize);
                 this._userAccount = this._userService.GetSessionUserProfile();
-                string filePath = Path.Combine(environment.WebRootPath,this._userAccount?._id ?? "Unknown");
+                //string filePath = Path.Combine(environment.WebRootPath,this._userAccount?._id ?? "Unknown");
+                string filePath = Path.Combine(configuration["PurchaseRequestDirectory"] ?? "/purchase_requests","Quotes");
                 DirectoryInfo info = new DirectoryInfo(filePath);
                 if (!info.Exists) {
                     info.Create();

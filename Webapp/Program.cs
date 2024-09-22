@@ -21,7 +21,7 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("LocalConnection") 
-                                                            ?? "mongodb://localhost:27017"));
+                                                            ?? "mongodb://10.5.0.12:27017"));
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ProtectedSessionStorage>();
@@ -42,7 +42,7 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-
+app.Urls.Add("http://0.0.0.0:8080");
 app.Run();
 
 
