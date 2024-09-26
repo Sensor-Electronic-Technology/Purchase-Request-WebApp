@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{22B03462-FF03-431C-8A62-2980F2AA420B}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		docker-compose-back.yml = docker-compose-back.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{FA8434B2-137F-4EF8-85B7-C41A9D342B5C}"
@@ -12,6 +13,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Webapp", "Webapp\Webapp.csproj", "{0FCACCA6-4E0C-47AA-890F-2EDCF4EEA0EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTesting", "ConsoleTesting\ConsoleTesting.csproj", "{4464FB8D-C3C6-45A9-A343-288B6713BE9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorage", "FileStorage\FileStorage.csproj", "{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{757FAD86-FB72-4E8B-A0B1-ADBF2EDC664D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{9C918176-C73F-471A-89D1-75D118EA3C1D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{9487BB62-4149-4E19-8107-D31E71E2F526}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,7 +44,16 @@ Global
 		{4464FB8D-C3C6-45A9-A343-288B6713BE9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4464FB8D-C3C6-45A9-A343-288B6713BE9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4464FB8D-C3C6-45A9-A343-288B6713BE9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{0FCACCA6-4E0C-47AA-890F-2EDCF4EEA0EC} = {757FAD86-FB72-4E8B-A0B1-ADBF2EDC664D}
+		{C5C15FF9-122D-4BE7-88F1-BBFB718E5F59} = {757FAD86-FB72-4E8B-A0B1-ADBF2EDC664D}
+		{467ACCB0-C14D-499E-A047-DEFB28EBD869} = {9C918176-C73F-471A-89D1-75D118EA3C1D}
+		{FA8434B2-137F-4EF8-85B7-C41A9D342B5C} = {9C918176-C73F-471A-89D1-75D118EA3C1D}
+		{4464FB8D-C3C6-45A9-A343-288B6713BE9C} = {9487BB62-4149-4E19-8107-D31E71E2F526}
 	EndGlobalSection
 EndGlobal

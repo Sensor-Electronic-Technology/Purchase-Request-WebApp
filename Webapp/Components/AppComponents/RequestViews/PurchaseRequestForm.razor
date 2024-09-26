@@ -1,4 +1,5 @@
-﻿@using Domain.PurchaseRequests
+﻿@using System.Net.Http.Headers
+@using Domain.PurchaseRequests
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.Users
@@ -89,9 +90,10 @@
                                                             Style="width: 200px; height:100px;"/>
                                         </RadzenFormField>
                                         <RadzenFormField Text="Upload Quotes">
-                                            <RadzenUpload Multiple="true"
-                                                          ChooseText="Select File"
-                                                          Change="@this.OnClientChange"/>
+                                            <RadzenUpload Multiple="false"
+                                                          ChooseText="Select Files"
+                                                          Url="http://localhost:5065/upload/single"/>
+                                                          @*Change="@this.OnClientChange"/>*@
                                         </RadzenFormField>
                                     </RadzenStack>
                                 </RadzenTabsItem>
@@ -161,7 +163,67 @@
         foreach (var file in args.Files) {
             /*Console.WriteLine($"File: {file.Name} / {file.Size} bytes");*/
             try {
+                
+                string url = "http://localhost:5021/FileStorage/UploadFile";
+                using var httpClient = new HttpClient();
+                using var form = new MultipartFormDataContent();
+                //long maxFileSize = 10 * 1024 * 1024;
+                /*await using var fs = File.OpenRead(filePath);*/
+                var stream = file.OpenReadStream(1048576000);
+                using var streamContent = new StreamContent(stream);
+                /*byte[] bytes;
+                List<byte> totalStream = new();
+                byte[] buffer = new byte[32];
+                int read;
+                
+                while((read=stream.Read(buffer,0,buffer.Length))>0) {
+                    totalStream.AddRange(buffer.Take(read));
+                }
+                bytes = totalStream.ToArray();*/
+                
+                using var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                // "file" parameter name should be the same as the server side input parameter name
+                FormFileCollection collection = new FormFileCollection();
+                //collection.Add();
+                form.Add(fileContent, "file", Path.GetFileName(file.Name));
+                HttpResponseMessage response = await httpClient.PostAsync(url, form);
+                response.EnsureSuccessStatusCode();
+                
+
+            } catch (Exception ex) {
+                this._notificationService.Notify(NotificationSeverity.Error, 
+                    "Internal Error",
+                    $"Client-side file read error: {ex.Message}");
+                Console.WriteLine($"Client-side file read error: {ex.Message}");
+            }
+        }
+    }
+    
+        /*async Task OnClientChange(UploadChangeEventArgs args) {
+        Console.WriteLine($"Client-side upload changed");
+        foreach (var file in args.Files) {
+            /*Console.WriteLine($"File: {file.Name} / {file.Size} bytes");#1#
+            try {
+                
+                string url = "http://localhost:5021/FileStorage/UploadFile";
+                using var httpClient = new HttpClient();
+                using var form = new MultipartFormDataContent();
                 long maxFileSize = 10 * 1024 * 1024;
+                /*await using var fs = File.OpenRead(filePath);#1#
+                var stream = file.OpenReadStream(maxFileSize);
+                await using FileStream outputFileStream = new FileStream(path, FileMode.Create);
+                await stream.CopyToAsync(outputFileStream);
+                using var streamContent = new StreamContent(fs);
+                
+                using var fileContent = new ByteArrayContent(stream.ReadAsBytArrayAsync());
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                // "file" parameter name should be the same as the server side input parameter name
+                FormFileCollection collection = new FormFileCollection();
+                //collection.Add();
+                form.Add(fileContent, "file", Path.GetFileName(filePath));
+                HttpResponseMessage response = await httpClient.PostAsync(url, form);
+                /*long maxFileSize = 10 * 1024 * 1024;
                 // read file
                 var stream = file.OpenReadStream(maxFileSize);
                 this._userAccount = this._userService.GetSessionUserProfile();
@@ -180,7 +242,7 @@
                 this._notificationService.Notify(NotificationSeverity.Success, 
                     "Quote Uploaded",
                     $"File: {file.Name} has been uploaded successfully");
-                Console.WriteLine(path);
+                Console.WriteLine(path);#1#
             } catch (Exception ex) {
                 this._notificationService.Notify(NotificationSeverity.Error, 
                     "Internal Error",
@@ -188,7 +250,7 @@
                 Console.WriteLine($"Client-side file read error: {ex.Message}");
             }
         }
-    }
+    }*/
     
     private async Task SelectedApproverChanged(string? selected) {
         this._selectedApprover = selected;

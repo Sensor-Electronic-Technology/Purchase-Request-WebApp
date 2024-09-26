@@ -1,15 +1,19 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Net.Http.Headers;
 using Domain.PurchaseRequests.Model;
 using Domain.Users;
 using MongoDB.Driver;
 using SETiAuth.Domain.Shared.Constants;
+using System.Security.Cryptography;
 using Infrastructure.Services;
 using ClosedXML.Excel;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
+using Microsoft.AspNetCore.Http;
 using MongoDB.Bson;
+using MongoDB.Driver.GridFS;
 using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -24,6 +28,52 @@ using QuestPDF.Companion;
 //await TestExcel();
 //await PdfWork();
 
+/*var arr2 = "\rMSG"u8.ToArray();
+var arr = "\rDOC"u8.ToArray();
+foreach (var a in arr) {
+    /*Console.WriteLine(a);#1#
+    Console.WriteLine ("Hex: {0:X}", a);
+}*/
+
+//await TestPdfUpload();
+
+FileService fileService = new FileService();
+//await fileService.DownloadFile("66f5a3b92b11ab38ca3296a1");
+await fileService.DownloadFileStream("66f5ae982b11ab38ca3296a5");
+//await fileService.UploadMultipleFiles(["C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf","C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest-2.pdf"]);
+//await fileService.UploadFile("C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf");
+async Task TestPdfUpload() {
+    QuestPDF.Settings.License = LicenseType.Community;
+    var model = await GetPurchaseRequest();
+    var document = new PurchaseRequestDocument(model,"C:\\Users\\aelmendo\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
+    document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest-2.pdf");
+    string url = "http://localhost:5021/FileStorage/UploadFile";
+    string filePath = @"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest-2.pdf";
+    using var httpClient = new HttpClient();
+    using var form = new MultipartFormDataContent();
+    await using var fs = File.OpenRead(filePath);
+    using var streamContent = new StreamContent(fs);
+    using var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
+    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+    // "file" parameter name should be the same as the server side input parameter name
+    FormFileCollection collection = new FormFileCollection();
+    //collection.Add();
+    form.Add(fileContent, "file", Path.GetFileName(filePath));
+    HttpResponseMessage response = await httpClient.PostAsync(url, form);
+}
+
+
+async Task UploadFile() {
+    var model = await GetPurchaseRequest();
+    var document = new PurchaseRequestDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
+    document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var bucket = new GridFSBucket(database, new GridFSBucketOptions() { BucketName = "Nitro" });
+    var stream=File.OpenRead(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");
+    MD5.Create();
+    var id = await bucket.UploadFromStreamAsync("PurchaseRequest.pdf", stream);
+}
 
 
 async Task PdfWork() {
