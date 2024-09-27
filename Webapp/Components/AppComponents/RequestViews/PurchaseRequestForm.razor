@@ -8,7 +8,20 @@
 @using MongoDB.Bson
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Services.Authentication
+<style>
+    #ddUpload {
+        left: 0;
+        --rz-upload-button-bar-background-color: transparent;
+        --rz-upload-button-bar-padding: 0;
+    }
 
+    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        padding: 100px 0;
+    }
+</style>
 @if (!(this._userAccount != null && this._approvers.Count > 0 && this._purchaseReqInput != null)) {
     <RadzenText Text="Loading User Profile"/>
 } else {
@@ -38,7 +51,7 @@
                                 <RadzenLabel Text="Urgent" Component="IsUrgent" class="rz-ms-2"/>
                             </div>
                         </RadzenStack>
-                        <RadzenTabs Style="height:100%">
+                        <RadzenTabs Style="height:100%" RenderMode="@TabRenderMode.Client">
                             <Tabs>
                                 <RadzenTabsItem Text="Department/Vendor">
                                     <RadzenStack Orientation="Orientation.Vertical">
@@ -89,12 +102,19 @@
                                                             @bind-Value="@this._purchaseReqInput.AdditionalComments"
                                                             Style="width: 200px; height:100px;"/>
                                         </RadzenFormField>
-                                        <RadzenFormField Text="Upload Quotes">
-                                            <RadzenUpload Multiple="false"
-                                                          ChooseText="Select Files"
-                                                          Url="http://localhost:5065/upload/single"/>
-                                                          @*Change="@this.OnClientChange"/>*@
-                                        </RadzenFormField>
+                                        <RadzenColumn Size="12">
+                                            <RadzenCard Variant="Variant.Outlined">
+                                                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                                                <RadzenUpload id="ddUpload" 
+                                                              ChooseText="Drag and drop here or click to choose files" 
+                                                              Auto="false" 
+                                                              Multiple="true"
+                                                              Change="@this.OnClientChange"
+                                                              InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "select file" }})"
+                                                              Style="width: 100%" />
+                                                <RadzenButton Text="Upload" Click="UploadClickHandler" class="rz-mt-4" />
+                                            </RadzenCard>
+                                        </RadzenColumn>
                                     </RadzenStack>
                                 </RadzenTabsItem>
                             </Tabs>
@@ -124,6 +144,7 @@
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IConfiguration configuration { get; set; }
+    [Inject] private FileService _fileService { get; set; }
     private RadzenUpload _upload;
     private PurchaseRequestInput? _purchaseReqInput;
     private string? _selectedApprover;
@@ -135,6 +156,7 @@
     private List<Department> _departments = new();
     private List<string> _shippingTypes = new();
     private List<Vendor> _vendors = new();
+    private List<FileInfo> _quotes = [];
     
     
     protected override async Task OnInitializedAsync() {
@@ -158,99 +180,27 @@
         return this._userAccount != null && this._approvers.Count > 0 && this._purchaseReqInput != null;
     }
     
-    async Task OnClientChange(UploadChangeEventArgs args) {
+    Task OnClientChange(UploadChangeEventArgs args) {
         Console.WriteLine($"Client-side upload changed");
-        foreach (var file in args.Files) {
-            /*Console.WriteLine($"File: {file.Name} / {file.Size} bytes");*/
-            try {
-                
-                string url = "http://localhost:5021/FileStorage/UploadFile";
-                using var httpClient = new HttpClient();
-                using var form = new MultipartFormDataContent();
-                //long maxFileSize = 10 * 1024 * 1024;
-                /*await using var fs = File.OpenRead(filePath);*/
-                var stream = file.OpenReadStream(1048576000);
-                using var streamContent = new StreamContent(stream);
-                /*byte[] bytes;
-                List<byte> totalStream = new();
-                byte[] buffer = new byte[32];
-                int read;
-                
-                while((read=stream.Read(buffer,0,buffer.Length))>0) {
-                    totalStream.AddRange(buffer.Take(read));
-                }
-                bytes = totalStream.ToArray();*/
-                
-                using var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
-                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-                // "file" parameter name should be the same as the server side input parameter name
-                FormFileCollection collection = new FormFileCollection();
-                //collection.Add();
-                form.Add(fileContent, "file", Path.GetFileName(file.Name));
-                HttpResponseMessage response = await httpClient.PostAsync(url, form);
-                response.EnsureSuccessStatusCode();
-                
-
-            } catch (Exception ex) {
-                this._notificationService.Notify(NotificationSeverity.Error, 
-                    "Internal Error",
-                    $"Client-side file read error: {ex.Message}");
-                Console.WriteLine($"Client-side file read error: {ex.Message}");
-            }
+        this._quotes = args.Files.ToList();
+        foreach (var file in this._quotes) {
+            Console.WriteLine(file.Name);
         }
+        return Task.CompletedTask;
     }
     
-        /*async Task OnClientChange(UploadChangeEventArgs args) {
-        Console.WriteLine($"Client-side upload changed");
-        foreach (var file in args.Files) {
-            /*Console.WriteLine($"File: {file.Name} / {file.Size} bytes");#1#
-            try {
-                
-                string url = "http://localhost:5021/FileStorage/UploadFile";
-                using var httpClient = new HttpClient();
-                using var form = new MultipartFormDataContent();
-                long maxFileSize = 10 * 1024 * 1024;
-                /*await using var fs = File.OpenRead(filePath);#1#
-                var stream = file.OpenReadStream(maxFileSize);
-                await using FileStream outputFileStream = new FileStream(path, FileMode.Create);
-                await stream.CopyToAsync(outputFileStream);
-                using var streamContent = new StreamContent(fs);
-                
-                using var fileContent = new ByteArrayContent(stream.ReadAsBytArrayAsync());
-                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-                // "file" parameter name should be the same as the server side input parameter name
-                FormFileCollection collection = new FormFileCollection();
-                //collection.Add();
-                form.Add(fileContent, "file", Path.GetFileName(filePath));
-                HttpResponseMessage response = await httpClient.PostAsync(url, form);
-                /*long maxFileSize = 10 * 1024 * 1024;
-                // read file
-                var stream = file.OpenReadStream(maxFileSize);
-                this._userAccount = this._userService.GetSessionUserProfile();
-                //string filePath = Path.Combine(environment.WebRootPath,this._userAccount?._id ?? "Unknown");
-                string filePath = Path.Combine(configuration["PurchaseRequestDirectory"] ?? "/purchase_requests","Quotes");
-                DirectoryInfo info = new DirectoryInfo(filePath);
-                if (!info.Exists) {
-                    info.Create();
-                }
-                file.Name=file.Name.Replace(".",$"_{this._purchaseReqInput?.Id.ToString()}.");
-                string path = Path.Combine(filePath, file.Name);
-                await using FileStream outputFileStream = new FileStream(path, FileMode.Create);
-                await stream.CopyToAsync(outputFileStream);
-                stream.Close();
-                this._purchaseReqInput?.Quotes.Add(path);
-                this._notificationService.Notify(NotificationSeverity.Success, 
-                    "Quote Uploaded",
-                    $"File: {file.Name} has been uploaded successfully");
-                Console.WriteLine(path);#1#
-            } catch (Exception ex) {
-                this._notificationService.Notify(NotificationSeverity.Error, 
-                    "Internal Error",
-                    $"Client-side file read error: {ex.Message}");
-                Console.WriteLine($"Client-side file read error: {ex.Message}");
-            }
+    private async Task UploadClickHandler() {
+        if (this._quotes.Count == 0) {
+            this._notificationService.Notify(NotificationSeverity.Error,
+                "Error",
+                "No files selected for upload");
+            return;
         }
-    }*/
+        var result=await this._fileService.UploadMultipleFiles(this._quotes);
+        if (result.Any()) {
+            this._purchaseReqInput.Quotes = result;
+        }
+    }
     
     private async Task SelectedApproverChanged(string? selected) {
         this._selectedApprover = selected;
@@ -308,5 +258,7 @@
             "Create Vendor feature is not yet implemented yet");
         return Task.CompletedTask;
     }
+
+
 
 }

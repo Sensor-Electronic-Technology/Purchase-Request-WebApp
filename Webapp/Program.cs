@@ -7,6 +7,9 @@ using Webapp.Components;
 using Webapp.Services.Authentication;
 using Infrastructure;
 using Infrastructure.Services;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -25,6 +28,9 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
 builder.Services.AddScoped<UserService>();
+//builder.Services.AddHttpClient<FileService>(x=>x.BaseAddress = new Uri(builder.Configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/"));
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<FileService>();
 builder.Services.AddInfrastructure();
 /*builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<CircuitHandler, UserCircuitHandler>());*/
 var app = builder.Build();

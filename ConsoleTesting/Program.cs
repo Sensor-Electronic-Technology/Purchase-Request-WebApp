@@ -1,11 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
-
 using System.Net.Http.Headers;
 using Domain.PurchaseRequests.Model;
 using Domain.Users;
 using MongoDB.Driver;
 using SETiAuth.Domain.Shared.Constants;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infrastructure.Services;
 using ClosedXML.Excel;
 using Domain.PurchaseRequests.Dto;
@@ -18,7 +19,6 @@ using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Companion;
-
 //Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
 //await TestMongoIdString();
 //await TestMongoQueryIdString();
@@ -27,6 +27,7 @@ using QuestPDF.Companion;
 //await CreateDepartments();
 //await TestExcel();
 //await PdfWork();
+await TestReadContentJson();
 
 /*var arr2 = "\rMSG"u8.ToArray();
 var arr = "\rDOC"u8.ToArray();
@@ -37,11 +38,24 @@ foreach (var a in arr) {
 
 //await TestPdfUpload();
 
-FileService fileService = new FileService();
+//FileService fileService = new FileService();
 //await fileService.DownloadFile("66f5a3b92b11ab38ca3296a1");
-await fileService.DownloadFileStream("66f5ae982b11ab38ca3296a5");
+//await fileService.DownloadFileStream("66f5ae982b11ab38ca3296a5");
 //await fileService.UploadMultipleFiles(["C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf","C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest-2.pdf"]);
 //await fileService.UploadFile("C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf");
+
+async Task TestReadContentJson() {
+    var jsonString =
+        "[\n  {\n    \"objectId\": \"66f6f924d35e2cf395eadd6f\",\n    \"fileName\": \"PurchaseRequest-2.pdf\",\n    \"isSuccessful\": true,\n    \"errorMessage\": null\n  },\n  {\n    \"objectId\": \"66f6f925d35e2cf395eadd71\",\n    \"fileName\": \"PurchaseRequest - Copy.pdf\",\n    \"isSuccessful\": true,\n    \"errorMessage\": null\n  }\n]";
+    var jsonArray=JsonSerializer.Deserialize<JsonArray>(jsonString);
+    foreach (var jsonNode in jsonArray) {
+        Console.WriteLine(jsonNode["objectId"]);
+        Console.WriteLine(jsonNode["fileName"]);
+        Console.WriteLine(jsonNode["isSuccessful"]);
+        Console.WriteLine(jsonNode["errorMessage"]);
+    }
+}
+
 async Task TestPdfUpload() {
     QuestPDF.Settings.License = LicenseType.Community;
     var model = await GetPurchaseRequest();

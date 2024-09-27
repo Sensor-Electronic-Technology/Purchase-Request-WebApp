@@ -1,21 +1,26 @@
 ﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Net.Mime;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Hosting;
+using Domain.FileStorage;
+using Microsoft.Extensions.Configuration;
+using Radzen;
+using FileInfo = Radzen.FileInfo;
+
 
 namespace Infrastructure.Services;
 
 public class FileService {
-    private HttpClient _httpClient;
+    private readonly IHttpClientFactory  _clientFactory;
+    private readonly Uri _baseUrl;
 
     
-    public FileService() {
-        this._httpClient = new HttpClient();
-        this._httpClient.BaseAddress=new Uri("http://localhost:5021/FileStorage/");
+    public FileService(IHttpClientFactory client,IConfiguration configuration) {
+        this._clientFactory = client;
+        this._baseUrl = new Uri(configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/");
     }
     public async Task UploadFile(string path) {
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
+        
         using var form = new MultipartFormDataContent();
         await using var fs = File.OpenRead(path);
         using var streamContent = new StreamContent(fs);
@@ -23,37 +28,77 @@ public class FileService {
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
         // "file" parameter name should be the same as the server side input parameter name
         form.Add(fileContent, "file", Path.GetFileName(path));
-        HttpResponseMessage response = await this._httpClient.PostAsync("UploadFile", form);
+        HttpResponseMessage response = await client.PostAsync("UploadFile", form);
     }
     
-    public async Task UploadMultipleFiles(string[] paths) {
+    public async Task<string?> UploadFile(FileInfo file) {
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
         using var form = new MultipartFormDataContent();
-        if(paths.Length==0) return;
-        if (paths.Length == 1) {
-            await UploadFile(paths[0]);
-            return;
-        }
-        foreach (var filePath in paths) {
-             var fs = File.OpenRead(filePath);
-             var streamContent = new StreamContent(fs);
-             var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
-            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-            // "file" parameter name should be the same as the server side input parameter name
-            form.Add(fileContent, "files", Path.GetFileName(filePath));
-        }
-        var response = await this._httpClient.PostAsync("UploadMultipleFiles", form);
+        await using var stream = file.OpenReadStream(1048576000);
+        using var streamContent = new StreamContent(stream);
+        using var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+        form.Add(fileContent, "file", file.Name);
+        HttpResponseMessage response = await client.PostAsync("UploadFile", form);
         response.EnsureSuccessStatusCode();
-        Console.WriteLine(response.Headers.ToString());
+        if (response.IsSuccessStatusCode) {
+            var content =await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<FileUploadResultModel>(content);
+            if(result!=null) {
+                return result.ObjectId;
+            } else {
+                return default;
+            }
+        } else {
+            return default;
+        }
+
+    }
+
+    public async Task<List<string>> UploadMultipleFiles(IList<FileInfo> files) {
+        using var form = new MultipartFormDataContent();
+        if(files.Count==0) return [];
+        if (files.Count == 1) {
+            var result=await UploadFile(files[0]);
+            return string.IsNullOrEmpty(result) ? []:[result];
+        }
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
+        
+        foreach (var file in files) {
+            var stream = file.OpenReadStream(1048576000);
+            var streamContent = new StreamContent(stream);
+            var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
+            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+            form.Add(fileContent, "files", file.Name);
+        }
+        var response = await client.PostAsync("UploadMultipleFiles", form);
+        response.EnsureSuccessStatusCode();
+        response.EnsureSuccessStatusCode();
+        if (response.IsSuccessStatusCode) {
+            var content =await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<List<FileUploadResultModel>>(content);
+            if(result!=null) {
+                return result.Select(e=>e.ObjectId).ToList();
+            } else {
+                return [];
+            }
+        } else {
+            return [];
+        }
     }
 
     public async Task DownloadFile(string objectId) {
-        var response = await _httpClient.GetAsync($"DownloadFile?objectId={objectId}");
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
+        var response = await client.GetAsync($"DownloadFile?objectId={objectId}");
         response.EnsureSuccessStatusCode();
        var fileName= response.Content.Headers?.ContentDisposition?.FileName;
        if (string.IsNullOrEmpty(fileName)) {
            return;
        }
-       var fileInfo = new FileInfo(fileName);
+       var fileInfo = new System.IO.FileInfo(fileName);
        await using var ms = await response.Content.ReadAsStreamAsync();
        //append path here
        await using var fs = File.Create(fileInfo.FullName);
@@ -62,7 +107,9 @@ public class FileService {
     }
 
     public async Task<string?> GetFileName(string objectId) {
-        var response=await this._httpClient.GetAsync($"GetFileInfo?objectId={objectId}");
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
+        var response=await client.GetAsync($"GetFileInfo?objectId={objectId}");
         response.EnsureSuccessStatusCode();
         var content =await response.Content.ReadAsStringAsync();
         var document = JsonSerializer.Deserialize<JsonDocument>(content);
@@ -79,7 +126,9 @@ public class FileService {
         if (string.IsNullOrEmpty(filename)) {
             return;
         }
-        var fileStream = await _httpClient.GetStreamAsync($"DownloadFileStream?objectId={objectId}");
+        using var client = this._clientFactory.CreateClient();
+        client.BaseAddress = this._baseUrl;
+        var fileStream = await client.GetStreamAsync($"DownloadFileStream?objectId={objectId}");
         var path=Path.Combine(@"C:\Users\aelme\Documents\PurchaseRequestData\Downloads", filename);
         await using FileStream outputFileStream = new FileStream(path, FileMode.CreateNew);
         await fileStream.CopyToAsync(outputFileStream);
@@ -106,4 +155,24 @@ public class FileService {
         //_logger.LogInformation($"File saved as [{fileInfo.Name}].");
         return fileInfo.FullName;
     }*/
+    
+    /*public async Task UploadMultipleFiles(string[] paths) {
+    using var form = new MultipartFormDataContent();
+    if(paths.Length==0) return;
+    if (paths.Length == 1) {
+        await UploadFile(paths[0]);
+        return;
+    }
+    foreach (var filePath in paths) {
+         var fs = File.OpenRead(filePath);
+         var streamContent = new StreamContent(fs);
+         var fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+        // "file" parameter name should be the same as the server side input parameter name
+        form.Add(fileContent, "files", Path.GetFileName(filePath));
+    }
+    var response = await this._httpClient.PostAsync("UploadMultipleFiles", form);
+    response.EnsureSuccessStatusCode();
+    Console.WriteLine(response.Headers.ToString());
+}*/
 }

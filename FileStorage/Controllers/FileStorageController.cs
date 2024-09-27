@@ -1,4 +1,4 @@
-﻿/*using FileStorage.ActionFilters;
+﻿using FileStorage.ActionFilters;
 using FileStorage.Model;
 using FileStorage.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -249,4 +249,4 @@ public class FileStorageController : ControllerBase {
             FileDownloadName = fileName, EnableRangeProcessing = true // enable resume download ability
         };
     }
-}*/
+}
