@@ -1,0 +1,153 @@
+﻿@using Domain.PurchaseRequests.Model
+
+<RadzenDataGrid @ref="ordersGrid" TItem="PurchaseItem" 
+                AllowAlternatingRows="false" 
+                AllowFiltering="true" 
+                AllowPaging="false"  
+                AllowSorting="true" 
+                GridLines="DataGridGridLines.Both"
+                AllowColumnResize="true"
+                EditMode="@editMode"
+                Data="@PurchaseItems"  
+                RowUpdate="@OnUpdateRow" 
+                RowCreate="@OnCreateRow" 
+                Sort="@Reset" 
+                Page="@Reset" 
+                Filter="@Reset">
+    <HeaderTemplate>
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle" 
+                      Text="Add New Purchase Item" 
+                      Click="@InsertRow" 
+                      Disabled="@(editMode == DataGridEditMode.Single && ordersToInsert.Any())" />
+    </HeaderTemplate>
+    <Columns>
+        <RadzenDataGridColumn Property="Quantity" Title="Quantity" Width="140px" >
+            <EditTemplate Context="order">
+                <RadzenNumeric Value="@order.Quantity"
+                               Min="1"
+                               ValueChanged="@((int value) => { order.Quantity = value; order.TotalCost = order.Quantity * order.UnitCost; })"
+                               Style="width:100%" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Quantity" }})" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="ProductName" Title="ProductDescription/PartNumber" Width="400px">
+            <EditTemplate Context="order">
+                <RadzenTextBox @bind-Value="order.ProductName" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="UnitCost" Title="Unit Cost" Width="120px">
+            <Template Context="order">
+                @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", order.UnitCost)
+            </Template>
+            <EditTemplate Context="order">
+                <RadzenNumeric Value="order.UnitCost"
+                               Format="C"
+                               ValueChanged="@((decimal value) => { order.UnitCost = value; order.TotalCost = order.Quantity * order.UnitCost; })"
+                               Style="width:100%" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Unit Cost" }})" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="TotalCost" Title="Total" Width="120px">
+            <Template Context="order">
+                @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", order.TotalCost)
+            </Template>
+            <FooterTemplate>
+                <RadzenText TextStyle="TextStyle.H6"><strong>Total: @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", this.PurchaseItems.Sum(e => e.TotalCost))</strong></RadzenText>
+            </FooterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Context="order" Filterable="false" Sortable="false" 
+                              TextAlign="TextAlign.Right" Frozen="true" 
+                              Width="150px"
+                              FrozenPosition="FrozenColumnPosition.Right">
+            <Template Context="order">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" 
+                              Variant="Variant.Flat" Size="ButtonSize.Medium" 
+                              Click="@(args => EditRow(order))" @onclick:stopPropagation="true"/>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" 
+                              Variant="Variant.Flat" Shade="Shade.Lighter" 
+                              Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" 
+                              Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true"/>
+            </Template>
+            <EditTemplate Context="order">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" 
+                              Variant="Variant.Flat" Size="ButtonSize.Medium" 
+                              Click="@((args) => SaveRow(order))" aria-label="Save">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" 
+                              Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" 
+                              Click="@((args) => CancelEdit(order))" aria-label="Cancel"/>
+                
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" 
+                              Variant="Variant.Flat" Shade="Shade.Lighter" 
+                              Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" 
+                              Click="@(args => DeleteRow(order))" aria-label="Delete"/>
+                
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter] public List<PurchaseItem> PurchaseItems { get; set; } = [];
+    [Parameter] public EventCallback<List<PurchaseItem>> PurchaseItemsChanged { get; set; }
+    
+    RadzenDataGrid<PurchaseItem> ordersGrid;
+    List<PurchaseItem> ordersToInsert = new List<PurchaseItem>();
+    List<PurchaseItem> ordersToUpdate = new List<PurchaseItem>();
+    
+    
+    DataGridEditMode editMode = DataGridEditMode.Single;
+    
+    
+    void Reset() {
+        ordersToInsert.Clear();
+        ordersToUpdate.Clear();
+    }
+
+    void Reset(PurchaseItem purchaseItem) {
+        ordersToInsert.Remove(purchaseItem);
+        ordersToUpdate.Remove(purchaseItem);
+    }
+    
+    async Task EditRow(PurchaseItem purchaseItem) {
+        if (ordersToInsert.Count > 0) {
+            Reset();
+        }
+        ordersToUpdate.Add(purchaseItem);
+        await ordersGrid.EditRow(purchaseItem);
+    }
+
+    void OnUpdateRow(PurchaseItem purchaseItem) {
+        Reset(purchaseItem);
+    }
+
+    async Task SaveRow(PurchaseItem purchaseItem) {
+        await ordersGrid.UpdateRow(purchaseItem);
+    }
+
+    void CancelEdit(PurchaseItem purchaseItem) {
+        Reset(purchaseItem);
+        ordersGrid.CancelEditRow(purchaseItem);
+    }
+    
+    Task DeleteRow(PurchaseItem purchaseItem) {
+        this.Reset(purchaseItem);
+        if(this.PurchaseItems.Contains(purchaseItem)) {
+            this.PurchaseItems.Remove(purchaseItem);
+            this.ordersGrid.Reload();
+        } else {
+            this.ordersGrid.CancelEditRow(purchaseItem);
+        }
+        return Task.CompletedTask;
+    }
+
+    async Task InsertRow() {
+        this.Reset();
+        var purchaseItem = new PurchaseItem();
+        ordersToInsert.Add(purchaseItem);
+        await ordersGrid.InsertRow(purchaseItem);
+    }
+
+    void OnCreateRow(PurchaseItem purchaseItem) {
+        this.PurchaseItems.Add(purchaseItem);
+        ordersToInsert.Remove(purchaseItem);
+    }
+}

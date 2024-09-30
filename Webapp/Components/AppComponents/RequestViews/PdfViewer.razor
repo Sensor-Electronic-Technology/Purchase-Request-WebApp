@@ -1,0 +1,43 @@
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Pdf
+@using QuestPDF.Fluent
+
+<RadzenStack Gap="10" Orientation="Orientation.Vertical">
+    
+
+    <RadzenButton Text="Generate Purchase Request" Size="ButtonSize.Large" Click="@Callback"/>
+    @if(string.IsNullOrEmpty(this._embededSrc)) {
+        <RadzenText TextStyle="TextStyle.H5" Text="Press Generate to view the purchase request" />
+    } else {
+        <embed type="application/pdf" 
+               src="@this._embededSrc"  
+               width="100%" height="600px"/>
+    }
+
+</RadzenStack>
+
+
+
+@code {
+    [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Parameter] public PurchaseRequestInput PurchaseRequestInput { get; set; }
+    private string _embededSrc = string.Empty;
+     protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+     }
+
+     private async Task Callback() {
+         var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+         /*string fileName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf";*/
+         if (string.IsNullOrEmpty(this.PurchaseRequestInput.TempFile)) {
+             this.PurchaseRequestInput.TempFile=$"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf";
+         }
+         
+         string pdfPath = Path.Combine($"{this._environment.WebRootPath}/temp",this.PurchaseRequestInput.TempFile);
+         //Console.WriteLine(this._pdfPath);
+         document.GeneratePdf(pdfPath);
+         this._embededSrc = $"/temp/{this.PurchaseRequestInput.TempFile}#zoom=75%";
+         await InvokeAsync(StateHasChanged);
+         //return Task.CompletedTask;
+     }
+}

@@ -22,119 +22,147 @@
         padding: 100px 0;
     }
 </style>
-@if (!(this._userAccount != null && this._approvers.Count > 0 && this._purchaseReqInput != null)) {
-    <RadzenText Text="Loading User Profile"/>
-} else {
-    <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenCard Style="width: 100%;">
-            <RadzenStack>
-                <RadzenCard class="rz-background-color-series-4">
-                    <RadzenText Text="Purchase Request Form" TextStyle="TextStyle.H6"/>
-                    <RadzenText Text="Please fill out the form below to submit a purchase request."
-                                TextStyle="TextStyle.Body1"/>
-                </RadzenCard>
-                <RadzenCard class="rz-background-color-info">
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenStack Orientation="Orientation.Horizontal" 
-                                     AlignItems="AlignItems.Center" 
-                                     JustifyContent="JustifyContent.Center">
-                            <RadzenFormField Text="Approver">
-                                <RadzenDropDown TValue="string"
-                                                Data="@this._approverSelectList"
-                                                Value="@this._selectedApprover"
-                                                ValueChanged="@SelectedApproverChanged"
-                                                Placeholder="Select an approver"
-                                                AllowClear="true"/>
-                            </RadzenFormField>
-                            <div class="rz-p-12 rz-text-align-center">
-                                <RadzenCheckBox TriState=false @bind-Value="@this._isUrgent" Name="IsUrgent"/>
-                                <RadzenLabel Text="Urgent" Component="IsUrgent" class="rz-ms-2"/>
-                            </div>
-                        </RadzenStack>
-                        <RadzenTabs Style="height:100%" RenderMode="@TabRenderMode.Client">
-                            <Tabs>
-                                <RadzenTabsItem Text="Department/Vendor">
-                                    <RadzenStack Orientation="Orientation.Vertical">
-                                        <RadzenFieldset Text="Department">
-                                            <RadzenDropDown TValue="Department"
-                                                            Data="@this._departments"
-                                                            Value="@this._purchaseReqInput.Department"
-                                                            Placeholder="Select a department"
-                                                            TextProperty="Name"
-                                                            AllowClear="true"/>
-                                        </RadzenFieldset>
-                                        <RadzenFieldset Text="Vendor">
-                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                                                <RadzenDropDown TValue="Vendor"
-                                                                Data="@this._vendors"
-                                                                Value="@this._purchaseReqInput.Vendor"
-                                                                ValueChanged="@SelectedVendorChanged"
-                                                                TextProperty="Name"
-                                                                Placeholder="Select an vendor"
-                                                                AllowClear="true"/>
-                                                <RadzenButton Text="Add Vendor" Click="CreateNewVendor" ButtonStyle="ButtonStyle.Secondary" Shade="Shade.Darker"/>
-                                                <VendorView Vendor="@this._purchaseReqInput.Vendor"/>
-                                            </RadzenStack>
-                                        </RadzenFieldset>
-                                    </RadzenStack>
-                                </RadzenTabsItem>
-                                <RadzenTabsItem Text="Purchase Information">
-                                    <RadzenStack>
-                                        <RadzenFormField Text="Requester">
-                                            <RadzenTextBox @bind-Value="@this._userAccount.FirstName"/>
-                                        </RadzenFormField>
-                                        <RadzenFormField Text="Purchase Request Title">
-                                            <RadzenTextBox Placeholder="Enter the title of the purchase request"
-                                                           @bind-Value="@this._purchaseReqInput.Title"
-                                                           Style="width: 100%"/>
-                                        </RadzenFormField>
-                                        <RadzenFormField Text="Purchase Request Reason">
-                                            <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
-                                                            @bind-Value="@this._purchaseReqInput.Description"
-                                                            Style="width: 100%; height:100px;"/>
-                                        </RadzenFormField>
-                                    </RadzenStack>
-                                </RadzenTabsItem>
-                                <RadzenTabsItem Text="Message">
-                                    <RadzenStack>
-                                        <RadzenFormField Text="Additional Comments">
-                                            <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
-                                                            @bind-Value="@this._purchaseReqInput.AdditionalComments"
-                                                            Style="width: 200px; height:100px;"/>
-                                        </RadzenFormField>
-                                        <RadzenColumn Size="12">
-                                            <RadzenCard Variant="Variant.Outlined">
-                                                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-                                                <RadzenUpload id="ddUpload" 
-                                                              ChooseText="Drag and drop here or click to choose files" 
-                                                              Auto="false" 
-                                                              Multiple="true"
-                                                              Change="@this.OnClientChange"
-                                                              InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "select file" }})"
-                                                              Style="width: 100%" />
-                                                <RadzenButton Text="Upload" Click="UploadClickHandler" class="rz-mt-4" />
-                                            </RadzenCard>
-                                        </RadzenColumn>
-                                    </RadzenStack>
-                                </RadzenTabsItem>
-                            </Tabs>
-                        </RadzenTabs>
-                        <RadzenFieldset Text="Save/Cancel">
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                                <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Shade="Shade.Darker"
-                                              Click="@SavePurchaseRequestHandler"
-                                              Style="width: 180px;height: 50px;"/>
-                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Danger"
-                                              Click="@CancelPurchaseRequestHandler"
-                                              Style="width: 180px;height: 50px;"/>
-                            </RadzenStack>
-                        </RadzenFieldset>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenStack>
+<RadzenCard Variant="Variant.Filled">
+    <RadzenStack>
+        <RadzenCard class="rz-background-color-secondary">
+            <RadzenText TextStyle="TextStyle.DisplayH5" TextAlign="TextAlign.Center">Purchase Request Form</RadzenText>
         </RadzenCard>
+        @if (!(this._userAccount != null && this._approvers.Count > 0)) {
+            <RadzenText Text="Loading User Profile"/>
+        } else {
+            <RadzenCard class="rz-background-color-info-lighter">
+                <RadzenSteps @ref="@this._steps" ShowStepsButtons="true" @bind-SelectedIndex="@this._selectedStepIndex" Style="min-height: 600px;">
+                    <Steps>
+                        <RadzenStepsItem Text="Approver & Priority" PreviousText="" NextText="Department & Vendor">
+                            <RadzenStack Orientation="Orientation.Vertical"
+                                         AlignItems="AlignItems.Center">
+                                <RadzenFormField Text="Approver">
+                                    <RadzenDropDown TValue="string"
+                                                    Data="@this._approverSelectList"
+                                                    Value="@this._selectedApprover"
+                                                    ValueChanged="@SelectedApproverChanged"
+                                                    Placeholder="Select an approver"
+                                                    Style="width: 300px; height: fit-content; font-size: 22px !important;"
+                                                    AllowClear="true"/>
+                                </RadzenFormField>
+                                <RadzenText TextStyle="TextStyle.Subtitle1" 
+                                            Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
+                                <RadzenFormField Text="Priority(Click)">
+                                    <RadzenToggleButton Text="@(this._isUrgent ? "Urgent" : "Normal")"
+                                                        Icon="alarm_off"
+                                                        @bind-Value="@this._isUrgent"
+                                                        ToggleIcon="alarm"
+                                                        ButtonStyle="ButtonStyle.Info"
+                                                        Shade="Shade.Light"
+                                                        ToggleShade="Shade.Dark"
+                                                        ToggleButtonStyle="ButtonStyle.Danger"
+                                                        Style="width: 300px; height: 100px; font-size: 22px !important;"/>
+                                </RadzenFormField>
+                            </RadzenStack>
+                        </RadzenStepsItem>
+                        <RadzenStepsItem Text="Department & Vendor" PreviousText="Approver & Priority" NextText="Purchase Information">
+                            <RadzenStack Orientation="Orientation.Vertical"
+                                         AlignItems="AlignItems.Center"
+                                         Gap="5">
+                                <RadzenFieldset Text="Department">
+                                    <RadzenDropDown TValue="Department"
+                                                    Data="@this._departments"
+                                                    Value="@this._purchaseReqInput.Department"
+                                                    Placeholder="Select a department"
+                                                    TextProperty="Name"
+                                                    AllowClear="true"/>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Vendor">
+                                    <RadzenStack Orientation="Orientation.Horizontal"
+                                                 Gap="5"
+                                                 AlignItems="AlignItems.Center">
+                                        <RadzenDropDown TValue="Vendor"
+                                                        Data="@this._vendors"
+                                                        Value="@this._purchaseReqInput.Vendor"
+                                                        ValueChanged="@SelectedVendorChanged"
+                                                        TextProperty="Name"
+                                                        Placeholder="Select an vendor"
+                                                        AllowClear="true"/>
+                                        <RadzenButton Text="Add Vendor" Click="CreateNewVendor" 
+                                                      ButtonStyle="ButtonStyle.Secondary" 
+                                                      Shade="Shade.Darker"/>
+                                        <VendorView Vendor="@this._purchaseReqInput.Vendor"/>
+                                    </RadzenStack>
+                                </RadzenFieldset>
+                            </RadzenStack>
+                        </RadzenStepsItem>
+                        <RadzenStepsItem Text="Purchase Information" 
+                                         PreviousText="Department & Vendor" 
+                                         NextText="Purchase Items">
+                            <RadzenStack>
+                                <RadzenFormField Text="Requester">
+                                    <RadzenTextBox @bind-Value="@this._userAccount.FirstName"/>
+                                </RadzenFormField>
+                                <RadzenFormField Text="Purchase Request Title">
+                                    <RadzenTextBox Placeholder="Enter the title of the purchase request"
+                                                   @bind-Value="@this._purchaseReqInput.Title"
+                                                   Style="width: 100%"/>
+                                </RadzenFormField>
+                                <RadzenFormField Text="Purchase Request Reason">
+                                    <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
+                                                    @bind-Value="@this._purchaseReqInput.Description"
+                                                    Style="width: 100%; height:100px;"/>
+                                </RadzenFormField>
+                            </RadzenStack>
+                        </RadzenStepsItem>
+                        <RadzenStepsItem Text="Purchase Items" PreviousText="Purchase Information" NextText="Comments & Quotes">
+                            <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"/>
+                            <RadzenButton Text="Next"/>
+                        </RadzenStepsItem>
+                        <RadzenStepsItem Text="Comments & Quotes">
+                            <RadzenStack Orientation="Orientation.Vertical">
+                                <RadzenFormField Text="Additional Comments">
+                                    <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
+                                                    @bind-Value="@this._purchaseReqInput.AdditionalComments"
+                                                    Style="width: 200px; height:100px;"/>
+                                </RadzenFormField>
+                                <RadzenColumn Size="12">
+                                    <RadzenCard Variant="Variant.Outlined">
+                                        <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                                        <RadzenUpload id="ddUpload"
+                                                      ChooseText="Drag and drop here or click to choose files"
+                                                      Auto="false"
+                                                      Multiple="true"
+                                                      Change="@this.OnClientChange"
+                                                      InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
+                                                      Style="width: 100%"/>
+                                        @*<RadzenButton Text="Upload" Click="UploadClickHandler" class="rz-mt-4"/>*@
+                                    </RadzenCard>
+                                </RadzenColumn>
+                            </RadzenStack>
+                        </RadzenStepsItem>
+                        <RadzenStepsItem Text="Finalize">
+                            <RadzenStack Orientation="Orientation.Horizontal"
+                                         JustifyContent="JustifyContent.Center">
+                                <RadzenButton Text="Submit" ButtonStyle="ButtonStyle.Success"
+                                              Icon="save"
+                                              Click="@this.SavePurchaseRequestHandler"
+                                              Style="width: 180px; height: 80px;"/>
+                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Danger" Icon="cancel"
+                                              Style="width: 180px; height: 80px;"/>
+                            </RadzenStack>
+                            <PdfViewer PurchaseRequestInput="@this._purchaseReqInput"></PdfViewer>
+                        </RadzenStepsItem>
+                    </Steps>
+                </RadzenSteps>
+            </RadzenCard>
+        }
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+            <RadzenButton Text="Previous" Image="/images/previous-arrow.svg"
+                          Click="@(async Task () => { await this._steps.PrevStep();})"
+                          Style="width: 150px; height: 50px;" 
+                          Visible="@(this._selectedStepIndex>0)"/>
+            <RadzenButton Text="Next" Image="/images/next-arrow.svg"
+                          Click="@(async Task () => { await this._steps.NextStep();})"
+                          Style="width: 150px; height: 50px;" />
+        </RadzenStack>
     </RadzenStack>
-}
+</RadzenCard>
 
 @code {
     [Inject] private AuthApiService _authApiService { get; set; }
@@ -146,6 +174,8 @@
     [Inject] private IConfiguration configuration { get; set; }
     [Inject] private FileService _fileService { get; set; }
     private RadzenUpload _upload;
+    private RadzenSteps _steps;
+    private int _selectedStepIndex = 0;
     private PurchaseRequestInput? _purchaseReqInput;
     private string? _selectedApprover;
     private bool _isUrgent = false;
@@ -172,6 +202,9 @@
                 RequesterEmail = this._userAccount?.Email,
                 RequesterUsername = this._userAccount?._id,
                 Id=ObjectId.GenerateNewId(),
+                PurchaseItems = new List<PurchaseItem>(),
+                Quotes = new List<string>(),
+                TempFile = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf"
             };
         }
     }
@@ -181,7 +214,7 @@
     }
     
     Task OnClientChange(UploadChangeEventArgs args) {
-        Console.WriteLine($"Client-side upload changed");
+        //Console.WriteLine($"Client-side upload changed");
         this._quotes = args.Files.ToList();
         foreach (var file in this._quotes) {
             Console.WriteLine(file.Name);
@@ -190,6 +223,10 @@
     }
     
     private async Task UploadClickHandler() {
+        await this.UploadFiles();
+    }
+    
+    private async Task UploadFiles() {
         if (this._quotes.Count == 0) {
             this._notificationService.Notify(NotificationSeverity.Error,
                 "Error",
@@ -197,8 +234,16 @@
             return;
         }
         var result=await this._fileService.UploadMultipleFiles(this._quotes);
-        if (result.Any()) {
-            this._purchaseReqInput.Quotes = result;
+        if (result != null) {
+            this._purchaseReqInput.Quotes = result.ObjectIds;
+            this._purchaseReqInput.Attachments=result.LocalFileInfo;
+            this._notificationService.Notify(NotificationSeverity.Success,
+                "Success",
+                "Files Uploaded");
+        } else {
+            this._notificationService.Notify(NotificationSeverity.Error,
+                "Error",
+                "Files failed to upload");
         }
     }
     
@@ -225,6 +270,8 @@
                 "Purchase Request Input is null");
             return;
         }
+
+        //await this.UploadFiles();
         var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
         if(success) {
             this._notificationService.Notify(NotificationSeverity.Success, 
@@ -251,14 +298,11 @@
         this._dialogService.CloseSide();
         return Task.CompletedTask;
     }
-
+    
     private Task CreateNewVendor() {
         this._notificationService.Notify(NotificationSeverity.Warning, 
             "Feature Not Implemented",
             "Create Vendor feature is not yet implemented yet");
         return Task.CompletedTask;
     }
-
-
-
 }

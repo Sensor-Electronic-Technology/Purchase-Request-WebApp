@@ -1,15 +1,9 @@
-﻿using System.Net.Mail;
-using System.Net.Security;
+﻿using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using Domain.PurchaseRequests;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.TypeConstants;
 using Domain.Settings;
-using MailKit.Net.Smtp;
-using MimeKit.Utils;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Options;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
@@ -25,8 +19,8 @@ public class EmailService {
         _logger = logger;
     }*/
     
-    public EmailService(IOptions<EmailSettings> emailSettings,IWebHostEnvironment environment) {
-        _emailSettings = emailSettings.Value;
+    public EmailService(EmailSettings emailSettings,IWebHostEnvironment environment) {
+        _emailSettings = emailSettings;
         this._environment = environment;
     }
     
@@ -50,12 +44,20 @@ public class EmailService {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
             message.Subject = $"{prInput.Title}-Purchase Request";
-            var builder = new BodyBuilder();
-            builder.HtmlBody=await GenerateMessage(prInput.ApproverName,
+            var builder = new BodyBuilder { HtmlBody = await GenerateMessage(prInput.ApproverName,
                 prInput.RequesterName,
                 prInput.PrUrl,"View Purchase Request", 
                 prInput.Title, prInput.Description,
-                prInput.AdditionalComments);
+                prInput.AdditionalComments)
+            };
+
+            await using var filestream=File.OpenRead($"{this._environment.WebRootPath}/temp/{prInput.TempFile}");
+            await builder.Attachments.AddAsync("PurchaseRequest.pdf",filestream);
+            
+            foreach (var attachment in prInput.Attachments) {
+                //builder.Attachments.Add(attachment.name,attachment.filePath);
+                await builder.Attachments.AddAsync(attachment.filePath);
+            }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
             await client.DisconnectAsync(true);

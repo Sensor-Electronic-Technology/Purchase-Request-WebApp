@@ -7,7 +7,7 @@
 @using Webapp.Services.Authentication
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-<RadzenContent>
+
     <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
         <RadzenButton Text="Create Purchase Request"
                       ButtonStyle="ButtonStyle.Info"
@@ -38,10 +38,6 @@
             </RadzenStack>
         </RadzenCard>
     </RadzenStack>
-</RadzenContent>
-
-
-
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
@@ -66,8 +62,8 @@
         });*/
         await this._dialogService.OpenSideAsync<PurchaseRequestForm>("Create Purchase Request",options: new SideDialogOptions() {
             CloseDialogOnOverlayClick = false,
-            ShowClose = false,
-            Width = "50%",
+            ShowClose = true,
+            Width = "80%",
             Position = DialogPosition.Right
         });
     }

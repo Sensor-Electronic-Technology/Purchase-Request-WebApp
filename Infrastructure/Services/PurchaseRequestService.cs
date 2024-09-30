@@ -44,6 +44,13 @@ public class PurchaseRequestService {
             Urgent=input.Urgent,
             Approver= input.ApproverName,
             Requester = input.RequesterUsername,
+            Department = input.Department,
+            Vendor = input.Vendor,
+            AdditionalComments = input.AdditionalComments,
+            Created = DateTime.Now,
+            Quotes = input.Quotes,
+            Items = new List<PurchaseItem>(),
+            TotalCost = 0
         };
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);

@@ -1,8 +1,8 @@
 ﻿namespace Domain.FileStorage;
 
 public class FileUploadResultModel {
-    public string ObjectId { get; set; }
-    public string? FileName { get; set; } = null!;
-    public bool IsSuccessful { get; set; } = true;
-    public string ErrorMessage { get; set; } = null!;
+    public string objectId { get; set; }
+    public string? fileName { get; set; } = null!;
+    public bool isSuccessful { get; set; } = true;
+    public string errorMessage { get; set; } = null!;
 }

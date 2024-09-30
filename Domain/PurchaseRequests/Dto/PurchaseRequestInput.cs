@@ -9,7 +9,9 @@ public class PurchaseRequestInput {
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
     public string? PrUrl { get; set; }
+    public string? TempFile { get; set; }
     public string? LinkText { get; set; }
+    public List<PurchaseItem> PurchaseItems { get; set; } = [];
     public Vendor? Vendor { get; set; }
     public Department? Department { get; set; }
     public bool Urgent { get; set; }
@@ -19,4 +21,5 @@ public class PurchaseRequestInput {
     public string? RequesterUsername { get; set; }
     public string? RequesterEmail { get; set; }
     public List<string> Quotes { get; set; } = [];
+    public List<(string name,string filePath)> Attachments { get; set; } = [];
 }

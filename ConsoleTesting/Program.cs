@@ -56,7 +56,7 @@ async Task TestReadContentJson() {
     }
 }
 
-async Task TestPdfUpload() {
+/*async Task TestPdfUpload() {
     QuestPDF.Settings.License = LicenseType.Community;
     var model = await GetPurchaseRequest();
     var document = new PurchaseRequestDocument(model,"C:\\Users\\aelmendo\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
@@ -74,10 +74,10 @@ async Task TestPdfUpload() {
     //collection.Add();
     form.Add(fileContent, "file", Path.GetFileName(filePath));
     HttpResponseMessage response = await httpClient.PostAsync(url, form);
-}
+}*/
 
 
-async Task UploadFile() {
+/*async Task UploadFile() {
     var model = await GetPurchaseRequest();
     var document = new PurchaseRequestDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
     document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");
@@ -87,25 +87,25 @@ async Task UploadFile() {
     var stream=File.OpenRead(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");
     MD5.Create();
     var id = await bucket.UploadFromStreamAsync("PurchaseRequest.pdf", stream);
-}
+}*/
 
 
-async Task PdfWork() {
+/*async Task PdfWork() {
     QuestPDF.Settings.License = LicenseType.Community;
 
     
     var model = await GetPurchaseRequest();
     var document = new PurchaseRequestDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
     /*var documentMetadata = document.GetMetadata();
-    Console.WriteLine($"Width: {documentMetadata.}");*/
-    /*document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");*/
+    Console.WriteLine($"Width: {documentMetadata.}");#1#
+    /*document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest.pdf");#1#
     await document.ShowInCompanionAsync();
     
     /*var model = await GetPurchaseOrderDto();
     var document = new PurchaseOrderDocument(model,"C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
     //document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseOrder.pdf");
-    await document.ShowInCompanionAsync();*/
-}
+    await document.ShowInCompanionAsync();#1#
+}*/
 
 async Task<PurchaseRequest> GetPurchaseRequest() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";

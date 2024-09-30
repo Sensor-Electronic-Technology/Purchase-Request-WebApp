@@ -36,6 +36,16 @@ public class FileStorageController : ControllerBase {
                 cancellationToken);
         return Ok(result);
     }
+    
+    [HttpPost]
+    [Route(nameof(DeleteFile))]
+    public async Task<IActionResult> DeleteFile(string fileId, CancellationToken cancellationToken) {
+        if(ObjectId.TryParse(fileId,out var objectId)) {
+            var result=await this._fileStorageService.DeleteFileAsync(objectId, cancellationToken);
+            return Ok(result);
+        }
+        return BadRequest();
+    }
 
     [HttpPost]
     [DisableFormValueModelBinding]

@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text.Json;
 using FileStorage.Model;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -101,7 +102,6 @@ public class FileStorageService {
 
         var result = await UploadFromStreamAsync(fileName, newFileName, FileSizeEnum.Small, stream, options,
             cancellationToken);
-
         return result;
     }
     
@@ -149,7 +149,7 @@ public class FileStorageService {
         var buffer = new byte[chunkSizeBytes];
         var isFilledFirstBytes = false;
         long lengthOfFile = 0;
-        Exception sourceException;
+        Exception? sourceException;
 
         while (true) {
             var bytesRead = 0;
@@ -157,7 +157,7 @@ public class FileStorageService {
             try {
                 bytesRead=await source.ReadAsync(buffer,0,buffer.Length,cancellationToken)
                     .ConfigureAwait(false);
-            } catch (Exception ex) {
+            } catch (Exception? ex) {
                 sourceException = ex;
             }
 
@@ -173,8 +173,7 @@ public class FileStorageService {
                                 await destination.AbortAsync(cancellationToken).ConfigureAwait(false);
                             } catch { } finally {
                                 await destination.CloseAsync(cancellationToken).ConfigureAwait(false);
-                                //await DeleteChunkAsync(destination.Id);
-                                //await ImagesBucket.DeleteAsync(destination.Id, cancellationToken);
+                                await this.DeleteFileAsync(destination.Id, cancellationToken);
                             }
 
                             buffer = (byte[])null;
@@ -191,8 +190,7 @@ public class FileStorageService {
                             await destination.AbortAsync(cancellationToken).ConfigureAwait(false);
                         } catch { } finally {
                             await destination.CloseAsync(cancellationToken).ConfigureAwait(false);
-                            //await DeleteChunkAsync(destination.Id);
-                            //await ImagesBucket.DeleteAsync(destination.Id, cancellationToken);
+                            await this.DeleteFileAsync(destination.Id, cancellationToken);
                         }
 
                         buffer = (byte[])null;
@@ -257,19 +255,30 @@ public class FileStorageService {
         return result;
     }
     
-    public async Task DeleteChunkAsync(ObjectId objectId) {
+    public async Task<FileDeleteResult> DeleteFileAsync(ObjectId objectId,
+        CancellationToken cancellationToken=default) {
+        if (await this.DeleteChunkAsync(objectId)) {
+            await this._fileBucket.DeleteAsync(objectId, cancellationToken);
+            return new FileDeleteResult() { Success = true };
+        }
+        return new FileDeleteResult(){Success = false, Message = "Failed to delete file chunks, Deletion aborted"};
+    }
+
+    private async Task<bool> DeleteChunkAsync(ObjectId objectId) {
         FilterDefinition<BsonDocument> filter = new BsonDocument("files_id", objectId);
         var chunksCollection =
             this._database.GetCollection<BsonDocument>(this._fileBucket.Options.BucketName + ".chunks");
-
-        await chunksCollection.DeleteManyAsync(filter);
+        var deleteResult = await chunksCollection.DeleteManyAsync(filter);
+        if (deleteResult.IsAcknowledged) {
+            return deleteResult.DeletedCount > 0;
+        }
+        return false;
     }
     
     public async Task<byte[]> DownloadAsBytesAsync(ObjectId objectId,
         CancellationToken cancellationToken = default) {
         var options = new GridFSDownloadOptions { Seekable = true, };
         var bytes = await this._fileBucket.DownloadAsBytesAsync(objectId, options, cancellationToken);
-
         return bytes;
     }
 

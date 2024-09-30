@@ -1,4 +1,5 @@
-﻿using Domain.PurchaseRequests.Model;
+﻿using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -6,11 +7,10 @@ using QuestPDF.Infrastructure;
 namespace Domain.PurchaseRequests.Pdf;
 
 public class PurchaseRequestDocument : IDocument {
-    //public static Image LogoImage { get; } = Image.FromFile("C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
     private Image _logoImage;
-    private PurchaseRequest _model;
+    private PurchaseRequestInput _model;
     private string _logoPath;
-    public PurchaseRequestDocument(PurchaseRequest model, string logoPath) {
+    public PurchaseRequestDocument(PurchaseRequestInput model, string logoPath) {
         this._model = model;
         this._logoPath = logoPath;
         this._logoImage = Image.FromFile(this._logoPath);
@@ -45,9 +45,9 @@ public class PurchaseRequestDocument : IDocument {
                     def.RelativeColumn();
                 });
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Date Of Request:").SemiBold();
-                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Created.ToString("MM/dd/yyyy"));
+                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(DateTime.Now.ToString("MM/dd/yyyy"));
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Requester:").SemiBold();
-                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Requester ?? "");
+                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.RequesterName ?? "");
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Department:").SemiBold();
                 table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Department?.Name ?? "");
                 
@@ -119,7 +119,7 @@ public class PurchaseRequestDocument : IDocument {
                 });
                 
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Delivery Method:  ").SemiBold();
-                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.ShippingType);
+                //table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Sh);
             });
             column.Item().Background(Colors.Grey.Lighten1).PaddingVertical(3);
             column.Item().Element(ComposePurchaseItemTable);
@@ -148,7 +148,7 @@ public class PurchaseRequestDocument : IDocument {
                     .BorderBottom(1).BorderTop(1).BorderRight(1)
                     .BorderColor(Colors.Black);
             });
-            foreach (var item in _model.Items) {
+            foreach (var item in _model.PurchaseItems) {
                 table.Cell().Element(CellStyle).AlignCenter().Text($"{item.Quantity}");
                 table.Cell().Element(CellStyle).AlignLeft().PaddingLeft(5).Text(item.ProductName);
                 table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost:C}");
@@ -160,7 +160,7 @@ public class PurchaseRequestDocument : IDocument {
             table.Cell().AlignCenter().Text($"");
             table.Cell().AlignLeft().PaddingLeft(5).Text("");
             table.Cell().Element(TotalCellStyle).AlignCenter().Text($"Total").SemiBold();
-            table.Cell().Element(TotalCellStyle).AlignCenter().Text($"{this._model.TotalCost:C}").SemiBold();
+            //table.Cell().Element(TotalCellStyle).AlignCenter().Text($"{this._model.TotalCost:C}").SemiBold();
             static IContainer TotalCellStyle(IContainer container) =>
                 container.BorderBottom(1).BorderTop(1).BorderRight(1).BorderLeft(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
         });
