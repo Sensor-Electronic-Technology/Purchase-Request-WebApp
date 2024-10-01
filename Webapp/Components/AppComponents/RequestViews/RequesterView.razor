@@ -20,19 +20,14 @@
                     <RadzenText Text="Purchase Requests"/>
                 </RadzenCard>
                 <RadzenCard>
-                    <RadzenDataGrid Data="@this._purchaseRequests"
-                                    AllowGrouping="true"
-                                    AllowFiltering="true"
-                                    AllowColumnResize="true">
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approved)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)"/>
-                        @*<RadzenDataGridColumn Property="@nameof(PurchaseRequest.Ordered)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Received)"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)"/>*@
+                    <RadzenDataGrid TItem="PurchaseRequest" Data="@this._purchaseRequests" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@this._selectedPurchaseRequests">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)" Title="Approver"/>
+                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
+                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description"/>
+                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At"/>
+                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
+                        </Columns>
                     </RadzenDataGrid>
                 </RadzenCard>
             </RadzenStack>
@@ -42,14 +37,27 @@
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
     [Inject] private UserService _userService { get; set; }
-    private List<PurchaseRequest> _purchaseRequests = new();
+    private RadzenDataGrid<PurchaseRequest> _dataGrid;
+    private List<PurchaseRequest> _purchaseRequests = [];
+    private IList<PurchaseRequest> _selectedPurchaseRequests = [];
     private UserProfile? _userAccount = new();
+    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
             this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
+            Console.WriteLine("Done Fetching Purchase Requests");
+            foreach (var request in this._purchaseRequests) {
+                Console.WriteLine(request.Title);
+            }
         }
+        /*if(this._userAccount != null) {
+
+            //await this._dataGrid.Reload();
+
+        }*/
+        
     }
 
     private async Task CreatePurchaseRequestHandler() {
@@ -66,6 +74,14 @@
             Width = "80%",
             Position = DialogPosition.Right
         });
+        await this.Reload();
+        await InvokeAsync(StateHasChanged);
     }
+    
+    private async Task Reload() {
+        this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
+        Console.WriteLine("Reloading Purchase Requests");
+    }
+    
 
 }

@@ -1,3 +1,4 @@
+using BlazorSpinner;
 using Domain;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -16,6 +17,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddCircuitOptions(options => options.DetailedErrors = true)
     .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
+builder.Services.AddScoped<SpinnerService>();
 builder.Services.AddDomain(builder);
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();

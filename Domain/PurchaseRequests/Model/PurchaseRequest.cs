@@ -10,16 +10,14 @@ public class PurchaseRequest {
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
     public string? ShippingType { get; set; }
+    public string? PrUrl { get; set; }
     public Department? Department { get; set; }
     public Vendor? Vendor { get; set; }
-    public List<PurchaseItem> Items { get; set; }
-    public decimal TotalCost { get; set; }
+    public List<PurchaseItem> PurchaseItems { get; set; } = [];
+    public decimal TotalCost=>PurchaseItems.Sum(x=>x.TotalCost);
     public bool Urgent { get; set; }
-    
-    public PurchaseOrder? PurchaseOrder { get; set; }
-    
     public List<string> Quotes { get; set; } = [];
-    
+    public PurchaseOrder? PurchaseOrder { get; set; }
     public DateTime Created { get; set; }
     public bool Approved { get; set; }
     public DateTime ApprovedDate { get; set; }

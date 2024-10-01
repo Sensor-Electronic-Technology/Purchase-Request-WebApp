@@ -49,19 +49,16 @@ public class PurchaseRequestService {
             AdditionalComments = input.AdditionalComments,
             Created = DateTime.Now,
             Quotes = input.Quotes,
-            Items = new List<PurchaseItem>(),
-            TotalCost = 0
+            PurchaseItems = new List<PurchaseItem>(),
         };
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
-        if (exists) {
-            input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
-            await this._emailService.SendEmail(EmailType.NeedsApproval, input, 
-                [input.RequesterEmail ?? ""],
-                [input.RequesterEmail ?? ""]);
-            return true;
-        }
-        return false;
+        if (!exists) return false;
+        input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
+        await this._emailService.SendEmail(EmailType.NeedsApproval, input, 
+            [input.RequesterEmail ?? ""],
+            [input.RequesterEmail ?? ""]);
+        return true;
     }
 
     /*public async Task PerformAction(PurchaseRequestAction action, ObjectId id) {

@@ -29,14 +29,15 @@
      private async Task Callback() {
          var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
          /*string fileName = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf";*/
-         if (string.IsNullOrEmpty(this.PurchaseRequestInput.TempFile)) {
+         /*if (string.IsNullOrEmpty(this.PurchaseRequestInput.TempFile)) {
              this.PurchaseRequestInput.TempFile=$"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf";
-         }
-         
-         string pdfPath = Path.Combine($"{this._environment.WebRootPath}/temp",this.PurchaseRequestInput.TempFile);
+         }*/
+         /*string pdfPath = Path.Combine($"{this._environment.WebRootPath}/temp",this.PurchaseRequestInput.TempFile);*/
          //Console.WriteLine(this._pdfPath);
-         document.GeneratePdf(pdfPath);
-         this._embededSrc = $"/temp/{this.PurchaseRequestInput.TempFile}#zoom=75%";
+         //document.GeneratePdf(pdfPath);
+         this.PurchaseRequestInput.TempFile=document.GeneratePdf();
+         this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
+         //this._embededSrc = $"/temp/{this.PurchaseRequestInput.TempFile}#zoom=75%";
          await InvokeAsync(StateHasChanged);
          //return Task.CompletedTask;
      }

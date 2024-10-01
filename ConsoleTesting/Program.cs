@@ -123,7 +123,8 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
     items.Add(new PurchaseItem() {
         ProductName = "Intel I7 546214 mini pc", Quantity = 3, UnitCost = 459.45m
     });
-    purchaseRequest.Items = items;
+    items.ForEach(e=>e.TotalCost=e.Quantity * e.UnitCost);
+    purchaseRequest.PurchaseItems = items;
     var vendor = await collection.OfType<Vendor>().Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();
     if (vendor != null) {
         Console.WriteLine("Vendor Found");
@@ -143,7 +144,6 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
                                             " I want to make sure the wrapping works when writing to a single cell";
         purchaseRequest.Approved = false;
         purchaseRequest.Rejected = false;
-        purchaseRequest.TotalCost = items.Sum(e => e.Quantity * e.UnitCost);
     }
     return purchaseRequest;
 }

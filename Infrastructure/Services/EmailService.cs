@@ -44,19 +44,16 @@ public class EmailService {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
             message.Subject = $"{prInput.Title}-Purchase Request";
-            var builder = new BodyBuilder { HtmlBody = await GenerateMessage(prInput.ApproverName,
+            var builder = new BodyBuilder { 
+                HtmlBody = await GenerateMessage(prInput.ApproverName,
                 prInput.RequesterName,
                 prInput.PrUrl,"View Purchase Request", 
                 prInput.Title, prInput.Description,
                 prInput.AdditionalComments)
             };
-
-            await using var filestream=File.OpenRead($"{this._environment.WebRootPath}/temp/{prInput.TempFile}");
-            await builder.Attachments.AddAsync("PurchaseRequest.pdf",filestream);
-            
+            builder.Attachments.Add("PurchaseRequest.pdf", prInput.TempFile);
             foreach (var attachment in prInput.Attachments) {
-                //builder.Attachments.Add(attachment.name,attachment.filePath);
-                await builder.Attachments.AddAsync(attachment.filePath);
+                await builder.Attachments.AddAsync(attachment.FilePath);
             }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);

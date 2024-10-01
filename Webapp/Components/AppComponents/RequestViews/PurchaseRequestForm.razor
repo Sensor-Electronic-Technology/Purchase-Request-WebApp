@@ -2,6 +2,7 @@
 @using Domain.PurchaseRequests
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Infrastructure.Services
 @using Microsoft.Extensions.Options
@@ -112,7 +113,6 @@
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Items" PreviousText="Purchase Information" NextText="Comments & Quotes">
                             <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"/>
-                            <RadzenButton Text="Next"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes">
                             <RadzenStack Orientation="Orientation.Vertical">
@@ -120,6 +120,16 @@
                                     <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
                                                     @bind-Value="@this._purchaseReqInput.AdditionalComments"
                                                     Style="width: 200px; height:100px;"/>
+                                </RadzenFormField>
+                                <RadzenFormField Text="Shipping">
+                                    <RadzenDropDown TValue="string"
+                                                    Data="@ShippingType.List"
+                                                    Value="@this._purchaseReqInput.ShippingType"
+
+                                                    Placeholder="Select an Shipping Method"
+                                                    ValueProperty="Value"
+                                                    Style="width: 300px; height: fit-content; font-size: 18px !important;"
+                                                    AllowClear="true"/>
                                 </RadzenFormField>
                                 <RadzenColumn Size="12">
                                     <RadzenCard Variant="Variant.Outlined">
@@ -173,18 +183,19 @@
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IConfiguration configuration { get; set; }
     [Inject] private FileService _fileService { get; set; }
+    [Inject] private SpinnerService _spinnerService { get; set; }
     private RadzenUpload _upload;
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
-    private PurchaseRequestInput? _purchaseReqInput;
+    private PurchaseRequestInput _purchaseReqInput = new PurchaseRequestInput();
     private string? _selectedApprover;
+    private string? _selectedShippingType;
     private bool _isUrgent = false;
     private List<UserAccountDto> _approvers = [];
     private List<string> _approverSelectList = [];
     private UserProfile? _userAccount = new();
     private UserAccountDto? _approverAccount = new();
     private List<Department> _departments = new();
-    private List<string> _shippingTypes = new();
     private List<Vendor> _vendors = new();
     private List<FileInfo> _quotes = [];
     
@@ -197,7 +208,8 @@
         this._vendors=await this._purchaseRequestService.GetVendors();
         this._departments = await this._purchaseRequestService.GetDepartments();
         if(this._userAccount!=null) {
-            this._purchaseReqInput = new PurchaseRequestInput() {
+            await this.GeneratePurchaseRequest();
+            /*this._purchaseReqInput = new PurchaseRequestInput() {
                 RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
                 RequesterEmail = this._userAccount?.Email,
                 RequesterUsername = this._userAccount?._id,
@@ -205,7 +217,7 @@
                 PurchaseItems = new List<PurchaseItem>(),
                 Quotes = new List<string>(),
                 TempFile = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf"
-            };
+            };*/
         }
     }
     
@@ -250,10 +262,14 @@
     private async Task SelectedApproverChanged(string? selected) {
         this._selectedApprover = selected;
         this._approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == selected);
-        if (this._purchaseReqInput != null) {
-            this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
-            this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
-        }
+        this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
+        this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task ShippingTypeChangedHandler(string shippingType) {
+        this._selectedShippingType = shippingType;
+        this._purchaseReqInput.ShippingType = shippingType;
         await InvokeAsync(StateHasChanged);
     }
     
@@ -270,10 +286,11 @@
                 "Purchase Request Input is null");
             return;
         }
-
-        //await this.UploadFiles();
+        this._spinnerService.Show();
+        await this.UploadFiles();
         var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
         if(success) {
+            
             this._notificationService.Notify(NotificationSeverity.Success, 
                 "Success",
                 "Purchase Request has been submitted successfully");
@@ -282,10 +299,10 @@
                 "Error",
                 "Purchase Request submission failed");
         }
+        this._spinnerService.Hide();
         this._dialogService.CloseSide();
     }
     
-
     private Task CancelPurchaseRequestHandler() {
         var enumerable = this._purchaseReqInput?.Quotes;
         if (enumerable != null) {
@@ -304,5 +321,45 @@
             "Feature Not Implemented",
             "Create Vendor feature is not yet implemented yet");
         return Task.CompletedTask;
+    }
+    
+    async Task GeneratePurchaseRequest() {
+        this._purchaseReqInput = new PurchaseRequestInput() {
+            RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
+            RequesterEmail = this._userAccount?.Email,
+            RequesterUsername = this._userAccount?._id,
+            Id=ObjectId.GenerateNewId(),
+            PurchaseItems = new List<PurchaseItem>(),
+            Quotes = new List<string>(),
+        };
+        List<PurchaseItem> items = new();
+        items.Add(new PurchaseItem() {
+            ProductName = "Star tech 4 port video splitter/546287str", Quantity = 1, UnitCost = 45.69m
+        });
+        items.Add(new PurchaseItem() {
+            ProductName = "Logitech Mouse/Keyboard Combo/mk432", Quantity = 1, UnitCost = 24.65m
+        });
+        items.Add(new PurchaseItem() {
+            ProductName = "Intel I7 546214 mini pc", Quantity = 3, UnitCost = 459.45m
+        });
+        items.ForEach(e=>e.TotalCost=e.Quantity * e.UnitCost);
+        this._purchaseReqInput.PurchaseItems = items;
+        /*var vendor = await collection.OfType<Vendor>().Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync();*/
+        this._purchaseReqInput.Vendor=this._vendors.FirstOrDefault(e=>e.Name=="Amazon.com");
+        if (this._purchaseReqInput.Vendor != null) {
+            this._purchaseReqInput.Department = new Department(){Name = "Epi"};
+            this._purchaseReqInput.Description = "Consultant Computers";
+            this._purchaseReqInput.ShippingType = ShippingType.Ground.Value;
+            this._purchaseReqInput.Urgent = true;
+            this._purchaseReqInput.Title = "Consultant Computers";
+            this._purchaseReqInput.Description = "The consultant computers are for the HQ consultants. " +
+                                                        "One computer with windows 11 and a display. Another computer with windows 11 and a display. " +
+                                                        " Also two keyboards and a mouse for each computers.  " +
+                                                        "Another filler line to increase the Reason For Purchase. " +
+                                                        " I want to make sure the wrapping works when writing to a single cell";
+            this._approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == "Rakesh");
+            this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
+            this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
+        }
     }
 }

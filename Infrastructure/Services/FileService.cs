@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
 using Domain.FileStorage;
+using Domain.PurchaseRequests.Dto;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Radzen;
@@ -17,7 +18,7 @@ public record FileUploadResult {
 
 public record MultiFileUploadResult {
     public List<string> ObjectIds { get; set; }
-    public List<(string name,string path)> LocalFileInfo { get; set; }
+    public List<FileInput> LocalFileInfo { get; set; }
 }
 
 public class FileService {
@@ -100,7 +101,7 @@ public class FileService {
                     }
                     await File.WriteAllBytesAsync(path,file.fileBytes);
                     Console.WriteLine($"File: {file.name} written to {path}");
-                    output.LocalFileInfo.Add((file.name,path));
+                    output.LocalFileInfo.Add(new FileInput(file.name, path));
                 }
                 return output;
             } else {

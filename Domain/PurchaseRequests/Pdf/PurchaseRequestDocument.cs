@@ -102,8 +102,8 @@ public class PurchaseRequestDocument : IDocument {
                 table.Header(header => {
                     header.Cell().Background(Colors.Grey.Lighten2).Border(1).Padding(2).AlignCenter().Text("Reason For Purchase");
                 });
-                if (!string.IsNullOrWhiteSpace(this._model.AdditionalComments)) {
-                    table.Cell().Border(1).Padding(2).AlignLeft().Text(this._model.AdditionalComments).SemiBold();
+                if (!string.IsNullOrWhiteSpace(this._model.Description)) {
+                    table.Cell().Border(1).Padding(2).AlignLeft().Text(this._model.Description).SemiBold();
                 } else {
                     table.Cell().Border(1).Padding(2).AlignLeft().Text("").SemiBold();
                     table.Cell().Border(1).Padding(2).AlignLeft().Text("").SemiBold();
@@ -119,7 +119,7 @@ public class PurchaseRequestDocument : IDocument {
                 });
                 
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Delivery Method:  ").SemiBold();
-                //table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Sh);
+                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.ShippingType);
             });
             column.Item().Background(Colors.Grey.Lighten1).PaddingVertical(3);
             column.Item().Element(ComposePurchaseItemTable);
@@ -160,7 +160,7 @@ public class PurchaseRequestDocument : IDocument {
             table.Cell().AlignCenter().Text($"");
             table.Cell().AlignLeft().PaddingLeft(5).Text("");
             table.Cell().Element(TotalCellStyle).AlignCenter().Text($"Total").SemiBold();
-            //table.Cell().Element(TotalCellStyle).AlignCenter().Text($"{this._model.TotalCost:C}").SemiBold();
+            table.Cell().Element(TotalCellStyle).AlignCenter().Text($"{this._model.TotalCost:C}").SemiBold();
             static IContainer TotalCellStyle(IContainer container) =>
                 container.BorderBottom(1).BorderTop(1).BorderRight(1).BorderLeft(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
         });
