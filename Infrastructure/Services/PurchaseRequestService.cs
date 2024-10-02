@@ -49,73 +49,26 @@ public class PurchaseRequestService {
             AdditionalComments = input.AdditionalComments,
             Created = DateTime.Now,
             Quotes = input.Quotes,
-            PurchaseItems = new List<PurchaseItem>(),
+            ShippingType = input.ShippingType,
+            PurchaseItems = input.PurchaseItems,
         };
+        input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
+        purchaseRequest.PrUrl = input.PrUrl;
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
         if (!exists) return false;
-        input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
-        await this._emailService.SendEmail(EmailType.NeedsApproval, input, 
+        await this._emailService.SendRequestEmail(input, 
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
         return true;
     }
-
-    /*public async Task PerformAction(PurchaseRequestAction action, ObjectId id) {
-        var pr = await this._purchaseRequestCollection.Find(e => e._id == id).FirstOrDefaultAsync();
-        if (pr != null) {
-            switch (action.Name) {
-                case nameof(PurchaseRequestAction.Approve):
-                    this.HandleApprove(pr);
-                    break;
-                case nameof(PurchaseRequestAction.Reject):
-                    this.HandleReject(pr);
-                    break;
-                case nameof(PurchaseRequestAction.Cancel):
-                    this.HandleCancel(pr);
-                    break;
-                case nameof(PurchaseRequestAction.Order):
-                    //this.HandleOrder(pr);
-                    break;
-                case nameof(PurchaseRequestAction.Receive):
-                    //this.HandleReceive(pr);
-                    break;
-            }
-            await this._purchaseRequestCollection.ReplaceOneAsync(e => e._id == id, pr);
-        }
-    }*/
-
+    
     public async Task<List<Vendor>> GetVendors() {
         return await this._contactDataService.GetVendors();
     }
     
     public async Task<List<Department>> GetDepartments() {
         return await this._departmentDataService.GetDepartments();
-    }
-    
-    private void HandleApprove(PurchaseRequest purchaseRequest) {
-        purchaseRequest.Approved = true;
-        purchaseRequest.ApprovedDate = DateTime.Now;
-    }
-    private void HandleCancel(PurchaseRequest purchaseRequest) {
-        //Send Email
-    }
-    private void HandleReject(PurchaseRequest purchaseRequest) {
-        purchaseRequest.Approved = false;
-        purchaseRequest.Rejected = true;
-        purchaseRequest.RejectedDate = DateTime.Now;
-        //Send Rejected Email
-    }
-    private void HandleOrder(PurchaseRequest purchaseRequest) {
-        /*purchaseRequest.Ordered = true;
-        purchaseRequest.OrderedDate = DateTime.Now;*/
-        //Send Ordered Email
-    }
-    
-    private void HandleReceive(PurchaseRequest purchaseRequest) {
-        /*purchaseRequest.Received = true;
-        purchaseRequest.ReceivedDate = DateTime.Now;*/
-        //Send Received Email
     }
     
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {

@@ -23,11 +23,11 @@ using QuestPDF.Companion;
 //await TestMongoIdString();
 //await TestMongoQueryIdString();
 //await TestSendEmail();
-//await CreateVendors();
+await CreateVendors();
 //await CreateDepartments();
 //await TestExcel();
 //await PdfWork();
-await TestReadContentJson();
+//await TestReadContentJson();
 
 /*var arr2 = "\rMSG"u8.ToArray();
 var arr = "\rDOC"u8.ToArray();
@@ -242,7 +242,7 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
 }*/
 
 async Task CreateVendors() {
-    string path =@"C:\Users\aelme\Documents\PurchaseRequestData\Vendors.txt";
+    string path =@"C:\Users\aelmendo\Documents\PurchaseRequestData\Vendors.txt";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var contactDataService = new ContactDataService(client);
     /*var database = client.GetDatabase("purchase_req_db");
@@ -256,23 +256,20 @@ async Task CreateVendors() {
         if (items != null && items.Length > 0) {
             Vendor vendor = new() {
                 Name = items[0], 
-                StreetAddress = items[1], 
-                Attention = items[3],
-                Phone = items[4], 
-                Fax = items[5],
-                Email = items[6]
+                City = items[1],
+                StreetAddress = items[2], 
+                Zip = items[3],
+                Country = items[4],
+                State = items[5],
+                Attention = items[6],
+                Phone = items[7], 
+                Email = ""
             };
-            var cityStateZip = items[2].Split(',');
-            if (cityStateZip.Length == 3) {
-                vendor.City = cityStateZip[0];
-                vendor.State = cityStateZip[1];
-                vendor.Zip = cityStateZip[2];
-            }
             vendors.Add(vendor);
         }
     }
     await contactDataService.InsertMany(vendors);
-
+    
     InternalContact internalContact = new() {
         _id=ObjectId.GenerateNewId(),
         Type = InternalContactType.CompanyMainContact,
@@ -281,6 +278,7 @@ async Task CreateVendors() {
         City="Columbia",
         State="SC",
         Zip="29209",
+        Country = "US",
         Phone="(803) 647-9757",
         Fax="(803) 647-9772",
         Email="ap@s-et.com"

@@ -3,7 +3,7 @@
 @if (this.Vendor == null) {
     
 } else {
-    <RadzenStack Orientation="Orientation.Horizontal">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="5">
         <RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenFormField Text="Name">
@@ -30,9 +30,6 @@
                 <RadzenTextBox @bind-Value="@this.Vendor.Zip"/>
             </RadzenFormField>
         </RadzenStack>
-
-
-
     </RadzenStack>
 }
 

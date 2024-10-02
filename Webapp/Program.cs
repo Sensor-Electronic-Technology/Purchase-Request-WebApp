@@ -1,4 +1,3 @@
-using BlazorSpinner;
 using Domain;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -9,6 +8,7 @@ using Webapp.Services.Authentication;
 using Infrastructure;
 using Infrastructure.Services;
 using QuestPDF.Infrastructure;
+using Webapp.Services;
 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);

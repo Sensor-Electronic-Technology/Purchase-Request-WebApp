@@ -4,6 +4,7 @@ using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.TypeConstants;
 using Domain.Settings;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
@@ -13,15 +14,12 @@ public class EmailService {
     public static readonly string FromAddress = "purchase.request@s-et.com";
     private EmailSettings _emailSettings;
     private readonly IWebHostEnvironment _environment;
-    //private readonly ILogger<EmailService> _logger;
-
-    /*public EmailService(ILogger<EmailService> logger) {
-        _logger = logger;
-    }*/
+    private readonly ILogger<EmailService> _logger;
     
-    public EmailService(EmailSettings emailSettings,IWebHostEnvironment environment) {
+    public EmailService(EmailSettings emailSettings,IWebHostEnvironment environment,ILogger<EmailService> logger) {
         _emailSettings = emailSettings;
         this._environment = environment;
+        this._logger=logger;
     }
     
     public EmailService() {
@@ -29,6 +27,30 @@ public class EmailService {
     }
 
     public async Task SendEmail(EmailType type,PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
+        switch (type) {
+            case nameof(EmailType.NeedsApproval): {
+                await this.SendRequestEmail(prInput,to,toCC);
+                break;
+            }
+            case nameof(EmailType.NeedsPurchase): {
+                break;
+            }
+            case nameof(EmailType.Received): {
+                break;
+            }
+            case nameof(EmailType.Rejected): {
+                break;
+            }
+            case nameof(EmailType.Ordered): {
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    public async Task SendRequestEmail(PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -46,22 +68,24 @@ public class EmailService {
             message.Subject = $"{prInput.Title}-Purchase Request";
             var builder = new BodyBuilder { 
                 HtmlBody = await GenerateMessage(prInput.ApproverName,
-                prInput.RequesterName,
-                prInput.PrUrl,"View Purchase Request", 
-                prInput.Title, prInput.Description,
-                prInput.AdditionalComments)
+                    prInput.RequesterName,
+                    prInput.PrUrl,"View Purchase Request", 
+                    prInput.Title, prInput.Description,
+                    prInput.AdditionalComments)
             };
-            builder.Attachments.Add("PurchaseRequest.pdf", prInput.TempFile);
+            builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
             foreach (var attachment in prInput.Attachments) {
                 await builder.Attachments.AddAsync(attachment.FilePath);
             }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
-            await client.DisconnectAsync(true);
         } catch (Exception ex) {
             Console.WriteLine($"Mail Failed, Exception: \n {ex.Message}");
+        } finally {
+            await client.DisconnectAsync(true);
         }
     }
+    
     
     private async Task<string> GenerateMessage(string approver,string requester,string prLink,string linkText,string title, string description, string additional) {
         using StreamReader reader = new($"{this._environment.WebRootPath}/{this._emailSettings.TemplatePath}");
@@ -96,44 +120,4 @@ public class EmailService {
         }
         return true;
     }
-    
-        /*public async Task SendEmailTesting(PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
-        var client = new SmtpClient();
-        try {
-            client.CheckCertificateRevocation = false;
-            client.ServerCertificateValidationCallback = CertValidationCallback;
-            await client.ConnectAsync("10.92.3.215", 25, false);
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Purchase Request", FromAddress));
-            foreach (var recipient in to) {
-                message.To.Add(new MailboxAddress(recipient, recipient));
-            }
-            foreach (var recipient in toCC) {
-                message.Cc.Add(new MailboxAddress(recipient, recipient));
-            }
-            message.Subject = "Consultant Computers-Purchase Request";
-            var builder = new BodyBuilder();
-            builder.HtmlBody=await GetTemplateTesting("Rakesh Jain","Andrew Elmendorf",
-                "setihome.seti.com", "Consultant Computer Purchase Request", 
-                "This is for the consultant computers", 
-                "Sharon, Please see the shopping list here: https://setihome.seti.com");
-            message.Body = builder.ToMessageBody();
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
-        } catch (Exception ex) {
-            Console.WriteLine($"Mail Failed, Exception: \n {ex.Message}");
-        }
-    }*/
-
-    /*private async Task<string> GetTemplateTesting(string approver,string requester,string prLink,string title, string description, string additional) {
-        using StreamReader reader = new(@"C:\Users\aelmendo\RiderProjects\PurchaseRequest\Webapp\wwwroot\EmailTemplateV2\EmailTemplateV2.htm");
-        var template=await reader.ReadToEndAsync();
-        template=template.Replace("{approver}",approver)
-            .Replace("{requester}",requester)
-            .Replace("{pr_link}",prLink)
-            .Replace("{title}", title)
-            .Replace("{description}", description)
-            .Replace("{additional}", additional);
-        return template;
-    }*/
 }

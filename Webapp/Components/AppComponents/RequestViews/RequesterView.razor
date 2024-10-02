@@ -4,39 +4,40 @@
 @using Domain.PurchaseRequests.Model
 @using Domain.Users
 @using Infrastructure.Services
+@using Webapp.Services
 @using Webapp.Services.Authentication
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-
-    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-        <RadzenButton Text="Create Purchase Request"
-                      ButtonStyle="ButtonStyle.Info"
-                      Click="CreatePurchaseRequestHandler"
-                      Icon="add_shopping_cart"
-                      Style="width: 500px; height: 70px;"/>
-        <RadzenCard Style="width: 100%">
-            <RadzenStack>
-                <RadzenCard>
-                    <RadzenText Text="Purchase Requests"/>
-                </RadzenCard>
-                <RadzenCard>
-                    <RadzenDataGrid TItem="PurchaseRequest" Data="@this._purchaseRequests" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@this._selectedPurchaseRequests">
-                        <Columns>
-                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)" Title="Approver"/>
-                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
-                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description"/>
-                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At"/>
-                            <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenCard>
-            </RadzenStack>
-        </RadzenCard>
-    </RadzenStack>
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+    <RadzenButton Text="Create Purchase Request"
+                  ButtonStyle="ButtonStyle.Info"
+                  Click="CreatePurchaseRequestHandler"
+                  Icon="add_shopping_cart"
+                  Style="width: 500px; height: 70px;"/>
+    <RadzenCard Style="width: 100%">
+        <RadzenStack>
+            <RadzenCard>
+                <RadzenText Text="Purchase Requests"/>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenDataGrid TItem="PurchaseRequest" Data="@this._purchaseRequests" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@this._selectedPurchaseRequests">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)" Title="Approver"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At"/>
+                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
     [Inject] private UserService _userService { get; set; }
+    
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
     private IList<PurchaseRequest> _selectedPurchaseRequests = [];
@@ -68,6 +69,7 @@
             Width = "50%",
             Height = "fit-content"
         });*/
+        
         await this._dialogService.OpenSideAsync<PurchaseRequestForm>("Create Purchase Request",options: new SideDialogOptions() {
             CloseDialogOnOverlayClick = false,
             ShowClose = true,

@@ -63,7 +63,7 @@ public class FileService {
         }
     }
 
-    public async Task<MultiFileUploadResult?> UploadMultipleFiles(IList<FileInfo> files) {
+    public async Task<MultiFileUploadResult?> UploadMultipleFiles(IList<FileData> files) {
         using var form = new MultipartFormDataContent();
         /*if(files.Count==0) return [];
         if (files.Count == 1) {
@@ -75,11 +75,11 @@ public class FileService {
         List<(string name,byte[] fileBytes)> fileBytesList=new();
         MultiFileUploadResult output = new MultiFileUploadResult();
         foreach (var file in files) {
-            var stream = file.OpenReadStream(1048576000);
-            var streamContent = new StreamContent(stream);
-            var filebytes=await streamContent.ReadAsByteArrayAsync();
-            fileBytesList.Add((file.Name,filebytes));
-            var fileContent = new ByteArrayContent(filebytes);
+            //var stream = file.OpenReadStream(1048576000);
+            //var streamContent = new StreamContent(stream);
+            //var filebytes=await streamContent.ReadAsByteArrayAsync();
+            fileBytesList.Add((file.Name,file.Data));
+            var fileContent = new ByteArrayContent(file.Data);
             fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
             form.Add(fileContent, "files", file.Name);
         }

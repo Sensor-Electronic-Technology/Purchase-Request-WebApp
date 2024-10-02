@@ -8,6 +8,7 @@
 @using Microsoft.Extensions.Options
 @using MongoDB.Bson
 @using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Services
 @using Webapp.Services.Authentication
 <style>
     #ddUpload {
@@ -57,7 +58,7 @@
                                                         Shade="Shade.Light"
                                                         ToggleShade="Shade.Dark"
                                                         ToggleButtonStyle="ButtonStyle.Danger"
-                                                        Style="width: 300px; height: 100px; font-size: 22px !important;"/>
+                                                        Style="width: 300px; height:80px; font-size: 22px !important;"/>
                                 </RadzenFormField>
                             </RadzenStack>
                         </RadzenStepsItem>
@@ -65,7 +66,7 @@
                             <RadzenStack Orientation="Orientation.Vertical"
                                          AlignItems="AlignItems.Center"
                                          Gap="5">
-                                <RadzenFieldset Text="Department">
+                                <RadzenFieldset Text="Department" Style="text-align: center">
                                     <RadzenDropDown TValue="Department"
                                                     Data="@this._departments"
                                                     Value="@this._purchaseReqInput.Department"
@@ -73,22 +74,31 @@
                                                     TextProperty="Name"
                                                     AllowClear="true"/>
                                 </RadzenFieldset>
-                                <RadzenFieldset Text="Vendor">
-                                    <RadzenStack Orientation="Orientation.Horizontal"
-                                                 Gap="5"
-                                                 AlignItems="AlignItems.Center">
-                                        <RadzenDropDown TValue="Vendor"
-                                                        Data="@this._vendors"
-                                                        Value="@this._purchaseReqInput.Vendor"
-                                                        ValueChanged="@SelectedVendorChanged"
-                                                        TextProperty="Name"
-                                                        Placeholder="Select an vendor"
-                                                        AllowClear="true"/>
-                                        <RadzenButton Text="Add Vendor" Click="CreateNewVendor" 
-                                                      ButtonStyle="ButtonStyle.Secondary" 
-                                                      Shade="Shade.Darker"/>
-                                        <VendorView Vendor="@this._purchaseReqInput.Vendor"/>
-                                    </RadzenStack>
+                                <RadzenFieldset Style="text-align: center;">
+                                    <HeaderTemplate>
+                                        <RadzenText TextStyle="TextStyle.H5" TextAlign="TextAlign.Center">Vendor</RadzenText>
+                                    </HeaderTemplate>
+                                    <ChildContent>
+                                        <RadzenStack Orientation="Orientation.Vertical"
+                                                     Gap="5"
+                                                     AlignItems="AlignItems.Center">
+                                            <RadzenDropDown TValue="Vendor"
+                                                            Data="@this._vendors"
+                                                            Value="@this._purchaseReqInput.Vendor"
+                                                            ValueChanged="@SelectedVendorChanged"
+                                                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                            FilterOperator="StringFilterOperator.StartsWith"
+                                                            AllowFiltering="true"
+                                                            TextProperty="Name"
+                                                            Placeholder="Select an vendor"
+                                                            AllowClear="true"
+                                                            Style="width: 400px;"/>
+                                            <RadzenButton Text="Add Vendor" Click="CreateNewVendor"
+                                                          ButtonStyle="ButtonStyle.Secondary"
+                                                          Shade="Shade.Darker"/>
+                                            <VendorView Vendor="@this._purchaseReqInput.Vendor"/>
+                                        </RadzenStack>
+                                    </ChildContent>
                                 </RadzenFieldset>
                             </RadzenStack>
                         </RadzenStepsItem>
@@ -141,7 +151,6 @@
                                                       Change="@this.OnClientChange"
                                                       InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
                                                       Style="width: 100%"/>
-                                        @*<RadzenButton Text="Upload" Click="UploadClickHandler" class="rz-mt-4"/>*@
                                     </RadzenCard>
                                 </RadzenColumn>
                             </RadzenStack>
@@ -197,8 +206,8 @@
     private UserAccountDto? _approverAccount = new();
     private List<Department> _departments = new();
     private List<Vendor> _vendors = new();
-    private List<FileInfo> _quotes = [];
-    
+    private List<FileData> _quotes = [];
+
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
@@ -209,15 +218,6 @@
         this._departments = await this._purchaseRequestService.GetDepartments();
         if(this._userAccount!=null) {
             await this.GeneratePurchaseRequest();
-            /*this._purchaseReqInput = new PurchaseRequestInput() {
-                RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
-                RequesterEmail = this._userAccount?.Email,
-                RequesterUsername = this._userAccount?._id,
-                Id=ObjectId.GenerateNewId(),
-                PurchaseItems = new List<PurchaseItem>(),
-                Quotes = new List<string>(),
-                TempFile = $"{Path.GetFileNameWithoutExtension(Path.GetTempFileName())}.pdf"
-            };*/
         }
     }
     
@@ -225,13 +225,12 @@
         return this._userAccount != null && this._approvers.Count > 0 && this._purchaseReqInput != null;
     }
     
-    Task OnClientChange(UploadChangeEventArgs args) {
-        //Console.WriteLine($"Client-side upload changed");
-        this._quotes = args.Files.ToList();
-        foreach (var file in this._quotes) {
-            Console.WriteLine(file.Name);
+    async Task OnClientChange(UploadChangeEventArgs args) {
+        foreach (var file in args.Files.ToList()) {
+            await using var stream=file.OpenReadStream();
+            using var streamContent = new StreamContent(stream);
+            this._quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
         }
-        return Task.CompletedTask;
     }
     
     private async Task UploadClickHandler() {
@@ -280,17 +279,14 @@
     }
 
     private async Task SavePurchaseRequestHandler() {
-        if(this._purchaseReqInput==null) {
-            this._notificationService.Notify(NotificationSeverity.Error, 
-                "Internal Error",
-                "Purchase Request Input is null");
-            return;
+        if (this._quotes.Count> 0) {
+            this._spinnerService.Show("Uploading Quotes....");
+            await this.UploadFiles();
         }
-        this._spinnerService.Show();
-        await this.UploadFiles();
+        this._spinnerService.Show("Submitting Purchase Request....");
         var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+        this._spinnerService.Hide();
         if(success) {
-            
             this._notificationService.Notify(NotificationSeverity.Success, 
                 "Success",
                 "Purchase Request has been submitted successfully");
@@ -304,14 +300,7 @@
     }
     
     private Task CancelPurchaseRequestHandler() {
-        var enumerable = this._purchaseReqInput?.Quotes;
-        if (enumerable != null) {
-            foreach (var quote in enumerable) {
-                if (File.Exists(quote)) {
-                    File.Delete(quote);
-                }
-            }
-        }
+        this._quotes.Clear();
         this._dialogService.CloseSide();
         return Task.CompletedTask;
     }

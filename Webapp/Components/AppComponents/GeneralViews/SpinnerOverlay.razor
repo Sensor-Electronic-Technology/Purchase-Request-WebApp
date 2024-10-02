@@ -1,0 +1,76 @@
+﻿@using Webapp.Services
+
+<style>
+
+    .loading-container {
+        z-index: 5000;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 4000;
+        width: 100%;
+        height: 100%;
+    }
+    .icon-container {
+        text-align: center;
+        margin-top: 200px; 
+    }
+
+</style>
+@if (IsVisible) {
+
+    <div class="loading-overlay">
+        <div class="loading-container">
+                <div class="icon-container">
+                    <RadzenStack>
+                        <RadzenProgressBarCircular ShowValue="false"
+                                                   Mode="ProgressBarMode.Indeterminate"
+                                                   Size="ProgressBarCircularSize.Large"
+                                                   Style="margin: auto; background: transparent; display: block;">
+                        </RadzenProgressBarCircular>
+                        <RadzenText Text="@_loadingText" Style="color: white; font-size: 20px; font-weight: bold;"/>
+                    </RadzenStack>
+                </div>
+        </div>
+    </div>
+}
+@code{
+    [Inject] private SpinnerService _spinnerService { get; set; }
+    
+    private string _loadingText = "Loading...";
+
+    protected bool IsVisible { get; set; }
+    
+    protected override void OnInitialized() {
+        this._spinnerService.OnShow += ShowLoadingSpinner;
+        this._spinnerService.OnHide += HideLoadingSpinner;
+        this._spinnerService.OnUpdateMessage += UpdateMessage;
+    }
+    
+
+
+    public void ShowLoadingSpinner(string loadingMessage) {
+        this._loadingText=loadingMessage;
+        IsVisible = true;
+        if (IsVisible == true)
+            StateHasChanged();
+    }
+    
+    public void UpdateMessage(string message) {
+        this._loadingText = message;
+        StateHasChanged();
+    }
+
+    public async void HideLoadingSpinner() {
+        IsVisible = false;
+        await Task.Delay(500);
+        if (IsVisible == false)
+            StateHasChanged();
+    }
+}
