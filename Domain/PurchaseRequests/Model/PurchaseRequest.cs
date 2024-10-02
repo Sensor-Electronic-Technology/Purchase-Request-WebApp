@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using Domain.PurchaseRequests.TypeConstants;
+using MongoDB.Bson;
 
 namespace Domain.PurchaseRequests.Model;
 
@@ -18,9 +19,10 @@ public class PurchaseRequest {
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
     public PurchaseOrder? PurchaseOrder { get; set; }
+    public PrStatus Status { get; set; }
     public DateTime Created { get; set; }
-    public bool Approved { get; set; }
     public DateTime ApprovedDate { get; set; }
-    public bool Rejected { get; set; }
     public DateTime RejectedDate { get; set; }
+    public DateTime OrderedDate { get; set; }
+    public DateTime ReceivedDate { get; set; }
 }

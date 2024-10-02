@@ -1,43 +1,96 @@
 ﻿@using Domain.PurchaseRequests.Model
+@using Infrastructure.Services
+@using Webapp.Data
 
 @if (this.Vendor == null) {
-    
+    <RadzenText Text="No Vendor Selected" TextStyle="TextStyle.H5"/>
 } else {
     <RadzenStack Orientation="Orientation.Vertical" Gap="5">
         <RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenFormField Text="Name">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Name"/>
+                    <RadzenTextBox @bind-Value="@this.Vendor.Name" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
                 <RadzenFormField Text="Contact">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Attention"/>
+                    <RadzenTextBox @bind-Value="@this.Vendor.Attention" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
             </RadzenStack>
             <RadzenFormField Text="Street">
-                <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress"/>
+                <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress" ReadOnly="@this.IsReadOnly()"/>
             </RadzenFormField>
         </RadzenStack>
         <RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenFormField Text="City">
-                    <RadzenTextBox @bind-Value="@this.Vendor.City"/>
+                    <RadzenTextBox @bind-Value="@this.Vendor.City" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
                 <RadzenFormField Text="State">
-                    <RadzenTextBox @bind-Value="@this.Vendor.State"/>
+                    <RadzenTextBox @bind-Value="@this.Vendor.State" ReadOnly="@this.IsReadOnly()"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Country">
+                    <RadzenTextBox @bind-Value="@this.Vendor.Country" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
             </RadzenStack>
             <RadzenFormField Text="Zip">
-                <RadzenTextBox @bind-Value="@this.Vendor.Zip"/>
+                <RadzenTextBox @bind-Value="@this.Vendor.Zip" ReadOnly="@this.IsReadOnly()"/>
+            </RadzenFormField>
+            <RadzenFormField Text="Email">
+                <RadzenTextBox @bind-Value="@this.Vendor.Email" ReadOnly="@this.IsReadOnly()"/>
             </RadzenFormField>
         </RadzenStack>
+        <RadzenFieldset Text="Save/Cancel" Visible="@(!this.IsReadOnly())">
+            <RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Save" Click="@this.SaveHandler" Disabled="@this.IsReadOnly()"/>
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Cancel" Click="@this.Cancel" Disabled="@this.IsReadOnly()"/>
+        </RadzenFieldset>
     </RadzenStack>
 }
 
-
-
 @code {
     [Parameter] public Vendor? Vendor { get; set; } = new();
-    [Parameter] public EventCallback<Vendor> VendorChanged { get; set; }
+    /*[Parameter] public EventCallback<Vendor> VendorChanged { get; set; }*/
+    [Parameter] public EventCallback<Vendor> VendorUpdated { get; set; }
+    [Parameter] public EditMode Mode { get; set; }
+
+    [Inject] private ContactDataService _dataService { get; set; }
+    
+    private bool _switchValue=false;
+    private string _label="Enable";
+
+    protected override Task OnParametersSetAsync() {
+        if(this.Mode == EditMode.NEW) {
+            this.Vendor = this.Vendor ?? new Vendor();
+        }
+        return base.OnParametersSetAsync();
+    }
+
+    private bool IsReadOnly() {
+        return this.Mode == EditMode.VIEW;
+    }
+
+    private async Task SaveHandler() {
+        if(this.Vendor == null) {
+            return;
+        }
+        switch (this.Mode) {
+            case EditMode.NEW:
+                await this._dataService.InsertOne(this.Vendor);
+                break;
+            case EditMode.EDIT:
+                await this._dataService.Update(this.Vendor);
+                
+                break;
+        }
+    }
+    
+    private async Task Cancel() {
+        
+    }
+    void OnChange(bool? value, string name) {
+        if (value.HasValue) {
+            this._switchValue = value.Value;
+            this._label = value.Value ? "Disable" : "Enable";
+        }
+    }
 
     protected override Task OnInitializedAsync() {
         return base.OnInitializedAsync();

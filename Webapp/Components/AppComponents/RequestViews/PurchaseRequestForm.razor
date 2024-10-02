@@ -8,6 +8,7 @@
 @using Microsoft.Extensions.Options
 @using MongoDB.Bson
 @using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
 <style>
@@ -93,10 +94,21 @@
                                                             Placeholder="Select an vendor"
                                                             AllowClear="true"
                                                             Style="width: 400px;"/>
-                                            <RadzenButton Text="Add Vendor" Click="CreateNewVendor"
-                                                          ButtonStyle="ButtonStyle.Secondary"
-                                                          Shade="Shade.Darker"/>
-                                            <VendorView Vendor="@this._purchaseReqInput.Vendor"/>
+                                            @*<RadzenStack Orientation="Orientation.Horizontal">
+                                                <RadzenButton Text="Add Vendor" Click="CreateNewVendor"
+                                                              ButtonStyle="ButtonStyle.Secondary"
+                                                              Shade="Shade.Darker"/>
+                                                <RadzenButton Text="Edit Vendor" Click="CreateNewVendor"
+                                                              ButtonStyle="ButtonStyle.Secondary"
+                                                              Shade="Shade.Darker"/>
+                                            </RadzenStack>*@
+                                            <RadzenSplitButton Click="@this.EditVendor" Text="SplitButton">
+                                                <ChildContent>
+                                                    <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)" />
+                                                    <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.NEW)" />
+                                                </ChildContent>
+                                            </RadzenSplitButton>
+                                            <VendorView Vendor="@this._purchaseReqInput.Vendor" Mode="EditMode.VIEW"/>
                                         </RadzenStack>
                                     </ChildContent>
                                 </RadzenFieldset>
@@ -158,11 +170,15 @@
                         <RadzenStepsItem Text="Finalize">
                             <RadzenStack Orientation="Orientation.Horizontal"
                                          JustifyContent="JustifyContent.Center">
-                                <RadzenButton Text="Submit" ButtonStyle="ButtonStyle.Success"
+                                <RadzenButton Text="Submit" 
+                                              ButtonStyle="ButtonStyle.Success"
                                               Icon="save"
                                               Click="@this.SavePurchaseRequestHandler"
                                               Style="width: 180px; height: 80px;"/>
-                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Danger" Icon="cancel"
+                                <RadzenButton Text="Cancel" 
+                                              ButtonStyle="ButtonStyle.Danger" 
+                                              Click="@this.CancelPurchaseRequestHandler"
+                                              Icon="cancel"
                                               Style="width: 180px; height: 80px;"/>
                             </RadzenStack>
                             <PdfViewer PurchaseRequestInput="@this._purchaseReqInput"></PdfViewer>
@@ -193,6 +209,10 @@
     [Inject] private IConfiguration configuration { get; set; }
     [Inject] private FileService _fileService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
+    
+    [Parameter] public EventCallback CancelCallback { get; set; }
+    [Parameter] public EventCallback SaveCallback { get; set; }
+    
     private RadzenUpload _upload;
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
@@ -206,7 +226,7 @@
     private UserAccountDto? _approverAccount = new();
     private List<Department> _departments = new();
     private List<Vendor> _vendors = new();
-    private List<FileData> _quotes = [];
+    private List<FileInput> _quotes = [];
 
     
     protected override async Task OnInitializedAsync() {
@@ -229,7 +249,7 @@
         foreach (var file in args.Files.ToList()) {
             await using var stream=file.OpenReadStream();
             using var streamContent = new StreamContent(stream);
-            this._quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
+            this._quotes.Add(new FileInput(file.Name,await streamContent.ReadAsByteArrayAsync()));
         }
     }
     
@@ -296,23 +316,30 @@
                 "Purchase Request submission failed");
         }
         this._spinnerService.Hide();
-        this._dialogService.CloseSide();
+        await Task.Delay(200);
+        /*this._dialogService.CloseSide();*/
+        await this.SaveCallback.InvokeAsync();
     }
     
-    private Task CancelPurchaseRequestHandler() {
+    private async Task CancelPurchaseRequestHandler() {
         this._quotes.Clear();
-        this._dialogService.CloseSide();
-        return Task.CompletedTask;
+        /*this._dialogService.CloseSide();*/
+        await this.CancelCallback.InvokeAsync();
     }
     
-    private Task CreateNewVendor() {
-        this._notificationService.Notify(NotificationSeverity.Warning, 
-            "Feature Not Implemented",
-            "Create Vendor feature is not yet implemented yet");
-        return Task.CompletedTask;
+    async Task EditVendor(RadzenSplitButtonItem? item){
+        if (item != null) {
+            if (Enum.TryParse(typeof(EditMode), item.Value, out var mode)) {
+                await this._dialogService.OpenAsync<VendorView>("Edit Vendor", new Dictionary<string, object> { { "Vendor", this._purchaseReqInput.Vendor }, { "Mode", mode } });
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error, 
+                    "Error",
+                    "Invalid Edit Mode");
+            }
+        }
     }
-    
-    async Task GeneratePurchaseRequest() {
+
+    Task GeneratePurchaseRequest() {
         this._purchaseReqInput = new PurchaseRequestInput() {
             RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
             RequesterEmail = this._userAccount?.Email,
@@ -350,5 +377,7 @@
             this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
             this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
         }
+
+        return Task.CompletedTask;
     }
 }

@@ -1,7 +1,9 @@
 ﻿@page "/RequesterView"
 @using Domain.Authentication
 @using Domain.PurchaseRequests
+@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Infrastructure.Services
 @using Webapp.Services
@@ -9,11 +11,18 @@
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-    <RadzenButton Text="Create Purchase Request"
-                  ButtonStyle="ButtonStyle.Info"
-                  Click="CreatePurchaseRequestHandler"
-                  Icon="add_shopping_cart"
-                  Style="width: 500px; height: 70px;"/>
+    <RadzenToggleButton Text="@(this._formVisible ? "Close Form" : "Create Purchase Request")"
+                        ButtonStyle="ButtonStyle.Info"
+                        ToggleButtonStyle="ButtonStyle.Danger"
+                        ToggleShade="Shade.Darker"
+                        ToggleIcon="close"
+                        
+                        @bind-Value="@this._formVisible"
+                        Icon="add_shopping_cart"
+                        Style="width: 500px; height: 70px;"/>
+    @if (this._formVisible) {
+        <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler" />
+    }
     <RadzenCard Style="width: 100%">
         <RadzenStack>
             <RadzenCard>
@@ -32,7 +41,44 @@
             </RadzenCard>
         </RadzenStack>
     </RadzenCard>
+
+
 </RadzenStack>
+
+<RadzenDropZoneContainer TItem="PurchaseRequestStatus"
+                         Data="@this._purchaseReqStatuses"
+                         CanDrop="args => false"
+                         
+                         ItemRender="@this.OnItemRender"
+                         ItemSelector="@this.ItemSelector">
+    <ChildContent>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-12">
+            <RadzenDropZone Value="PrStatus.NeedsApproval"
+                            class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+            </RadzenDropZone>
+
+            <RadzenDropZone Value="PrStatus.Approved"
+                            class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
+            </RadzenDropZone>
+
+            <RadzenDropZone Value="PrStatus.Ordered"
+                            class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
+            </RadzenDropZone>
+
+            <RadzenDropZone Value="PrStatus.Delivered"
+                            class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
+
+            </RadzenDropZone>
+        </RadzenStack>
+    </ChildContent>
+    <Template>
+        <strong>@context.Name</strong>
+    </Template>
+</RadzenDropZoneContainer>
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
@@ -40,42 +86,33 @@
     
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
+    private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
     private IList<PurchaseRequest> _selectedPurchaseRequests = [];
     private UserProfile? _userAccount = new();
+    private bool _formVisible = false;
+    
+    Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
             this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
+            this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
             Console.WriteLine("Done Fetching Purchase Requests");
             foreach (var request in this._purchaseRequests) {
                 Console.WriteLine(request.Title);
             }
         }
-        /*if(this._userAccount != null) {
-
-            //await this._dataGrid.Reload();
-
-        }*/
-        
+    }
+    
+    private async Task CancelHandler() {
+        this._formVisible = false;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task CreatePurchaseRequestHandler() {
-        /*this._dialogService.Open<PurchaseRequestForm>("Create Purchase Request",options: new DialogOptions() {
-            Draggable = true,
-            CloseDialogOnOverlayClick = false,
-            ShowClose = true,
-            Width = "50%",
-            Height = "fit-content"
-        });*/
-        
-        await this._dialogService.OpenSideAsync<PurchaseRequestForm>("Create Purchase Request",options: new SideDialogOptions() {
-            CloseDialogOnOverlayClick = false,
-            ShowClose = true,
-            Width = "80%",
-            Position = DialogPosition.Right
-        });
+    private async Task SaveHandler() {
+        this._formVisible = false;
         await this.Reload();
         await InvokeAsync(StateHasChanged);
     }
@@ -84,6 +121,28 @@
         this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
         Console.WriteLine("Reloading Purchase Requests");
     }
-    
 
+    private Task ShowFormHandler() {
+        this._formVisible = !this._formVisible;
+        return Task.CompletedTask;
+    }
+    
+    void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
+// Customize item appearance
+        /*if (args.Item == "Task2")
+        {
+            args.Attributes["draggable"] = "false";
+            args.Attributes["style"] = "cursor:not-allowed";
+            args.Attributes["class"] = "rz-card rz-variant-flat rz-background-color-primary-lighter rz-color-on-primary-lighter";
+        }
+        else
+        {
+            
+        }*/
+        args.Attributes["draggable"] = "false";
+        args.Attributes["style"] = "cursor:not-allowed";
+        args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
+        args.Visible = args.Item.Status != PrStatus.Delivered;
+    }
+    
 }

@@ -74,13 +74,13 @@ public class EmailService {
                     prInput.AdditionalComments)
             };
             builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
-            foreach (var attachment in prInput.Attachments) {
-                await builder.Attachments.AddAsync(attachment.FilePath);
+            foreach (var attachment in prInput.Attachments) { 
+                builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", attachment.Data);
             }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {
-            Console.WriteLine($"Mail Failed, Exception: \n {ex.Message}");
+            this._logger.LogError("Mail Failed, Exception: \\n {ExMessage}", ex.Message);
         } finally {
             await client.DisconnectAsync(true);
         }

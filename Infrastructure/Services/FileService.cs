@@ -13,7 +13,7 @@ namespace Infrastructure.Services;
 public record FileUploadResult {
     public string FileName { get; set; }
     public string ObjectId { get; set; }
-    public string FullPath { get; set; }
+    public byte[] Data { get; set; }
 }
 
 public record MultiFileUploadResult {
@@ -32,52 +32,44 @@ public class FileService {
         this._baseUrl = new Uri(configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/");
     }
     
-    public async Task<FileUploadResult?> UploadFile(FileInfo file) {
+    public async Task<FileUploadResult?> UploadFile(FileInput file) {
         using var client = this._clientFactory.CreateClient();
         client.BaseAddress = this._baseUrl;
         using var form = new MultipartFormDataContent();
-        await using var stream = file.OpenReadStream(1048576000);
+        /*await using var stream = file.OpenReadStream(1048576000);
         using var streamContent = new StreamContent(stream);
-        var filebytes=await streamContent.ReadAsByteArrayAsync();
-        using var fileContent = new ByteArrayContent(filebytes);
+        var filebytes=await streamContent.ReadAsByteArrayAsync();*/
+        using var fileContent = new ByteArrayContent(file.Data);
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
         form.Add(fileContent, "file", file.Name);
         HttpResponseMessage response = await client.PostAsync("UploadFile", form);
         response.EnsureSuccessStatusCode();
         if (response.IsSuccessStatusCode) {
             FileUploadResult output = new FileUploadResult() {
-                FileName = file.Name
+                FileName = file.Name,
+                Data=file.Data
             };
             var content =await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<FileUploadResultModel>(content);
-            var path=Path.Combine(@"C:\Users\aelme\Documents\PurchaseRequestData\Downloads\", file.Name);
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (result != null) {
+                output.ObjectId = result.objectId;
+                return output;
+            } else {
+                //Console.WriteLine("Deserialization failed");
+                return null;
             }
-            await File.WriteAllBytesAsync(path,filebytes);
-            output.ObjectId = result?.objectId;
-            output.FullPath = path;
-            return output;
         } else {
             return null;
         }
     }
 
-    public async Task<MultiFileUploadResult?> UploadMultipleFiles(IList<FileData> files) {
+    public async Task<MultiFileUploadResult?> UploadMultipleFiles(IList<FileInput> files) {
         using var form = new MultipartFormDataContent();
-        /*if(files.Count==0) return [];
-        if (files.Count == 1) {
-            var result=await UploadFile(files[0]);
-            return result!=null ? [result]:[];
-        }*/
         using var client = this._clientFactory.CreateClient();
         client.BaseAddress = this._baseUrl;
         List<(string name,byte[] fileBytes)> fileBytesList=new();
         MultiFileUploadResult output = new MultiFileUploadResult();
         foreach (var file in files) {
-            //var stream = file.OpenReadStream(1048576000);
-            //var streamContent = new StreamContent(stream);
-            //var filebytes=await streamContent.ReadAsByteArrayAsync();
             fileBytesList.Add((file.Name,file.Data));
             var fileContent = new ByteArrayContent(file.Data);
             fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
@@ -91,18 +83,7 @@ public class FileService {
             var result = JsonSerializer.Deserialize<List<FileUploadResultModel>>(content);
             if(result!=null) {
                 output.ObjectIds = result.Select(e=>e?.objectId).ToList();
-                output.LocalFileInfo = new();
-                foreach (var file in fileBytesList) {
-                    //TODO: Replace with container path
-                    var path=Path.Combine(@"C:\Users\aelme\Documents\PurchaseRequestData\Downloads\", file.name);
-                    Console.WriteLine($"File Path: {path}");
-                    if (File.Exists(path)) {
-                        File.Delete(path);
-                    }
-                    await File.WriteAllBytesAsync(path,file.fileBytes);
-                    Console.WriteLine($"File: {file.name} written to {path}");
-                    output.LocalFileInfo.Add(new FileInput(file.name, path));
-                }
+                output.LocalFileInfo = files.ToList();
                 return output;
             } else {
                 Console.WriteLine("Error uploading files,Result was null");

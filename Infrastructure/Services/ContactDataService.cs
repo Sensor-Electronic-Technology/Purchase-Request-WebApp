@@ -27,6 +27,14 @@ public class ContactDataService {
         await this._contactCollection.InsertManyAsync(contacts);
     }
     
+    public async Task<bool> Update<T>(T contact) where T:Contact {
+        var result=await this._contactCollection.OfType<T>().ReplaceOneAsync(e=>e._id == contact._id,contact);
+        if (result.IsAcknowledged) {
+            return result.ModifiedCount>0;
+        }
+        return false;
+    }
+    
     public async Task<List<Vendor>> GetVendors() {
         return await this._contactCollection.OfType<Vendor>().Find(_=>true).ToListAsync();
     }
