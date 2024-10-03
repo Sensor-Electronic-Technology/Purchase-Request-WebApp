@@ -1,0 +1,127 @@
+﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+
+
+<RadzenRow>
+    <RadzenSplitter Orientation="Orientation.Horizontal">
+        <RadzenSplitterPane Size="50%">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard Style="width: 100%">
+                    <RadzenStack>
+                        <RadzenCard>
+                            <RadzenText Text="Purchase Requests"/>
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
+                                            Data="@this.PurchaseRequests"
+                                            AllowRowSelectOnRowClick="true"
+                                            SelectionMode="DataGridSelectionMode.Single"
+                                            Value="@this._selectedPurchaseRequests"
+                                            CellRender="@this.CellRender"
+                                            Render="@this.OnRender"
+                                            ValueChanged="SelectedChangedHandler">
+                                <Columns>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At">
+                                        <Template Context="request">
+                                            @request.Created.ToString("MM/dd/yy")
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Status)" Title="Status">
+                                        <Template Context="request">
+                                            @switch (request.Status) {
+                                            case PrStatus.NeedsApproval:
+                                            <span style='color: var(--rz-text-contrast-color)'>Pending</span>
+                                            @*<RadzenText Text="Pending" Style="color: red"/>*@
+                                            break;
+                                            case PrStatus.Approved:
+                                            <span style='color: var(--rz-text-contrast-color)'>Approved</span>
+                                            @*<RadzenText Text="Approved" Style="color: green"/>*@
+                                            break;
+                                            case PrStatus.Ordered:
+                                            <span style='color: var(--rz-text-contrast-color)'>Ordered</span>
+                                            @*<RadzenText Text="Rejected" Style="color: mediumpurple"/>*@
+                                            break;
+                                            case PrStatus.Delivered:
+                                            <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
+                                            @*<RadzenText Text="Delivered" Style="color: green"/>*@
+                                            break;
+                                            default:
+                                            <span style='color: var(--rz-text-contrast-color)'>Unknown</span>
+                                            @*<RadzenText Text="Unknown" Style="color: black"/>*@
+                                            break;
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </RadzenCard>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="50%">
+            <RadzenColumn Size="12" SizeMD="6">
+                <PurchaseRequestView PurchaseRequest="@this.SelectedPurchaseRequest"/>
+            </RadzenColumn>
+        </RadzenSplitterPane>
+    </RadzenSplitter>
+    
+
+</RadzenRow>
+
+
+@code {
+    [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
+    [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
+    
+    private IList<PurchaseRequest> _selectedPurchaseRequests;
+    private RadzenDataGrid<PurchaseRequest> _dataGrid;
+    
+    
+    
+    private void CancelRequestHandler(PurchaseRequest request) {
+        Console.WriteLine("Cancel Request");
+    }
+
+    private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
+        if (obj.Count > 0) {
+            this.SelectedPurchaseRequest = obj[0];
+            this._selectedPurchaseRequests=obj;
+            await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
+        }
+    }
+    
+    void OnRender(DataGridRenderEventArgs<PurchaseRequest> args) {
+        if(args.FirstRender) {
+            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Status", SortOrder = SortOrder.Descending });
+            StateHasChanged();
+        }
+    }
+    
+    void CellRender(DataGridCellRenderEventArgs<PurchaseRequest> args) {
+        if (args.Column.Property == nameof(PurchaseRequest.Status)) {
+            switch (args.Data.Status) {
+                case PrStatus.Approved:
+                    args.Attributes.Add("style", "background-color: var(--rz-warning)");
+                    break;
+                case PrStatus.Delivered:
+                    args.Attributes.Add("style", "background-color: var(--rz-success)");
+                    break;
+                case PrStatus.Ordered:
+                    args.Attributes.Add("style", "background-color: var(--rz-danger)");
+                    break;
+                case PrStatus.NeedsApproval:
+                    args.Attributes.Add("style", "background-color: var(--rz-info)");
+                    break;
+            }
+            //args.Attributes.Add("style", $"background-color: {(args.Data.Quantity > 20 ? "var(--rz-success)" : "var(--rz-base-background-color)")};");
+            //args.Attributes.Add("class", args.Data.Quantity > 20 ? "my-class" : "my-other-class");
+            
+        }
+    }
+
+}

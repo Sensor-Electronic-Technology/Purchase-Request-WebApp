@@ -3,8 +3,6 @@
 @using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using MongoDB.Bson
-
-
 <AuthorizeView Roles="Admin,Approver,Requester">
     <Authorized>
         @if (this._purchaseRequest == null) {

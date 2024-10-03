@@ -1,0 +1,25 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Domain.Users
+@using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Services.Authentication
+
+
+
+@code {
+    [Inject] private UserService _userService { get; set; }
+    [Inject] private PurchaseRequestDataService _purchaseRequestDataService { get; set; }
+    
+    private List<PurchaseRequest> _purchaseRequests = [];
+    private UserProfile? _userAccount = new();
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._userAccount = this._userService.GetSessionUserProfile();
+        if (this._userAccount != null) {
+            this._purchaseRequests = await this._purchaseRequestDataService.GetApproverRequests(this._userAccount.FirstName+" "+this._userAccount.LastName);
+        }
+        
+    }
+
+}

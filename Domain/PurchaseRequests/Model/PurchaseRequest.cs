@@ -1,4 +1,5 @@
-﻿using Domain.PurchaseRequests.TypeConstants;
+﻿using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.TypeConstants;
 using MongoDB.Bson;
 
 namespace Domain.PurchaseRequests.Model;
@@ -25,4 +26,21 @@ public class PurchaseRequest {
     public DateTime RejectedDate { get; set; }
     public DateTime OrderedDate { get; set; }
     public DateTime ReceivedDate { get; set; }
+
+    public PurchaseRequestInput ToInput() {
+        return new PurchaseRequestInput {
+            RequesterUsername = Requester,
+            ApproverName = Approver,
+            Title = Title,
+            Description = Description,
+            AdditionalComments = AdditionalComments,
+            ShippingType = ShippingType,
+            PrUrl = PrUrl,
+            Department = Department,
+            Vendor = Vendor,
+            PurchaseItems = PurchaseItems,
+            Urgent = Urgent,
+            Quotes = Quotes,
+        };
+    }
 }

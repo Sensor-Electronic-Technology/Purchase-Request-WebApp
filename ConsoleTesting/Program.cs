@@ -142,8 +142,9 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
                                             " Also two keyboards and a mouse for each computers.  " +
                                             "Another filler line to increase the Reason For Purchase. " +
                                             " I want to make sure the wrapping works when writing to a single cell";
-        purchaseRequest.Approved = false;
-        purchaseRequest.Rejected = false;
+        purchaseRequest.Status = PrStatus.NeedsApproval;
+        /*purchaseRequest.Approved = false;
+        purchaseRequest.Rejected = false;*/
     }
     return purchaseRequest;
 }

@@ -28,6 +28,10 @@ public class PurchaseRequestDataService {
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {
         return await this._purchaseRequestCollection.Find(filter).ToListAsync();
     }
+
+    public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
+        return await this._purchaseRequestCollection.Find(e=>e.Approver==username).ToListAsync();
+    }
     
     public async Task InsertOne(PurchaseRequest purchaseRequest) {
         await this._purchaseRequestCollection.InsertOneAsync(purchaseRequest);

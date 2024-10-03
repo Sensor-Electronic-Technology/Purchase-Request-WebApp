@@ -5,9 +5,9 @@
 @if (this.Vendor == null) {
     <RadzenText Text="No Vendor Selected" TextStyle="TextStyle.H5"/>
 } else {
-    <RadzenStack Orientation="Orientation.Vertical" Gap="5">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="10" Style="width:600px;">
         <RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
                 <RadzenFormField Text="Name">
                     <RadzenTextBox @bind-Value="@this.Vendor.Name" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
@@ -20,7 +20,7 @@
             </RadzenFormField>
         </RadzenStack>
         <RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
                 <RadzenFormField Text="City">
                     <RadzenTextBox @bind-Value="@this.Vendor.City" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
@@ -31,16 +31,28 @@
                     <RadzenTextBox @bind-Value="@this.Vendor.Country" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
             </RadzenStack>
-            <RadzenFormField Text="Zip">
-                <RadzenTextBox @bind-Value="@this.Vendor.Zip" ReadOnly="@this.IsReadOnly()"/>
-            </RadzenFormField>
-            <RadzenFormField Text="Email">
-                <RadzenTextBox @bind-Value="@this.Vendor.Email" ReadOnly="@this.IsReadOnly()"/>
-            </RadzenFormField>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFormField Text="Zip">
+                    <RadzenTextBox @bind-Value="@this.Vendor.Zip" ReadOnly="@this.IsReadOnly()" Style="width: 150px;"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Email">
+                    <RadzenTextBox @bind-Value="@this.Vendor.Email" ReadOnly="@this.IsReadOnly()" Style="width: 450px"/>
+                </RadzenFormField>
+            </RadzenStack>
         </RadzenStack>
         <RadzenFieldset Text="Save/Cancel" Visible="@(!this.IsReadOnly())">
-            <RadzenButton ButtonStyle="ButtonStyle.Primary" Text="Save" Click="@this.SaveHandler" Disabled="@this.IsReadOnly()"/>
-            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Text="Cancel" Click="@this.Cancel" Disabled="@this.IsReadOnly()"/>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" 
+                              Text="Save" 
+                              Click="@this.SaveHandler" 
+                              Disabled="@this.IsReadOnly()"
+                              Style="width: 150px;height: 50px;"/>
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" 
+                              Text="Cancel" 
+                              Click="@this.Cancel" 
+                              Disabled="@this.IsReadOnly()"
+                              Style="width: 150px;height: 50px;"/>
+            </RadzenStack>
         </RadzenFieldset>
     </RadzenStack>
 }
@@ -50,6 +62,7 @@
     /*[Parameter] public EventCallback<Vendor> VendorChanged { get; set; }*/
     [Parameter] public EventCallback<Vendor> VendorUpdated { get; set; }
     [Parameter] public EditMode Mode { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
 
     [Inject] private ContactDataService _dataService { get; set; }
     
@@ -73,17 +86,19 @@
         }
         switch (this.Mode) {
             case EditMode.NEW:
-                await this._dataService.InsertOne(this.Vendor);
+                this.Vendor=await this._dataService.InsertOneV2(this.Vendor);
                 break;
             case EditMode.EDIT:
                 await this._dataService.Update(this.Vendor);
-                
                 break;
         }
+
+        await this.VendorUpdated.InvokeAsync(this.Vendor);
+        this._dialogService.Close();
     }
     
     private async Task Cancel() {
-        
+        this._dialogService.Close();
     }
     void OnChange(bool? value, string name) {
         if (value.HasValue) {
@@ -91,9 +106,4 @@
             this._label = value.Value ? "Disable" : "Enable";
         }
     }
-
-    protected override Task OnInitializedAsync() {
-        return base.OnInitializedAsync();
-    }
-
 }

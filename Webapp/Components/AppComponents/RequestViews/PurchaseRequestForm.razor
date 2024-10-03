@@ -83,10 +83,22 @@
                                         <RadzenStack Orientation="Orientation.Vertical"
                                                      Gap="5"
                                                      AlignItems="AlignItems.Center">
-                                            <RadzenDropDown TValue="Vendor"
+                                            @*<RadzenDropDown TValue="Vendor"
+                                                            @bind-Value="@this._purchaseReqInput.Vendor"
                                                             Data="@this._vendors"
                                                             Value="@this._purchaseReqInput.Vendor"
                                                             ValueChanged="@SelectedVendorChanged"
+                                                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                            FilterOperator="StringFilterOperator.StartsWith"
+                                                            AllowFiltering="true"
+                                                            TextProperty="Name"
+                                                            Placeholder="Select an vendor"
+                                                            AllowClear="true"
+                                                            @bind-SelectedItem="@this._purchaseReqInput.Vendor"
+                                                            Style="width: 400px;"/>*@
+                                            <RadzenDropDown TValue="Vendor"
+                                                            @bind-Value="@this._purchaseReqInput.Vendor"
+                                                            Data="@this._vendors"
                                                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                                             FilterOperator="StringFilterOperator.StartsWith"
                                                             AllowFiltering="true"
@@ -102,10 +114,10 @@
                                                               ButtonStyle="ButtonStyle.Secondary"
                                                               Shade="Shade.Darker"/>
                                             </RadzenStack>*@
-                                            <RadzenSplitButton Click="@this.EditVendor" Text="SplitButton">
+                                            <RadzenSplitButton Click="@this.EditVendor" Text="New/Edit">
                                                 <ChildContent>
-                                                    <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)" />
-                                                    <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.NEW)" />
+                                                    <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)"/>
+                                                    <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.EDIT)"/>
                                                 </ChildContent>
                                             </RadzenSplitButton>
                                             <VendorView Vendor="@this._purchaseReqInput.Vendor" Mode="EditMode.VIEW"/>
@@ -147,7 +159,6 @@
                                     <RadzenDropDown TValue="string"
                                                     Data="@ShippingType.List"
                                                     Value="@this._purchaseReqInput.ShippingType"
-
                                                     Placeholder="Select an Shipping Method"
                                                     ValueProperty="Value"
                                                     Style="width: 300px; height: fit-content; font-size: 18px !important;"
@@ -212,7 +223,10 @@
     
     [Parameter] public EventCallback CancelCallback { get; set; }
     [Parameter] public EventCallback SaveCallback { get; set; }
-    
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public EditMode Mode { get; set; }
+
+    /*private RadzenDropDown<Vendor> _dropDown;*/
     private RadzenUpload _upload;
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
@@ -240,7 +254,15 @@
             await this.GeneratePurchaseRequest();
         }
     }
-    
+
+    protected override Task OnParametersSetAsync() {
+        if (this.PurchaseRequest != null && this.Mode == EditMode.EDIT) {
+            this._purchaseReqInput = this.PurchaseRequest.ToInput();
+        }
+        return base.OnParametersSetAsync();
+    }
+
+
     bool CanCreatePurchaseRequest() {
         return this._userAccount != null && this._approvers.Count > 0 && this._purchaseReqInput != null;
     }
@@ -330,13 +352,57 @@
     async Task EditVendor(RadzenSplitButtonItem? item){
         if (item != null) {
             if (Enum.TryParse(typeof(EditMode), item.Value, out var mode)) {
-                await this._dialogService.OpenAsync<VendorView>("Edit Vendor", new Dictionary<string, object> { { "Vendor", this._purchaseReqInput.Vendor }, { "Mode", mode } });
+                if ((EditMode)mode == EditMode.NEW) {
+                    this._purchaseReqInput.Vendor = null;
+                    await InvokeAsync(StateHasChanged);
+                    await this._dialogService.OpenAsync<VendorView>("New Vendor",
+                        new Dictionary<string, object> {
+                            { "Mode", mode },
+                            {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+                        },new DialogOptions() {
+                            Width = "fit-content",
+                        });
+                } else {
+                    if (this._purchaseReqInput.Vendor == null) {
+                        this._notificationService.Notify(NotificationSeverity.Error, 
+                            "Error",
+                            "No Vendor Selected");
+                        return;
+                    }
+                    await this._dialogService.OpenAsync<VendorView>("Edit Vendor",
+                        new Dictionary<string, object> {
+                            { "Vendor", this._purchaseReqInput.Vendor }, 
+                            { "Mode", mode },
+                            {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+                        },new DialogOptions() {
+                            Width = "fit-content",
+                        });
+                }
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error, 
                     "Error",
                     "Invalid Edit Mode");
             }
+        }else {
+            this._notificationService.Notify(NotificationSeverity.Warning, 
+                "Click Event",
+                "Selected New or Edit from dropdown");
         }
+    }
+    
+    async Task VendorUpdatedHandler(Vendor vendor) {
+        this._vendors=await this._purchaseRequestService.GetVendors();
+        this._purchaseReqInput.Vendor=this._vendors.FirstOrDefault(e=>e._id==vendor._id);
+        Console.WriteLine($"Vendor Updated: {vendor.Name}");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadData() {
+        this._approvers = await this._authApiService.GetApprovers();
+        this._userAccount = this._userService.GetSessionUserProfile();
+        this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
+        this._vendors=await this._purchaseRequestService.GetVendors();
+        this._departments = await this._purchaseRequestService.GetDepartments();
     }
 
     Task GeneratePurchaseRequest() {
@@ -377,7 +443,6 @@
             this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
             this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
         }
-
         return Task.CompletedTask;
     }
 }

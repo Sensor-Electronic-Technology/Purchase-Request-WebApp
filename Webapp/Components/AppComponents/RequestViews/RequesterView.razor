@@ -1,4 +1,5 @@
 ﻿@page "/RequesterView"
+@using System.Text.Json
 @using Domain.Authentication
 @using Domain.PurchaseRequests
 @using Domain.PurchaseRequests.Dto
@@ -6,6 +7,7 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Infrastructure.Services
+@using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
@@ -16,33 +18,15 @@
                         ToggleButtonStyle="ButtonStyle.Danger"
                         ToggleShade="Shade.Darker"
                         ToggleIcon="close"
-                        
                         @bind-Value="@this._formVisible"
+                        Click="@this.ShowRequestFormHandler"
                         Icon="add_shopping_cart"
                         Style="width: 500px; height: 70px;"/>
     @if (this._formVisible) {
         <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler" />
     }
-    <RadzenCard Style="width: 100%">
-        <RadzenStack>
-            <RadzenCard>
-                <RadzenText Text="Purchase Requests"/>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenDataGrid TItem="PurchaseRequest" Data="@this._purchaseRequests" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@this._selectedPurchaseRequests">
-                    <Columns>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Approver)" Title="Approver"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At"/>
-                        <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
-                    </Columns>
-                </RadzenDataGrid>
-            </RadzenCard>
-        </RadzenStack>
-    </RadzenCard>
-
-
+    <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
+    
 </RadzenStack>
 
 <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
@@ -87,9 +71,10 @@
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
     private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
-    private IList<PurchaseRequest> _selectedPurchaseRequests = [];
+    private PurchaseRequest? _selectedRequest;
     private UserProfile? _userAccount = new();
     private bool _formVisible = false;
+    private EditMode _requestFormMode = EditMode.NEW;
     
     Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
     
@@ -110,11 +95,21 @@
         this._formVisible = false;
         await InvokeAsync(StateHasChanged);
     }
+    
+    private async Task EditHandler() {
+        this._formVisible = true;
+        this._requestFormMode = EditMode.EDIT;
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task SaveHandler() {
         this._formVisible = false;
         await this.Reload();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CancelRequestHandler(PurchaseRequest request) {
+        Console.WriteLine(JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true }));
     }
     
     private async Task Reload() {
@@ -122,27 +117,16 @@
         Console.WriteLine("Reloading Purchase Requests");
     }
 
-    private Task ShowFormHandler() {
+    private Task ShowRequestFormHandler() {
         this._formVisible = !this._formVisible;
+        this._requestFormMode=EditMode.NEW;
         return Task.CompletedTask;
     }
     
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
-// Customize item appearance
-        /*if (args.Item == "Task2")
-        {
-            args.Attributes["draggable"] = "false";
-            args.Attributes["style"] = "cursor:not-allowed";
-            args.Attributes["class"] = "rz-card rz-variant-flat rz-background-color-primary-lighter rz-color-on-primary-lighter";
-        }
-        else
-        {
-            
-        }*/
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "cursor:not-allowed";
         args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
         args.Visible = args.Item.Status != PrStatus.Delivered;
     }
-    
 }

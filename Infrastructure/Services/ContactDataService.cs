@@ -20,7 +20,14 @@ public class ContactDataService {
     }
     
     public async Task InsertOne<T>(T contact) where T:Contact {
+        contact._id=ObjectId.GenerateNewId();
         await this._contactCollection.InsertOneAsync(contact);
+    }
+    
+    public async Task<T> InsertOneV2<T>(T contact) where T:Contact {
+        contact._id=ObjectId.GenerateNewId();
+        await this._contactCollection.InsertOneAsync(contact);
+        return contact;
     }
     
     public async Task InsertMany<T>(IList<T> contacts) where T:Contact {
