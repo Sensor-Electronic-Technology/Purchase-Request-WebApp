@@ -37,7 +37,7 @@ public class PurchaseRequestService {
     }
     
     
-    public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
+    public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input,byte[] message) {
         var purchaseRequest=new PurchaseRequest {
             Title=input.Title,
             Description=input.Description,
@@ -57,7 +57,7 @@ public class PurchaseRequestService {
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
         if (!exists) return false;
-        await this._emailService.SendRequestEmail(input, 
+        await this._emailService.SendRequestEmail(message,input, 
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
         return true;

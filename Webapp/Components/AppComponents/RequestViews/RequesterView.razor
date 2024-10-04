@@ -13,27 +13,10 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-    <RadzenToggleButton Text="@(this._formVisible ? "Close Form" : "Create Purchase Request")"
-                        ButtonStyle="ButtonStyle.Info"
-                        ToggleButtonStyle="ButtonStyle.Danger"
-                        ToggleShade="Shade.Darker"
-                        ToggleIcon="close"
-                        @bind-Value="@this._formVisible"
-                        Click="@this.ShowRequestFormHandler"
-                        Icon="add_shopping_cart"
-                        Style="width: 500px; height: 70px;"/>
-    @if (this._formVisible) {
-        <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler" />
-    }
-    <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
-    
-</RadzenStack>
-
 <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
                          Data="@this._purchaseReqStatuses"
                          CanDrop="args => false"
-                         
+
                          ItemRender="@this.OnItemRender"
                          ItemSelector="@this.ItemSelector">
     <ChildContent>
@@ -65,12 +48,29 @@
     </Template>
 </RadzenDropZoneContainer>
 
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+    <RadzenToggleButton Text="@(this._formVisible ? "Close Form" : "Create Purchase Request")"
+                        ButtonStyle="ButtonStyle.Info"
+                        ToggleButtonStyle="ButtonStyle.Danger"
+                        ToggleShade="Shade.Darker"
+                        ToggleIcon="close"
+                        @bind-Value="@this._formVisible"
+                        Click="@this.ShowRequestFormHandler"
+                        Icon="add_shopping_cart"
+                        Style="width: 500px; height: 70px;"/>
+    @if (this._formVisible) {
+        <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler" />
+    }
+    <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
+    
+</RadzenStack>
 
-<DxRichEdit />
-    @*<MailMergeSettings>
-        <DxMailMergeSettings Data="@DataSource" ViewMergedData="true" ActiveRecord="1"/>
+<DxRichEdit DocumentContent="@this._documentContent">
+    <MailMergeSettings>
+        <DxMailMergeSettings Data="@this._mailMerge" ViewMergedData="true" ActiveRecord="1"/>
     </MailMergeSettings>
-</DxRichEdit>*@
+</DxRichEdit>
+
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
@@ -83,11 +83,21 @@
     private UserProfile? _userAccount = new();
     private bool _formVisible = false;
     private EditMode _requestFormMode = EditMode.NEW;
+    private byte[] _documentContent;
+    private IEnumerable<RequestMailMerge> _mailMerge = [new RequestMailMerge() {
+        Title = "Consultant Computers",
+        Approver = "Rakesh Jain",
+        Requester = "Andrew Elmendorf",
+        PrLink = "http://setihome.seti.com",
+        Description = "Short description of the request",
+        AdditionalComments = "Comments regarding the circumstances of the request",
+    }];
     
     Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
+        this._documentContent=await File.ReadAllBytesAsync(@"C:\Users\aelme\RiderProjects\Purchase-Request-WebApp\Webapp\wwwroot\MailTemplateFiles\RequestTemplate.docx");
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
             this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);

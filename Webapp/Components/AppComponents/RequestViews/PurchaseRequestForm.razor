@@ -179,20 +179,39 @@
                             </RadzenStack>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize">
-                            <RadzenStack Orientation="Orientation.Horizontal"
-                                         JustifyContent="JustifyContent.Center">
-                                <RadzenButton Text="Submit" 
-                                              ButtonStyle="ButtonStyle.Success"
-                                              Icon="save"
-                                              Click="@this.SavePurchaseRequestHandler"
-                                              Style="width: 180px; height: 80px;"/>
-                                <RadzenButton Text="Cancel" 
-                                              ButtonStyle="ButtonStyle.Danger" 
-                                              Click="@this.CancelPurchaseRequestHandler"
-                                              Icon="cancel"
-                                              Style="width: 180px; height: 80px;"/>
-                            </RadzenStack>
-                            <PdfViewer PurchaseRequestInput="@this._purchaseReqInput"></PdfViewer>
+                            <RadzenRow>
+                                <RadzenColumn Size="6" SizeMD="6">
+                                    <RadzenStack Orientation="Orientation.Horizontal"
+                                                 JustifyContent="JustifyContent.Center">
+                                        <RadzenButton Text="Submit"
+                                                      ButtonStyle="ButtonStyle.Success"
+                                                      Icon="save"
+                                                      Click="@this.SavePurchaseRequestHandler"
+                                                      Style="width: 180px; height: 80px;"/>
+                                        <RadzenButton Text="Cancel"
+                                                      ButtonStyle="ButtonStyle.Danger"
+                                                      Click="@this.CancelPurchaseRequestHandler"
+                                                      Icon="cancel"
+                                                      Style="width: 180px; height: 80px;"/>
+                                    </RadzenStack>
+                                    <PdfViewer PurchaseRequestInput="@this._purchaseReqInput"></PdfViewer>
+                                </RadzenColumn>
+                                <RadzenColumn Size="6" SizeMD="6">
+                                    <RadzenStack>
+                                        <RadzenButton Text="Preview Mail" Click="PreviewMailHandler"/>
+                                    </RadzenStack>
+                                    <DxRichEdit @ref="@this._richEdit" 
+                                                DocumentContent="@this._documentContent" 
+                                                DocumentFormat="DocumentFormat.OpenXml">
+                                        <MailMergeSettings>
+                                            <DxMailMergeSettings Data="@this._mailMerge"
+                                                                 ViewMergedData="true"
+                                                                 ActiveRecord="1"/>
+                                        </MailMergeSettings>
+                                    </DxRichEdit>
+                                </RadzenColumn>
+                            </RadzenRow>
+
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
@@ -220,6 +239,7 @@
     [Inject] private IConfiguration configuration { get; set; }
     [Inject] private FileService _fileService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
+    [Inject] private EmailService _emailService { get; set; }
     
     [Parameter] public EventCallback CancelCallback { get; set; }
     [Parameter] public EventCallback SaveCallback { get; set; }
@@ -229,6 +249,7 @@
     /*private RadzenDropDown<Vendor> _dropDown;*/
     private RadzenUpload _upload;
     private RadzenSteps _steps;
+    private DxRichEdit _richEdit;
     private int _selectedStepIndex = 0;
     private PurchaseRequestInput _purchaseReqInput = new PurchaseRequestInput();
     private string? _selectedApprover;
@@ -241,10 +262,13 @@
     private List<Department> _departments = new();
     private List<Vendor> _vendors = new();
     private List<FileInput> _quotes = [];
+    private byte[] _documentContent;
+    private IEnumerable<RequestMailMerge> _mailMerge;
 
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
+        this._documentContent=await File.ReadAllBytesAsync(@"C:\Users\aelme\RiderProjects\Purchase-Request-WebApp\Webapp\wwwroot\MailTemplateFiles\RequestTemplate.docx");
         this._approvers = await this._authApiService.GetApprovers();
         this._userAccount = this._userService.GetSessionUserProfile();
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
@@ -326,7 +350,13 @@
             await this.UploadFiles();
         }
         this._spinnerService.Show("Submitting Purchase Request....");
-        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+        byte[] result = await _richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        /*await this._emailService.SendTestEmail(result,
+            ["aelmendorf@s-et.com"],
+            ["aelmendorf@s-et.com"]);*/
+        var messageBody = (byte[])result.Clone();
+        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput,messageBody);
+        await _richEdit.LoadDocumentAsync(result, DocumentFormat.OpenXml);
         this._spinnerService.Hide();
         if(success) {
             this._notificationService.Notify(NotificationSeverity.Success, 
@@ -443,6 +473,24 @@
             this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
             this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
         }
+        _mailMerge = [new RequestMailMerge() {
+            Title = this._purchaseReqInput.Title,
+            Approver = this._selectedApprover,
+            Requester = this._userAccount.FirstName,
+            PrLink = "http://setihome.seti.com",
+            Description = this._purchaseReqInput.Description,
+            AdditionalComments = this._purchaseReqInput.AdditionalComments,
+        }];
         return Task.CompletedTask;
     }
+
+    private async Task PreviewMailHandler() {
+        byte[] result = await _richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        /*await this._emailService.SendTestEmail(result, 
+            ["aelmendorf@s-et.com"],
+            ["aelmendorf@s-et.com"]);*/
+        await _richEdit.LoadDocumentAsync(result, DocumentFormat.OpenXml);
+        
+    }
+
 }
