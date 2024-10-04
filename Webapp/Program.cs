@@ -7,6 +7,7 @@ using Webapp.Components;
 using Webapp.Services.Authentication;
 using Infrastructure;
 using Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using QuestPDF.Infrastructure;
 using Webapp.Services;
 
@@ -17,6 +18,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddCircuitOptions(options => options.DetailedErrors = true)
     .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
+builder.Services.AddDevExpressBlazor(options => {
+    options.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5;
+    options.SizeMode = DevExpress.Blazor.SizeMode.Small;
+});
+builder.Services.AddMvc();
 builder.Services.AddScoped<SpinnerService>();
 builder.Services.AddDomain(builder);
 builder.Services.AddControllers();

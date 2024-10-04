@@ -24,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="DevExpress.Blazor.RichEdit" Version="24.2.1-alpha-24260" />
         <PackageReference Include="Radzen.Blazor" Version="5.2.4" />
         <PackageReference Include="SETiAuth.Domain.Shared" Version="1.3.6" />
         <PackageReference Include="Aspire.MongoDB.Driver" Version="8.2.0" />

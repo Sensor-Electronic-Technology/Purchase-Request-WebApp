@@ -1,13 +1,20 @@
-﻿<!DOCTYPE html>
+﻿@using DevExpress.Blazor
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@inject IFileVersionProvider FileVersionProvider
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="/"/>
+    <link href=@AppendVersion("_content/DevExpress.Blazor.Themes/blazing-dark.bs5.min.css") rel="stylesheet" />
+    @DxResourceManager.RegisterScripts()
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css"/>
     <link rel="stylesheet" href="app.css"/>
     <link rel="stylesheet" href="Webapp.styles.css"/>
+    <link href=@AppendVersion("_content/DevExpress.Blazor.RichEdit/dx-blazor-richedit.css") rel="stylesheet" />
     <link rel="icon" type="image/png" href="/images/seti_logo.png"/>
     <RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>
     <HeadOutlet @rendermode="InteractiveServer"/>
@@ -20,3 +27,9 @@
 <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 </body>
 </html>
+
+@code {
+
+    private string AppendVersion(string path) => FileVersionProvider.AddFileVersionToPath("/", path);
+
+}

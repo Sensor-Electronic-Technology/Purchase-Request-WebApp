@@ -10,6 +10,7 @@
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
+@rendermode InteractiveServer
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
@@ -63,6 +64,13 @@
         <strong>@context.Name</strong>
     </Template>
 </RadzenDropZoneContainer>
+
+
+<DxRichEdit />
+    @*<MailMergeSettings>
+        <DxMailMergeSettings Data="@DataSource" ViewMergedData="true" ActiveRecord="1"/>
+    </MailMergeSettings>
+</DxRichEdit>*@
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
