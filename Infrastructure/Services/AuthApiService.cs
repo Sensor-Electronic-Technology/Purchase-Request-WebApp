@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Domain.Authentication;
 using Microsoft.Extensions.Configuration;
 using SETiAuth.Domain.Shared.Authentication;
 using SETiAuth.Domain.Shared.Constants;
@@ -32,15 +33,24 @@ public class AuthApiService {
     public async Task<List<UserAccountDto>> GetApprovers() {
         Console.WriteLine($"AuthDomain: {this._configuration["AuthDomain"]}");
         var response=this._client.PostAsJsonAsync(HttpClientConstants.GetUsersEndpoint,
-            new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = "Approver" });
-        /*if (!response.IsCompletedSuccessfully) {
-            Console.WriteLine("Failed to fetch approvers");
-            return [];
-        }*/
+            new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = PurchaseRequestRole.Approver.Name });
         var usersResponse=await response.Result.Content.ReadFromJsonAsync<GetUsersResponse>();
         
         return usersResponse?.Users ?? [];
     }
+    
+    public async Task<List<string>> GetUserEmails() {
+        var userEmails = new List<string>();
+        foreach (var role in PurchaseRequestRole.List) {
+            var response=this._client.PostAsJsonAsync(HttpClientConstants.GetUsersEndpoint,
+                new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = PurchaseRequestRole.Approver.Name });
+            var usersResponse=await response.Result.Content.ReadFromJsonAsync<GetUsersResponse>();
+            userEmails.AddRange(usersResponse?.Users?.Select(x => x.Email) ?? []);
+        }
+        return userEmails;
+    }
+    
+    
     
     
     public async Task Logout(string? token) {

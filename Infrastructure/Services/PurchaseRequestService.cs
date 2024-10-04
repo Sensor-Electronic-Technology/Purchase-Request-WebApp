@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using QuestPDF;
+using SETiAuth.Domain.Shared.Authentication;
 
 namespace Infrastructure.Services;
 
@@ -69,6 +70,14 @@ public class PurchaseRequestService {
     
     public async Task<List<Department>> GetDepartments() {
         return await this._departmentDataService.GetDepartments();
+    }
+
+    public async Task<List<UserAccountDto>> GetApprovers() {
+        return await this._authApiService.GetApprovers();
+    }
+
+    public async Task<List<string>> GetUserEmails() {
+        return await this._authApiService.GetUserEmails();
     }
     
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {

@@ -18,6 +18,7 @@ public class PurchaseRequestInput {
     public string? ShippingType { get; set; }
     public string? PrUrl { get; set; }
     public byte[]? TempFile { get; set; }=Array.Empty<byte>();
+    public byte[]? EmailTemplate { get; set; }=Array.Empty<byte>();
     public Vendor? Vendor { get; set; }
     public Department? Department { get; set; }
     public List<PurchaseItem> PurchaseItems { get; set; } = [];

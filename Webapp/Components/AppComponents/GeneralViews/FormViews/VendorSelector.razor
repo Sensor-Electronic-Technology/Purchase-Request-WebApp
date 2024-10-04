@@ -1,0 +1,96 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Infrastructure.Services
+@using Webapp.Data
+
+<RadzenStack Orientation="Orientation.Vertical"
+             Gap="5"
+             AlignItems="AlignItems.Center">
+    <RadzenDropDown TValue="Vendor"
+                    Value="@this.Vendor"
+                    ValueChanged="@VendorChangedHandler"
+                    Data="@this._vendors"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    FilterOperator="StringFilterOperator.StartsWith"
+                    AllowFiltering="true"
+                    TextProperty="Name"
+                    Placeholder="Select an vendor"
+                    AllowClear="true"
+                    Style="width: 400px;"/>
+    <RadzenSplitButton Click="@this.EditVendor" Text="New/Edit">
+        <ChildContent>
+            <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)"/>
+            <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.EDIT)"/>
+        </ChildContent>
+    </RadzenSplitButton>
+    <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
+</RadzenStack>
+@code {
+    
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
+    
+    [Parameter] public Vendor? Vendor { get; set; }
+    [Parameter] public EventCallback<Vendor> VendorChanged { get; set; }
+    
+    private List<Vendor> _vendors = new();
+    
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._vendors=await this._purchaseRequestService.GetVendors();
+    }
+    
+    async Task VendorUpdatedHandler(Vendor vendor) {
+        this._vendors=await this._purchaseRequestService.GetVendors();
+        this.Vendor=this._vendors.FirstOrDefault(e=>e._id==vendor._id);
+        Console.WriteLine($"Vendor Updated: {vendor.Name}");
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    async Task EditVendor(RadzenSplitButtonItem? item){
+        if (item != null) {
+            if (Enum.TryParse(typeof(EditMode), item.Value, out var mode)) {
+                if ((EditMode)mode == EditMode.NEW) {
+                    this.Vendor = null;
+                    await InvokeAsync(StateHasChanged);
+                    await this._dialogService.OpenAsync<VendorView>("New Vendor",
+                        new Dictionary<string, object> {
+                            { "Mode", mode },
+                            {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+                        },new DialogOptions() {
+                            Width = "fit-content",
+                        });
+                } else {
+                    if (this.Vendor == null) {
+                        this._notificationService.Notify(NotificationSeverity.Error, 
+                            "Error",
+                            "No Vendor Selected");
+                        return;
+                    }
+                    await this._dialogService.OpenAsync<VendorView>("Edit Vendor",
+                        new Dictionary<string, object> {
+                            { "Vendor", this.Vendor }, 
+                            { "Mode", mode },
+                            {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+                        },new DialogOptions() {
+                            Width = "fit-content",
+                        });
+                }
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error, 
+                    "Error",
+                    "Invalid Edit Mode");
+            }
+        }else {
+            this._notificationService.Notify(NotificationSeverity.Warning, 
+                "Click Event",
+                "Selected New or Edit from dropdown");
+        }
+    }
+
+    private async Task VendorChangedHandler(Vendor vendor) {
+        this.Vendor = vendor;
+        await this.VendorChanged.InvokeAsync(this.Vendor);
+    }
+
+}

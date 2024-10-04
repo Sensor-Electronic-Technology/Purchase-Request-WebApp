@@ -1,0 +1,43 @@
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Pdf
+@using QuestPDF.Fluent
+
+<embed type="application/pdf" 
+       src="@this._embededSrc"  
+       width="100%" height="600px"/>
+
+@code {
+    [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
+    private bool _prNull = true;
+    private string _embededSrc = string.Empty;
+     protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+     }
+
+     protected override async Task OnParametersSetAsync() {
+         await base.OnParametersSetAsync();
+         
+         if(this.PurchaseRequestInput != null) {
+             if (this._prNull) {
+                 var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+                 this.PurchaseRequestInput.TempFile=document.GeneratePdf();
+                 this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
+                 this._prNull = false;
+             }
+         } else {
+             this._prNull = true;
+         }
+
+         //await InvokeAsync(StateHasChanged);
+     }
+
+     /*private async Task Callback() {
+         var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+         this.PurchaseRequestInput.TempFile=document.GeneratePdf();
+         this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
+         await InvokeAsync(StateHasChanged);
+     }*/
+     
+     
+}

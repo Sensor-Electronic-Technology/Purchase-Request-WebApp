@@ -13,63 +13,18 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-<RadzenDropZoneContainer TItem="PurchaseRequestStatus"
-                         Data="@this._purchaseReqStatuses"
-                         CanDrop="args => false"
+<RadzenTabs>
+    <Tabs>
+        <RadzenTabsItem Icon="add_shopping_cart" Text="Overview" Style="background:#4a764a">
+            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
+            <RequestQueueView PurchaseReqStatuses="@this._purchaseReqStatuses"/>
 
-                         ItemRender="@this.OnItemRender"
-                         ItemSelector="@this.ItemSelector">
-    <ChildContent>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-12">
-            <RadzenDropZone Value="PrStatus.NeedsApproval"
-                            class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
-            </RadzenDropZone>
-
-            <RadzenDropZone Value="PrStatus.Approved"
-                            class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
-            </RadzenDropZone>
-
-            <RadzenDropZone Value="PrStatus.Ordered"
-                            class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
-            </RadzenDropZone>
-
-            <RadzenDropZone Value="PrStatus.Delivered"
-                            class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
-
-            </RadzenDropZone>
-        </RadzenStack>
-    </ChildContent>
-    <Template>
-        <strong>@context.Name</strong>
-    </Template>
-</RadzenDropZoneContainer>
-
-<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-    <RadzenToggleButton Text="@(this._formVisible ? "Close Form" : "Create Purchase Request")"
-                        ButtonStyle="ButtonStyle.Info"
-                        ToggleButtonStyle="ButtonStyle.Danger"
-                        ToggleShade="Shade.Darker"
-                        ToggleIcon="close"
-                        @bind-Value="@this._formVisible"
-                        Click="@this.ShowRequestFormHandler"
-                        Icon="add_shopping_cart"
-                        Style="width: 500px; height: 70px;"/>
-    @if (this._formVisible) {
-        <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler" />
-    }
-    <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
-    
-</RadzenStack>
-
-<DxRichEdit DocumentContent="@this._documentContent">
-    <MailMergeSettings>
-        <DxMailMergeSettings Data="@this._mailMerge" ViewMergedData="true" ActiveRecord="1"/>
-    </MailMergeSettings>
-</DxRichEdit>
+        </RadzenTabsItem>
+        <RadzenTabsItem Icon="add_shopping_cart" Text="Create New" Style="background: #0a53be">
+            <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler"/>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
 
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
@@ -83,21 +38,9 @@
     private UserProfile? _userAccount = new();
     private bool _formVisible = false;
     private EditMode _requestFormMode = EditMode.NEW;
-    private byte[] _documentContent;
-    private IEnumerable<RequestMailMerge> _mailMerge = [new RequestMailMerge() {
-        Title = "Consultant Computers",
-        Approver = "Rakesh Jain",
-        Requester = "Andrew Elmendorf",
-        PrLink = "http://setihome.seti.com",
-        Description = "Short description of the request",
-        AdditionalComments = "Comments regarding the circumstances of the request",
-    }];
-    
-    Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._documentContent=await File.ReadAllBytesAsync(@"C:\Users\aelme\RiderProjects\Purchase-Request-WebApp\Webapp\wwwroot\MailTemplateFiles\RequestTemplate.docx");
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
             this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
@@ -141,10 +84,5 @@
         return Task.CompletedTask;
     }
     
-    void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
-        args.Attributes["draggable"] = "false";
-        args.Attributes["style"] = "cursor:not-allowed";
-        args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
-        args.Visible = args.Item.Status != PrStatus.Delivered;
-    }
+
 }

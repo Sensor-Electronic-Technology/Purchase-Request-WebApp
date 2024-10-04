@@ -1,7 +1,5 @@
-﻿@using Domain.Authentication
-@using Domain.PurchaseRequests.Model
+﻿@using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
-
 
 <RadzenRow>
     <RadzenSplitter Orientation="Orientation.Horizontal">
@@ -13,6 +11,7 @@
                             <RadzenText Text="Purchase Requests"/>
                         </RadzenCard>
                         <RadzenCard>
+                            <RadzenButton Click="Callback" Text="Clear Selection" />
                             <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
@@ -32,26 +31,26 @@
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Status)" Title="Status">
                                         <Template Context="request">
                                             @switch (request.Status) {
-                                            case PrStatus.NeedsApproval:
-                                            <span style='color: var(--rz-text-contrast-color)'>Pending</span>
-                                            @*<RadzenText Text="Pending" Style="color: red"/>*@
-                                            break;
-                                            case PrStatus.Approved:
-                                            <span style='color: var(--rz-text-contrast-color)'>Approved</span>
-                                            @*<RadzenText Text="Approved" Style="color: green"/>*@
-                                            break;
-                                            case PrStatus.Ordered:
-                                            <span style='color: var(--rz-text-contrast-color)'>Ordered</span>
-                                            @*<RadzenText Text="Rejected" Style="color: mediumpurple"/>*@
-                                            break;
-                                            case PrStatus.Delivered:
-                                            <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
-                                            @*<RadzenText Text="Delivered" Style="color: green"/>*@
-                                            break;
-                                            default:
-                                            <span style='color: var(--rz-text-contrast-color)'>Unknown</span>
-                                            @*<RadzenText Text="Unknown" Style="color: black"/>*@
-                                            break;
+                                                case PrStatus.NeedsApproval:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Pending</span>
+                                                    @*<RadzenText Text="Pending" Style="color: red"/>*@
+                                                    break;
+                                                case PrStatus.Approved:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Approved</span>
+                                                    @*<RadzenText Text="Approved" Style="color: green"/>*@
+                                                    break;
+                                                case PrStatus.Ordered:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Ordered</span>
+                                                    @*<RadzenText Text="Rejected" Style="color: mediumpurple"/>*@
+                                                    break;
+                                                case PrStatus.Delivered:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
+                                                    @*<RadzenText Text="Delivered" Style="color: green"/>*@
+                                                    break;
+                                                default:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Unknown</span>
+                                                    @*<RadzenText Text="Unknown" Style="color: black"/>*@
+                                                    break;
                                             }
                                         </Template>
                                     </RadzenDataGridColumn>
@@ -78,7 +77,7 @@
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
     
-    private IList<PurchaseRequest> _selectedPurchaseRequests;
+    private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     
     
@@ -92,7 +91,11 @@
             this.SelectedPurchaseRequest = obj[0];
             this._selectedPurchaseRequests=obj;
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
-        }
+        }/* else {
+            this.SelectedPurchaseRequest = null;
+            this._selectedPurchaseRequests = null;
+            await SelectedPurchaseRequestChanged.InvokeAsync(null);
+        }*/
     }
     
     void OnRender(DataGridRenderEventArgs<PurchaseRequest> args) {
@@ -122,6 +125,12 @@
             //args.Attributes.Add("class", args.Data.Quantity > 20 ? "my-class" : "my-other-class");
             
         }
+    }
+
+    private async Task Callback() {
+        this._selectedPurchaseRequests = null;
+        this.SelectedPurchaseRequest = null;
+        await SelectedPurchaseRequestChanged.InvokeAsync(null);
     }
 
 }

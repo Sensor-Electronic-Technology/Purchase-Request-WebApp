@@ -1,0 +1,56 @@
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.TypeConstants
+
+<style>
+    .rz-panel-titlebar {
+        flex-direction: row-reverse;
+        justify-content:left;
+    }
+</style>
+<RadzenPanel Icon="dashboard" Text="Queue" AllowCollapse="true" CollapseTitle="Press to expand">
+    <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
+                             Data="@this.PurchaseReqStatuses"
+                             CanDrop="args => false"
+                             ItemRender="@this.OnItemRender"
+                             ItemSelector="@this.ItemSelector">
+        <ChildContent>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-12">
+                <RadzenDropZone Value="PrStatus.NeedsApproval"
+                                class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                    <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                </RadzenDropZone>
+
+                <RadzenDropZone Value="PrStatus.Approved"
+                                class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                    <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
+                </RadzenDropZone>
+
+                <RadzenDropZone Value="PrStatus.Ordered"
+                                class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                    <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"  />
+                </RadzenDropZone>
+
+                <RadzenDropZone Value="PrStatus.Delivered"
+                                class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                    <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                </RadzenDropZone>
+            </RadzenStack>
+        </ChildContent>
+        <Template>
+            <strong>@context.Name</strong>
+        </Template>
+    </RadzenDropZoneContainer>
+</RadzenPanel>
+
+
+@code {
+    [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; }
+    Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
+    
+    void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
+        args.Attributes["draggable"] = "false";
+        args.Attributes["style"] = "cursor:not-allowed";
+        args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
+        args.Visible = args.Item.Status != PrStatus.Delivered;
+    }
+}
