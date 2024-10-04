@@ -1,5 +1,12 @@
 ﻿@using Webapp.Data
 
+<style>
+    .rz-alert-title{
+        font-size: var(--rz-body-font-size) !important;
+        font-weight: bold !important;
+    }
+</style>
+
 @if (this.RequestAlerts != null) {
     <RadzenStack Gap="1" Style="margin: 0.5rem" Visible="true">
         <RadzenText TextStyle="TextStyle.H5"
@@ -18,9 +25,9 @@
                                     Style="font-weight: bold;"
                                     TextAlign="TextAlign.Center"/>
                         <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
-                                     Text="@alert.Text"
+                                     Text="@alert.Message"
                                      Shade="Shade.Default"
-                                     Size="AlertSize.ExtraSmall"
+                                     Size="AlertSize.Small"
                                      AllowClose="false" Style="min-width: 1rem !important;"/>
                     </RadzenStack>
                     @*<RadzenStack AlignItems="AlignItems.Start">
