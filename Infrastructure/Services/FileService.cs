@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+﻿/*using System.Net.Http.Headers;
 using System.Text.Json;
 using Domain.FileStorage;
 using Domain.PurchaseRequests.Dto;
@@ -38,7 +38,7 @@ public class FileService {
         using var form = new MultipartFormDataContent();
         /*await using var stream = file.OpenReadStream(1048576000);
         using var streamContent = new StreamContent(stream);
-        var filebytes=await streamContent.ReadAsByteArrayAsync();*/
+        var filebytes=await streamContent.ReadAsByteArrayAsync();#1#
         using var fileContent = new ByteArrayContent(file.Data);
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
         form.Add(fileContent, "file", file.Name);
@@ -76,7 +76,6 @@ public class FileService {
             form.Add(fileContent, "files", file.Name);
         }
         var response = await client.PostAsync("UploadMultipleFiles", form);
-        response.EnsureSuccessStatusCode();
         response.EnsureSuccessStatusCode();
         if (response.IsSuccessStatusCode) {
             var content =await response.Content.ReadAsStringAsync();
@@ -139,4 +138,4 @@ public class FileService {
         await using FileStream outputFileStream = new FileStream(path, FileMode.CreateNew);
         await fileStream.CopyToAsync(outputFileStream);
     }
-}
+}*/

@@ -6,9 +6,8 @@ using Radzen;
 using Webapp.Components;
 using Webapp.Services.Authentication;
 using Infrastructure;
-using Infrastructure.Services;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using QuestPDF.Infrastructure;
+using SetiFileStore.FileClient;
 using Webapp.Services;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -37,8 +36,7 @@ builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
 builder.Services.AddScoped<UserService>();
 //builder.Services.AddHttpClient<FileService>(x=>x.BaseAddress = new Uri(builder.Configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/"));
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<FileService>();
+builder.Services.AddSetiFileClient();
 builder.Services.AddInfrastructure();
 /*builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<CircuitHandler, UserCircuitHandler>());*/
 var app = builder.Build();

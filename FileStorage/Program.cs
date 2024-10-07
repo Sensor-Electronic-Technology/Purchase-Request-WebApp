@@ -9,17 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
-
-/*builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-        policy =>
-        {
-            policy.WithOrigins("https://localhost:7295",
-                    "https://localhost:3000", "http://localhost:3000").AllowAnyOrigin().AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});*/
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
                                                             ?? "mongodb://172.20.3.41:27017"));
 

@@ -1,8 +1,8 @@
-﻿
-@using Domain.PurchaseRequests.Dto
+﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
+@using SetiFileStore.FileClient
 @using Infrastructure.Services
 @using MongoDB.Bson
 @using SETiAuth.Domain.Shared.Authentication
@@ -237,7 +237,7 @@
     private UserProfile? _userAccount = new();
     private UserAccountDto? _approverAccount = new();
     private List<Department> _departments = new();
-    private List<FileInput> _quotes = [];
+    private List<FileData> _quotes = [];
     private byte[]? _documentContent;
     private bool _canSave = false;
     private PurchaseRequestInput? _pdfDataInput = null;
@@ -271,7 +271,7 @@
         foreach (var file in args.Files.ToList()) {
             await using var stream=file.OpenReadStream();
             using var streamContent = new StreamContent(stream);
-            this._quotes.Add(new FileInput(file.Name,await streamContent.ReadAsByteArrayAsync()));
+            this._quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
         }
     }
     
@@ -287,9 +287,9 @@
             return;
         }
         var result=await this._fileService.UploadMultipleFiles(this._quotes);
-        if (result != null) {
-            this._purchaseReqInput.Quotes = result.ObjectIds;
-            this._purchaseReqInput.Attachments=result.LocalFileInfo;
+        if (result.Any()) {
+            this._purchaseReqInput.Quotes = result;
+            this._purchaseReqInput.Attachments=this._quotes.Select(e=>new FileInput(e.Name,e.Data)).ToList();
             this._notificationService.Notify(NotificationSeverity.Success,
                 "Success",
                 "Files Uploaded");

@@ -28,6 +28,7 @@
         <PackageReference Include="Radzen.Blazor" Version="5.2.4" />
         <PackageReference Include="SETiAuth.Domain.Shared" Version="1.3.6" />
         <PackageReference Include="Aspire.MongoDB.Driver" Version="8.2.0" />
+        <PackageReference Include="SETiFileClient" Version="1.3.12" />
 
     </ItemGroup>
 

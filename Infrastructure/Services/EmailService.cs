@@ -66,13 +66,6 @@ public class EmailService {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
             message.Subject = $"{prInput.Title}-Purchase Request";
-            /*var builder = new BodyBuilder { 
-                HtmlBody = await GenerateMessage(prInput.ApproverName,
-                    prInput.RequesterName,
-                    prInput.PrUrl,"View Purchase Request", 
-                    prInput.Title, prInput.Description,
-                    prInput.AdditionalComments)
-            };*/
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
@@ -82,7 +75,7 @@ public class EmailService {
             };
             builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
             foreach (var attachment in prInput.Attachments) { 
-                builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", attachment.Data);
+                builder.Attachments.Add(attachment.Name, attachment.Data);
             }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
