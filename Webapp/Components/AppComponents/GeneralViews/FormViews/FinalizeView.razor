@@ -1,21 +1,35 @@
 ﻿@using Domain.PurchaseRequests.Dto
-<h3>FinalizeView</h3>
+@using Webapp.Data
+<style>
+    #ddUpload {
+        left: 0;
+        --rz-upload-button-bar-background-color: transparent;
+        --rz-upload-button-bar-padding: 0;
+    }
+
+    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        padding: 100px 0;
+    }
+</style>
 <RadzenStack Orientation="Orientation.Vertical" Gap="20">
     <RadzenStack Orientation="Orientation.Horizontal"
                  JustifyContent="JustifyContent.Center" Gap="20">
         <RadzenButton Text="Submit"
                       ButtonStyle="ButtonStyle.Success"
                       Icon="save"
-                      Click="@this.SavePurchaseRequestHandler"
-                      Disabled="@(!this._canSave)"
+                      Click="@this.SaveClicked"
+                      Disabled="@(!this.CanSave)"
                       Style="width: 180px; height: 50px;"/>
         <RadzenButton Text="Cancel"
                       ButtonStyle="ButtonStyle.Danger"
-                      Click="@this.CancelPurchaseRequestHandler"
+                      Click="@this.CancelClicked"
                       Icon="cancel"
                       Style="width: 180px; height: 50px;"/>
     </RadzenStack>
-    <AlertListView RequestAlerts="@this._requestAlerts"/>
+    <AlertListView RequestAlerts="@this.RequestAlerts"/>
     <RadzenRow RowGap="5">
         <RadzenColumn Size="6" SizeMD="6">
             <RadzenStack Orientation="Orientation.Vertical">
@@ -33,14 +47,12 @@
                     <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
                 </RadzenCard>
                 <DxRichEdit @ref="@this._richEdit"
-                            @bind-DocumentContent="@this._documentContent"
+                            @bind-DocumentContent="@this.DocumentContent"
                             DocumentLoaded="@this.DocumentLoadedHandler"
                             DocumentFormat="DocumentFormat.OpenXml"
-                            ViewType="ViewType.Simple"
-                            BarMode="BarMode.None"
-                            ReadOnly="true">
+                            ReadOnly="false">
                     <MailMergeSettings>
-                        <DxMailMergeSettings Data="@this._mailMerge"
+                        <DxMailMergeSettings Data="@this.MailMerge"
                                              ViewMergedData="true"
                                              ActiveRecord="1"/>
                     </MailMergeSettings>
@@ -52,12 +64,45 @@
 
 
 @code {
-    
+    [Inject] private IWebHostEnvironment _environment { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
+    [Parameter] public bool DocLoaded { get; set; }
+    [Parameter] public bool CanSave { get; set; }
+    [Parameter] public List<RequestAlert> RequestAlerts { get; set; } = [];
+     public List<RequestMailMerge> MailMerge { get; set; } = [];
+    [Parameter] public byte[] DocumentContent { get; set; }
+    [Parameter] public byte[] MailDocument { get; set; }
+ 
+    [Parameter] public EventCallback<bool> DocLoadedChanged { get; set; }
+    [Parameter] public EventCallback<byte[]> MailDocumentChanged { get; set; }
+    
+    [Parameter] public EventCallback SaveClicked { get; set; }
+    [Parameter] public EventCallback CancelClicked { get; set; }
     
     DxRichEdit _richEdit;
-    byte[] _documentContent;
-    MailMergeData _mailMerge;
-    
-    
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this.DocumentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
+    }
+
+    protected override Task OnParametersSetAsync() {
+        this.MailMerge = [new RequestMailMerge() {
+            Title = this.PurchaseRequestInput?.Title ?? "",
+            Approver = this.PurchaseRequestInput?.ApproverName ?? "",
+            Requester = this.PurchaseRequestInput?.RequesterName ?? "",
+            PrLink = this.PurchaseRequestInput?.PrUrl ?? "",
+            Description = this.PurchaseRequestInput?.Description ?? "",
+            AdditionalComments = this.PurchaseRequestInput?.AdditionalComments ?? "",
+        }];
+        return base.OnParametersSetAsync();
+    }
+
+    private async Task DocumentLoadedHandler(Document obj) {
+        this.DocLoaded = true;
+        this.MailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        //await this._richEdit.LoadDocumentAsync(this.MailDocument, DocumentFormat.OpenXml);
+        await this.MailDocumentChanged.InvokeAsync(this.MailDocument);
+        await this.DocLoadedChanged.InvokeAsync(this.DocLoaded);
+    }
 }

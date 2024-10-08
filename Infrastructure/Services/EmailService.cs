@@ -70,6 +70,7 @@ public class EmailService {
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
             html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
+            html = html.Replace("{prLink}",$"<a href=\"{prInput.PrUrl}\">Request Link</a>");
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };

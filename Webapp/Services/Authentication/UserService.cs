@@ -21,12 +21,10 @@ public class UserService {
     public UserProfile? GetSessionUserProfile() {
         return _profile;
     }
-    
-    /*
-    public async Task<UserProfile?> GetProfile(string username) {
-        return await this._profileService.GetProfile(username);
+
+    public string GetUserRole() {
+        return this._session.UserAccount.Role;
     }
-    */
     
     public async Task<bool> ProfileExists(string username) {
         return await this._profileService.ProfileExists(username);

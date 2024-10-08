@@ -36,10 +36,24 @@ public class PurchaseRequestService {
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._requestDataService.GetPurchaseRequest(id);
     }
+
+    public PurchaseRequestInput CreatePrInput(string name,string email,string username) {
+        var input= new PurchaseRequestInput() {
+            RequesterName = name,
+            RequesterEmail = email,
+            RequesterUsername = username,
+            Id=ObjectId.GenerateNewId(),
+            PurchaseItems = new List<PurchaseItem>(),
+            Quotes = new List<string>(),
+        };
+        input.PrUrl = $"http://localhost:5015/approve/{input.Id.ToString()}";
+        return input;
+    }
     
     
-    public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input,byte[] message) {
+    public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
         var purchaseRequest=new PurchaseRequest {
+            _id = input.Id ?? ObjectId.GenerateNewId(),
             Title=input.Title,
             Description=input.Description,
             Urgent=input.Urgent,
@@ -58,7 +72,7 @@ public class PurchaseRequestService {
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
         if (!exists) return false;
-        await this._emailService.SendRequestEmail(message,input, 
+        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
         return true;

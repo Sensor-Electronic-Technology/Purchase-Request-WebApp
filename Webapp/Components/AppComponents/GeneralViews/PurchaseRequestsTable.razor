@@ -1,5 +1,9 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
+@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Services.Authentication
+@using Domain.Users
 
 <RadzenRow>
     <RadzenSplitter Orientation="Orientation.Horizontal">
@@ -15,6 +19,7 @@
                             <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
+                                            CellContextMenu="@this.ContextMenuHandle"
                                             SelectionMode="DataGridSelectionMode.Single"
                                             Value="@this._selectedPurchaseRequests"
                                             CellRender="@this.CellRender"
@@ -73,17 +78,23 @@
 
 
 @code {
+    [Inject] private ContextMenuService _contextMenuService { get; set; }
+    [Inject] private UserService _userService { get; set; }
     [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
+    [Parameter] public EventCallback ModifyRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest> RejectRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest> ApproveRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest> CancelRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest> OrderRequest { get; set; }
     
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     
-    
-    
     private void CancelRequestHandler(PurchaseRequest request) {
         Console.WriteLine("Cancel Request");
+        
     }
 
     private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
@@ -132,5 +143,112 @@
         this.SelectedPurchaseRequest = null;
         await SelectedPurchaseRequestChanged.InvokeAsync(null);
     }
-
+    
+    private void ContextMenuHandle(DataGridCellMouseEventArgs<PurchaseRequest> args) {
+        var role = this._userService.GetUserRole();
+        Console.WriteLine($"Role: {role}");
+        if (PurchaseRequestRole.TryFromName(role, out PurchaseRequestRole requestRole)) {
+            Console.WriteLine($"PrRole: {requestRole.Name}");
+            switch (requestRole.Name) {
+                case nameof(PurchaseRequestRole.Requester): {
+                    Console.WriteLine("Creating Requester Context Menu");
+                    this._contextMenuService.Open(args,
+                        new List<ContextMenuItem> {
+                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
+                            new ContextMenuItem(){ Text = "CancelRequest", Value = 2, Icon = "highlight_off" },
+                        }, (e) => {
+                            this._dataGrid.SelectRow(args.Data,false);
+                            switch((int)e.Value){
+                                case 1:
+                                    this.ModifyRequest.InvokeAsync().Wait();
+                                    break;
+                                case 2:
+                                    this.CancelRequest.InvokeAsync(args.Data);
+                                    break;
+                            }
+                            this._contextMenuService.Close();
+                        }
+                    );
+                    break;
+                }
+                case nameof(PurchaseRequestRole.Approver): {
+                    this._contextMenuService.Open(args,
+                        new List<ContextMenuItem> {
+                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
+                            new ContextMenuItem(){ Text = "Reject Request", Value = 2, Icon = "delete_forever" },
+                            new ContextMenuItem(){ Text = "ApproveRequest", Value = 3, Icon = "done_all" },
+                        }, (e) => {
+                            switch((int)e.Value){
+                                case 1:
+                                    this.ModifyRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 2:
+                                    this.RejectRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 3:
+                                    this.ApproveRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                            }
+                            this._contextMenuService.Close();
+                        }
+                    );
+                    break;
+                }
+                case nameof(PurchaseRequestRole.Purchaser): {
+                    this._contextMenuService.Open(args,
+                        new List<ContextMenuItem> {
+                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
+                            new ContextMenuItem(){ Text = "Reject Request", Value = 2, Icon = "delete_forever" },
+                            new ContextMenuItem(){ Text = "Order Request", Value = 5, Icon = "add_shopping_cart" },
+                        }, (e) => {
+                            switch((int)e.Value){
+                                case 1:
+                                    this.ModifyRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 2:
+                                    this.RejectRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 5:
+                                    this.OrderRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                            }
+                            this._contextMenuService.Close();
+                        }
+                    );
+                    break;
+                }
+                case nameof(PurchaseRequestRole.Admin): {
+                    this._contextMenuService.Open(args,
+                        new List<ContextMenuItem> {
+                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
+                            new ContextMenuItem(){ Text = "Reject Request", Value = 2, Icon = "delete_forever" },
+                            new ContextMenuItem(){ Text = "ApproveRequest", Value = 3, Icon = "done_all" },
+                            new ContextMenuItem(){ Text = "CancelRequest", Value = 4, Icon = "highlight_off" },
+                            new ContextMenuItem(){ Text = "Order Request", Value = 5, Icon = "add_shopping_cart" },
+                        }, (e) => {
+                            switch((int)e.Value){
+                                case 1:
+                                    this.ModifyRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 2:
+                                    this.RejectRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 3:
+                                    this.ApproveRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 4:
+                                    this.CancelRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                                case 5:
+                                    this.OrderRequest.InvokeAsync(this.SelectedPurchaseRequest);
+                                    break;
+                            }
+                            this._contextMenuService.Close();
+                        }
+                    );
+                    break;
+                }
+            }
+        }
+    }
 }

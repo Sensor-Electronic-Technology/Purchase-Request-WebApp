@@ -10,20 +10,7 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 
-<style>
-    #ddUpload {
-        left: 0;
-        --rz-upload-button-bar-background-color: transparent;
-        --rz-upload-button-bar-padding: 0;
-    }
 
-    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
-        width: 100%;
-        text-align: center;
-        font-size: 16px;
-        padding: 100px 0;
-    }
-</style>
 <RadzenCard Variant="Variant.Filled">
     <RadzenStack>
         <RadzenCard class="rz-background-color-secondary">
@@ -42,7 +29,8 @@
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Department & Vendor">
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
                                                     FirstName="@(this._userAccount.FirstName+" "+this._userAccount.LastName)"
-                                                    @bind-SelectedApprover="@this._selectedApprover"
+                                                    SelectedApprover="@this._selectedApprover"
+                                                    SelectedApproverChanged="SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
                                                     @bind-Description="@this._purchaseReqInput.Description"
                                                     @bind-IsUrgent="@this._purchaseReqInput.Urgent"/>
@@ -61,7 +49,13 @@
                                                 @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize">
-                            
+                            <FinalizeView PurchaseRequestInput="@this._finalizeDataInput" 
+                                          CanSave="@this._canSave"
+                                          RequestAlerts="@this._requestAlerts"
+                                          SaveClicked="@this.SavePurchaseRequestHandler"
+                                          CancelClicked="@this.CancelPurchaseRequestHandler"
+                                          @bind-MailDocument="@this._purchaseReqInput.EmailTemplate"
+                                          @bind-DocLoaded="@this._docLoaded"/>
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
@@ -99,25 +93,23 @@
     private int _selectedStepIndex = 0;
     private PurchaseRequestInput _purchaseReqInput = new PurchaseRequestInput();
     private string? _selectedApprover;
-    private string? _selectedShippingType;
     private bool _isUrgent = false;
     private List<UserAccountDto> _approvers = [];
     private List<string> _approverSelectList = [];
     private UserProfile? _userAccount = new();
-    private UserAccountDto? _approverAccount = new();
     private List<Department> _departments = new();
     private List<FileData> _quotes = [];
-    private byte[]? _documentContent;
+    private PurchaseRequestInput? _finalizeDataInput = null;
+    private List<RequestAlert> _requestAlerts = [];
     private bool _canSave = false;
     private bool _docLoaded = false;
-    private PurchaseRequestInput? _pdfDataInput = null;
-    private List<RequestAlert> _requestAlerts = [];
+
     
     private List<RequestMailMerge> _mailMerge;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
+        
         this._approvers = await this._purchaseRequestService.GetApprovers();
         this._userAccount = this._userService.GetSessionUserProfile();
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
@@ -126,28 +118,12 @@
             await this.GeneratePurchaseRequest();
         }
     }
-
+    
     protected override Task OnParametersSetAsync() {
         if (this.PurchaseRequest != null && this.Mode == EditMode.EDIT) {
             this._purchaseReqInput = this.PurchaseRequest.ToInput();
         }
         return base.OnParametersSetAsync();
-    }
-    
-    bool CanCreatePurchaseRequest() {
-        return this._userAccount != null && this._approvers.Count > 0;
-    }
-    
-    /*async Task OnClientChange(UploadChangeEventArgs args) {
-        foreach (var file in args.Files.ToList()) {
-            await using var stream=file.OpenReadStream();
-            using var streamContent = new StreamContent(stream);
-            this._quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
-        }
-    }*/
-    
-    private async Task UploadClickHandler() {
-        await this.UploadFiles();
     }
     
     private async Task UploadFiles() {
@@ -170,41 +146,13 @@
                 "Files failed to upload");
         }
     }
-    
-    /*private async Task SelectedApproverChanged(string? selected) {
-        this._selectedApprover = selected;
-        this._approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == selected);
-        this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
-        this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
-        await InvokeAsync(StateHasChanged);
-    }*/
-    
-    /*private async Task ShippingTypeChangedHandler(string shippingType) {
-        this._selectedShippingType = shippingType;
-        this._purchaseReqInput.ShippingType = shippingType;
-        await InvokeAsync(StateHasChanged);
-    }
-    
-    private async Task SelectedVendorChanged(Vendor? selected) {
-        //this._selectedVendor = selected;
-        this._purchaseReqInput.Vendor=selected;
-        await InvokeAsync(StateHasChanged);
-    }*/
-
     private async Task SavePurchaseRequestHandler() {
         if (this._quotes.Count> 0) {
             this._spinnerService.Show("Uploading Quotes....");
             await this.UploadFiles();
         }
         this._spinnerService.UpdateMessage("Submitting Purchase Request....");
-        /*byte[] messageBody=[];
-        byte[] result = await _richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        await _richEdit.LoadDocumentAsync(result, DocumentFormat.OpenXml);
-        //this._purchaseReqInput.EmailTemplate = (byte[])result.Clone();
-        messageBody=(byte[])result.Clone();*/
-        this._documentContent = await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        await _richEdit.LoadDocumentAsync(this._documentContent, DocumentFormat.OpenXml);
-        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput,this._documentContent);
+        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
         this._spinnerService.Hide();
         await InvokeAsync(StateHasChanged);
         if(success) {
@@ -233,30 +181,22 @@
         this._departments = await this._purchaseRequestService.GetDepartments();
     }
     
-        private async Task SelectedStepChangedHandler(int obj) {
+    private async Task SelectedStepChangedHandler(int obj) {
         this._selectedStepIndex = obj;
         if (obj == 4) {
-            this._mailMerge = [new RequestMailMerge() {
-                Title = this._purchaseReqInput.Title ?? "",
-                Approver = this._selectedApprover ?? "",
-                Requester = this._userAccount?.FirstName ?? "",
-                PrLink = "http://setihome.seti.com",
-                Description = this._purchaseReqInput.Description ?? "",
-                AdditionalComments = this._purchaseReqInput.AdditionalComments ?? "",
-            }];
-            this._pdfDataInput = this._purchaseReqInput;
+            this._finalizeDataInput = this._purchaseReqInput;
             await this.VerifyPurchaseRequest();
         } else {
-            this._pdfDataInput = null;
+            this._finalizeDataInput = null;
+            this._docLoaded = false;
+            this._canSave = false;
         }
-        this._docLoaded = false;
-        this._canSave = false;
+
     }
     
     private Task VerifyPurchaseRequest() {
         bool okay = true;
         this._requestAlerts.Clear();
-        
         if (string.IsNullOrEmpty(this._selectedApprover)) {
             okay = false;
             this._requestAlerts.Add(new RequestAlert() {
@@ -287,11 +227,41 @@
             });
         }
 
-        if (string.IsNullOrEmpty(this._selectedShippingType)) {
+        if (string.IsNullOrEmpty(this._purchaseReqInput.ShippingType)) {
             okay = false;
             this._requestAlerts.Add(new RequestAlert() {
                 Item="Shipping",
                 Message = "Shipping type not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+
+        if (this._purchaseReqInput.Department == null) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Department",
+                Message = "Department not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+
+        if (string.IsNullOrEmpty(this._purchaseReqInput.Description)) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Purchase Request Reason",
+                Message = "Reason not provided",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+        
+        if (string.IsNullOrEmpty(this._purchaseReqInput.Title)) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Title",
+                Message = "Title not provided",
                 Okay = false,
                 Style = AlertStyle.Danger
             });
@@ -310,20 +280,11 @@
         return Task.CompletedTask;
     }
 
-    private Task DocumentLoadedHandler(Document obj) {
-        this._docLoaded = true;
-        return Task.CompletedTask;
-    }
-
     Task GeneratePurchaseRequest() {
-        this._purchaseReqInput = new PurchaseRequestInput() {
-            RequesterName = this._userAccount?.FirstName + " " + this._userAccount?.LastName,
-            RequesterEmail = this._userAccount?.Email,
-            RequesterUsername = this._userAccount?._id,
-            Id=ObjectId.GenerateNewId(),
-            PurchaseItems = new List<PurchaseItem>(),
-            Quotes = new List<string>(),
-        };
+        this._purchaseReqInput=this._purchaseRequestService.CreatePrInput(
+            this._userAccount?.FirstName + " " + this._userAccount?.LastName,
+            this._userAccount.Email,this._userAccount._id);
+
         List<PurchaseItem> items = new();
         items.Add(new PurchaseItem() {
             ProductName = "Star tech 4 port video splitter/546287str", Quantity = 1, UnitCost = 45.69m
@@ -337,22 +298,27 @@
         items.ForEach(e=>e.TotalCost=e.Quantity * e.UnitCost);
         this._purchaseReqInput.PurchaseItems = items;
         this._purchaseReqInput.Department = new Department(){Name = "Epi"};
-        this._purchaseReqInput.Description = "Consultant Computers";
         this._purchaseReqInput.ShippingType = ShippingTypes.Ground.Value;
         this._purchaseReqInput.Urgent = true;
-        this._purchaseReqInput.Title = "Consultant Computers";
+        /*this._purchaseReqInput.Title = "Consultant Computers";
         this._purchaseReqInput.Description = "The consultant computers are for the HQ consultants. " +
                                              "One computer with windows 11 and a display. Another computer with windows 11 and a display. " +
                                              " Also two keyboards and a mouse for each computers.  " +
                                              "Another filler line to increase the Reason For Purchase. " +
-                                             " I want to make sure the wrapping works when writing to a single cell";
-        this._approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == "Rakesh");
-        this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
-        this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
+                                             " I want to make sure the wrapping works when writing to a single cell";*/
+        var approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == "Rakesh");
+        this._selectedApprover = approverAccount?.FirstName;
+        this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
+        this._purchaseReqInput.ApproverEmail=approverAccount?.Email;
 
         return Task.CompletedTask;
     }
 
-
+    private void SelectedApproverChangedHandler(string approver) {
+        var approverAccount=this._approvers.FirstOrDefault(a => a.FirstName ==approver);
+        this._selectedApprover = approverAccount?.FirstName;
+        this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
+        this._purchaseReqInput.ApproverEmail=approverAccount?.Email;
+    }
 
 }

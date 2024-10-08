@@ -2,24 +2,18 @@
 
 <RadzenDataGrid @ref="ordersGrid" 
                 TItem="PurchaseItem" 
-                AllowAlternatingRows="false" 
-                AllowFiltering="true" 
-                AllowPaging="false"  
-                AllowSorting="true" 
-                GridLines="DataGridGridLines.Both"
-                AllowColumnResize="true"
-                EditMode="@editMode"
-                Data="@PurchaseItems"  
-                RowUpdate="@OnUpdateRow" 
-                RowCreate="@OnCreateRow" 
-                Sort="@Reset" 
-                Page="@Reset" 
-                Filter="@Reset">
+                AllowAlternatingRows="false" AllowFiltering="true" 
+                AllowPaging="false"  AllowSorting="true" 
+                GridLines="DataGridGridLines.Both" 
+                AllowColumnResize="true" EditMode="@editMode"
+                Data="@PurchaseItems"  RowUpdate="@OnUpdateRow" 
+                RowCreate="@OnCreateRow" Sort="@Reset" 
+                Page="@Reset" Filter="@Reset">
     <HeaderTemplate>
         <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle" 
                       Text="Add New Purchase Item" 
                       Click="@InsertRow" 
-                      Disabled="@(editMode == DataGridEditMode.Single && ordersToInsert.Any())" />
+                      Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())" />
     </HeaderTemplate>
     <Columns>
         <RadzenDataGridColumn Property="Quantity" Title="Quantity" Width="140px" >
@@ -87,32 +81,32 @@
 </RadzenDataGrid>
 
 @code {
+    [Inject] private ContextMenuService _contextMenuService { get; set; }
+    
     [Parameter] public List<PurchaseItem> PurchaseItems { get; set; } = [];
     [Parameter] public EventCallback<List<PurchaseItem>> PurchaseItemsChanged { get; set; }
     
     RadzenDataGrid<PurchaseItem> ordersGrid;
-    List<PurchaseItem> ordersToInsert = new List<PurchaseItem>();
-    List<PurchaseItem> ordersToUpdate = new List<PurchaseItem>();
-    
-    
+    List<PurchaseItem> itemsToInsert = new List<PurchaseItem>();
+    List<PurchaseItem> itemsToUpdate = new List<PurchaseItem>();
     DataGridEditMode editMode = DataGridEditMode.Single;
     
     
     void Reset() {
-        ordersToInsert.Clear();
-        ordersToUpdate.Clear();
+        itemsToInsert.Clear();
+        itemsToUpdate.Clear();
     }
 
     void Reset(PurchaseItem purchaseItem) {
-        ordersToInsert.Remove(purchaseItem);
-        ordersToUpdate.Remove(purchaseItem);
+        itemsToInsert.Remove(purchaseItem);
+        itemsToUpdate.Remove(purchaseItem);
     }
     
     async Task EditRow(PurchaseItem purchaseItem) {
-        if (ordersToInsert.Count > 0) {
+        if (itemsToInsert.Count > 0) {
             Reset();
         }
-        ordersToUpdate.Add(purchaseItem);
+        itemsToUpdate.Add(purchaseItem);
         await ordersGrid.EditRow(purchaseItem);
     }
 
@@ -143,12 +137,12 @@
     async Task InsertRow() {
         this.Reset();
         var purchaseItem = new PurchaseItem();
-        ordersToInsert.Add(purchaseItem);
+        itemsToInsert.Add(purchaseItem);
         await ordersGrid.InsertRow(purchaseItem);
     }
 
     void OnCreateRow(PurchaseItem purchaseItem) {
         this.PurchaseItems.Add(purchaseItem);
-        ordersToInsert.Remove(purchaseItem);
+        itemsToInsert.Remove(purchaseItem);
     }
 }

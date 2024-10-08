@@ -16,12 +16,28 @@
 <RadzenTabs @bind-SelectedIndex="@this._selectedIndex">
     <Tabs>
         <RadzenTabsItem Icon="add_shopping_cart" Text="Overview" Style="background:#4a764a">
-            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
+            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" 
+                                   ModifyRequest="@this.EditHandler"
+                                   @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
             <RequestQueueView PurchaseReqStatuses="@this._purchaseReqStatuses"/>
-
         </RadzenTabsItem>
         <RadzenTabsItem Icon="add_shopping_cart" Text="Create New" Style="background: #0a53be">
             <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler"/>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="@this._templateTabText" Visible="@this._templateTabVisible"
+                        Style="background: #cc7119">
+            <PurchaseRequestView PurchaseRequest="@this._actionRequest"/>
+            @*@switch(this._selectedIndex) {
+                case 0:
+                    <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
+                    break;
+                case 1:
+                    <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler"/>
+                    break;
+                case 2:
+                    <PurchaseRequestForm CancelCallback="@this.CancelHandler" SaveCallback="@this.SaveHandler"/>
+                    break;
+            }*@
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -35,8 +51,11 @@
     private List<PurchaseRequest> _purchaseRequests = [];
     private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
     private PurchaseRequest? _selectedRequest;
+    private PurchaseRequest? _actionRequest;
     private UserProfile? _userAccount = new();
-    private bool _formVisible = false;
+    private bool _templateTabVisible = false;
+    private string _templateTabText="Template";
+    
     private int _selectedIndex = 0;
     private EditMode _requestFormMode = EditMode.NEW;
     
@@ -54,26 +73,29 @@
     }
     
     private async Task CancelHandler() {
-        this._formVisible = false;
+        this._templateTabVisible = false;
         this._selectedIndex = 0;
         await InvokeAsync(StateHasChanged);
     }
     
     private async Task EditHandler() {
-        this._formVisible = true;
-        this._requestFormMode = EditMode.EDIT;
+        this._actionRequest = this._selectedRequest;
+        this._templateTabVisible = true;
+        this._templateTabText = "Modify Request";
+        this._selectedIndex = 2;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveHandler() {
-        this._formVisible = false;
+        this._templateTabVisible = false;
         this._selectedIndex = 0;
         await this.Reload();
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task CancelRequestHandler(PurchaseRequest request) {
+    private Task CancelRequestHandler(PurchaseRequest request) {
         Console.WriteLine(JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true }));
+        return Task.CompletedTask;
     }
     
     private async Task Reload() {
@@ -82,7 +104,7 @@
     }
 
     private Task ShowRequestFormHandler() {
-        this._formVisible = !this._formVisible;
+        this._templateTabVisible = !this._templateTabVisible;
         this._requestFormMode=EditMode.NEW;
         return Task.CompletedTask;
     }
