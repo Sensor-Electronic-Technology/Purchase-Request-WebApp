@@ -39,159 +39,29 @@
                              SelectedIndexChanged="SelectedStepChangedHandler"
                              Style="min-height: 600px;">
                     <Steps>
-                        <RadzenStepsItem Text="Approver & Priority" PreviousText="" NextText="Department & Vendor">
-                            <RadzenStack Orientation="Orientation.Vertical"
-                                         AlignItems="AlignItems.Center">
-                                <RadzenFormField Text="Approver">
-                                    <RadzenDropDown TValue="string"
-                                                    Data="@this._approverSelectList"
-                                                    Value="@this._selectedApprover"
-                                                    ValueChanged="@SelectedApproverChanged"
-                                                    Placeholder="Select an approver"
-                                                    Style="width: 300px; height: fit-content; font-size: 22px !important;"
-                                                    AllowClear="true"/>
-                                </RadzenFormField>
-                                <RadzenText TextStyle="TextStyle.Subtitle1" 
-                                            Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
-                                <RadzenFormField Text="Priority(Click)">
-                                    <RadzenToggleButton Text="@(this._isUrgent ? "Urgent" : "Normal")"
-                                                        Icon="alarm_off"
-                                                        @bind-Value="@this._isUrgent"
-                                                        ToggleIcon="alarm"
-                                                        ButtonStyle="ButtonStyle.Info"
-                                                        Shade="Shade.Light"
-                                                        ToggleShade="Shade.Dark"
-                                                        ToggleButtonStyle="ButtonStyle.Danger"
-                                                        Style="width: 300px; height:80px; font-size: 22px !important;"/>
-                                </RadzenFormField>
-                            </RadzenStack>
+                        <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Department & Vendor">
+                            <RequestInformationView ApproverSelectList="@this._approverSelectList"
+                                                    FirstName="@(this._userAccount.FirstName+" "+this._userAccount.LastName)"
+                                                    @bind-SelectedApprover="@this._selectedApprover"
+                                                    @bind-Title="@this._purchaseReqInput.Title"
+                                                    @bind-Description="@this._purchaseReqInput.Description"
+                                                    @bind-IsUrgent="@this._purchaseReqInput.Urgent"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Information"  PreviousText="Approver & Priority" NextText="Purchase Items">
-                            <RadzenRow>
-                                <RadzenColumn Size="6" SizeMD="6">
-                                    <RadzenFieldset Text="Title & Reason">
-                                        <RadzenStack>
-                                            <RadzenFormField Text="Requester">
-                                                <RadzenTextBox @bind-Value="@this._userAccount.FirstName"/>
-                                            </RadzenFormField>
-                                            <RadzenFormField Text="Purchase Request Title">
-                                                <RadzenTextBox Placeholder="Enter the title of the purchase request"
-                                                               @bind-Value="@this._purchaseReqInput.Title"
-                                                               Style="width: 100%"/>
-                                            </RadzenFormField>
-                                            <RadzenFormField Text="Purchase Request Reason">
-                                                <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
-                                                                @bind-Value="@this._purchaseReqInput.Description"
-                                                                Style="width: 100%; height:100px;"/>
-                                            </RadzenFormField>
-                                        </RadzenStack>
-                                    </RadzenFieldset>
-                                </RadzenColumn>
-                                <RadzenColumn Size="6" SizeMD="6">
-                                    <RadzenFieldset Text="Department & Vendor">
-                                        <RadzenStack Orientation="Orientation.Vertical"
-                                                     AlignItems="AlignItems.Center"
-                                                     Gap="5">
-                                            <RadzenFieldset Text="Department" Style="text-align: center">
-                                                <RadzenDropDown TValue="Department"
-                                                                Data="@this._departments"
-                                                                Value="@this._purchaseReqInput.Department"
-                                                                Placeholder="Select a department"
-                                                                TextProperty="Name"
-                                                                AllowClear="true"/>
-                                            </RadzenFieldset>
-                                            <RadzenFieldset Style="text-align: center;">
-                                                <HeaderTemplate>
-                                                    <RadzenText TextStyle="TextStyle.H5" TextAlign="TextAlign.Center">Vendor</RadzenText>
-                                                </HeaderTemplate>
-                                                <ChildContent>
-                                                    <VendorSelector @bind-Vendor="@this._purchaseReqInput.Vendor"/>
-                                                </ChildContent>
-                                            </RadzenFieldset>
-                                        </RadzenStack>
-                                    </RadzenFieldset>
-                                </RadzenColumn>
-                            </RadzenRow>
+                            <PurchaseInformationView Departments="@this._departments"
+                                                     @bind-Department="@this._purchaseReqInput.Department"
+                                                     @bind-Vendor="@this._purchaseReqInput.Vendor"
+                                                     @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Items" PreviousText="Purchase Information" NextText="Comments & Quotes">
                             <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes">
-                            <RadzenStack Orientation="Orientation.Vertical">
-                                <RadzenFormField Text="Additional Comments">
-                                    <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
-                                                    @bind-Value="@this._purchaseReqInput.AdditionalComments"
-                                                    Style="width: 200px; height:100px;"/>
-                                </RadzenFormField>
-                                <RadzenFormField Text="Shipping">
-                                    <RadzenDropDown TValue="string"
-                                                    Data="@ShippingType.List"
-                                                    Value="@this._purchaseReqInput.ShippingType"
-                                                    Placeholder="Select an Shipping Method"
-                                                    ValueProperty="Value"
-                                                    Style="width: 300px; height: fit-content; font-size: 18px !important;"
-                                                    AllowClear="true"/>
-                                </RadzenFormField>
-                                <RadzenColumn Size="12">
-                                    <RadzenCard Variant="Variant.Outlined">
-                                        <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-                                        <RadzenUpload id="ddUpload"
-                                                      ChooseText="Drag and drop here or click to choose files"
-                                                      Auto="false"
-                                                      Multiple="true"
-                                                      Change="@this.OnClientChange"
-                                                      InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
-                                                      Style="width: 100%"/>
-                                    </RadzenCard>
-                                </RadzenColumn>
-                            </RadzenStack>
+                            <CommentsQuotesView @bind-Quotes="@this._quotes"
+                                                @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize">
-                            <RadzenStack Gap="20">
-                                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                                    <RadzenRow>
-                                        <RadzenStack Orientation="Orientation.Horizontal"
-                                                     JustifyContent="JustifyContent.Center" Gap="20">
-                                            <RadzenButton Text="Submit"
-                                                          ButtonStyle="ButtonStyle.Success"
-                                                          Icon="save"
-                                                          Click="@this.SavePurchaseRequestHandler"
-                                                          Style="width: 180px; height: 80px;"/>
-                                            <RadzenButton Text="Cancel"
-                                                          ButtonStyle="ButtonStyle.Danger"
-                                                          Click="@this.CancelPurchaseRequestHandler"
-                                                          Icon="cancel"
-                                                          Style="width: 180px; height: 80px;"/>
-                                        </RadzenStack>
-                                    </RadzenRow>
-                                </RadzenRow>
-                                <RadzenRow RowGap="5">
-                                    <RadzenColumn Size="6" SizeMD="6">
-                                        <RadzenStack Orientation="Orientation.Vertical" class="text-center">
-                                            <RadzenText Text="Request Preview" TextStyle="TextStyle.H5"/>
-                                            <PdfViewer PurchaseRequestInput="@this._purchaseReqInput"></PdfViewer>
-                                        </RadzenStack>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="6" SizeMD="6">
-                                        <RadzenStack>
-                                            <RadzenText Text="Email Preview" TextStyle="TextStyle.H5"/>
-                                            <DxRichEdit @ref="@this._richEdit"
-                                                        @bind-DocumentContent="@this._documentContent"
-                                                        DocumentLoaded="@this.DocumentLoadedHandler"
-                                                        DocumentFormat="DocumentFormat.OpenXml"
-                                                        ViewType="ViewType.Simple"
-                                                        BarMode="BarMode.None"
-                                                        ReadOnly="true">
-                                                <MailMergeSettings>
-                                                    <DxMailMergeSettings Data="@this._mailMerge"
-                                                                         ViewMergedData="true"
-                                                                         ActiveRecord="1"/>
-                                                </MailMergeSettings>
-                                            </DxRichEdit>
-                                        </RadzenStack>
-                                    </RadzenColumn>
-                                </RadzenRow>
-                            </RadzenStack>
+                            
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
@@ -201,8 +71,7 @@
             <RadzenButton Text="Previous" Image="/images/previous-arrow.svg"
                           Click="@(async Task () => { await this._steps.PrevStep();})"
                           Style="width: 150px; height: 50px;" 
-                          Visible="@(this._selectedStepIndex>0)"
-                          Disabled="@(!this._canSave)"/>
+                          Visible="@(this._selectedStepIndex>0)"/>
             <RadzenButton Text="Next" Image="/images/next-arrow.svg"
                           Click="@(async Task () => { await this._steps.NextStep();})"
                           Style="width: 150px; height: 50px;" />
@@ -226,7 +95,7 @@
 
     private RadzenUpload _upload;
     private RadzenSteps _steps;
-    private DxRichEdit _richEdit=new DxRichEdit();
+    private DxRichEdit _richEdit;
     private int _selectedStepIndex = 0;
     private PurchaseRequestInput _purchaseReqInput = new PurchaseRequestInput();
     private string? _selectedApprover;
@@ -240,7 +109,9 @@
     private List<FileData> _quotes = [];
     private byte[]? _documentContent;
     private bool _canSave = false;
+    private bool _docLoaded = false;
     private PurchaseRequestInput? _pdfDataInput = null;
+    private List<RequestAlert> _requestAlerts = [];
     
     private List<RequestMailMerge> _mailMerge;
     
@@ -267,13 +138,13 @@
         return this._userAccount != null && this._approvers.Count > 0;
     }
     
-    async Task OnClientChange(UploadChangeEventArgs args) {
+    /*async Task OnClientChange(UploadChangeEventArgs args) {
         foreach (var file in args.Files.ToList()) {
             await using var stream=file.OpenReadStream();
             using var streamContent = new StreamContent(stream);
             this._quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
         }
-    }
+    }*/
     
     private async Task UploadClickHandler() {
         await this.UploadFiles();
@@ -300,15 +171,15 @@
         }
     }
     
-    private async Task SelectedApproverChanged(string? selected) {
+    /*private async Task SelectedApproverChanged(string? selected) {
         this._selectedApprover = selected;
         this._approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == selected);
         this._purchaseReqInput.ApproverName=this._approverAccount?.FirstName+" "+this._approverAccount?.LastName;
         this._purchaseReqInput.ApproverEmail=this._approverAccount?.Email;
         await InvokeAsync(StateHasChanged);
-    }
+    }*/
     
-    private async Task ShippingTypeChangedHandler(string shippingType) {
+    /*private async Task ShippingTypeChangedHandler(string shippingType) {
         this._selectedShippingType = shippingType;
         this._purchaseReqInput.ShippingType = shippingType;
         await InvokeAsync(StateHasChanged);
@@ -318,22 +189,24 @@
         //this._selectedVendor = selected;
         this._purchaseReqInput.Vendor=selected;
         await InvokeAsync(StateHasChanged);
-    }
+    }*/
 
     private async Task SavePurchaseRequestHandler() {
         if (this._quotes.Count> 0) {
             this._spinnerService.Show("Uploading Quotes....");
             await this.UploadFiles();
         }
-        this._spinnerService.Show("Submitting Purchase Request....");
-        byte[] messageBody=[];
-        
+        this._spinnerService.UpdateMessage("Submitting Purchase Request....");
+        /*byte[] messageBody=[];
         byte[] result = await _richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         await _richEdit.LoadDocumentAsync(result, DocumentFormat.OpenXml);
         //this._purchaseReqInput.EmailTemplate = (byte[])result.Clone();
-        messageBody=(byte[])result.Clone();
-        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput,messageBody);
+        messageBody=(byte[])result.Clone();*/
+        this._documentContent = await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await _richEdit.LoadDocumentAsync(this._documentContent, DocumentFormat.OpenXml);
+        var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput,this._documentContent);
         this._spinnerService.Hide();
+        await InvokeAsync(StateHasChanged);
         if(success) {
             this._notificationService.Notify(NotificationSeverity.Success, 
                 "Success",
@@ -343,7 +216,6 @@
                 "Error",
                 "Purchase Request submission failed");
         }
-        this._spinnerService.Hide();
         await Task.Delay(200);
         await this.SaveCallback.InvokeAsync();
     }
@@ -359,6 +231,88 @@
         this._userAccount = this._userService.GetSessionUserProfile();
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
+    }
+    
+        private async Task SelectedStepChangedHandler(int obj) {
+        this._selectedStepIndex = obj;
+        if (obj == 4) {
+            this._mailMerge = [new RequestMailMerge() {
+                Title = this._purchaseReqInput.Title ?? "",
+                Approver = this._selectedApprover ?? "",
+                Requester = this._userAccount?.FirstName ?? "",
+                PrLink = "http://setihome.seti.com",
+                Description = this._purchaseReqInput.Description ?? "",
+                AdditionalComments = this._purchaseReqInput.AdditionalComments ?? "",
+            }];
+            this._pdfDataInput = this._purchaseReqInput;
+            await this.VerifyPurchaseRequest();
+        } else {
+            this._pdfDataInput = null;
+        }
+        this._docLoaded = false;
+        this._canSave = false;
+    }
+    
+    private Task VerifyPurchaseRequest() {
+        bool okay = true;
+        this._requestAlerts.Clear();
+        
+        if (string.IsNullOrEmpty(this._selectedApprover)) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Approver",
+                Message = "Approver not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+        
+        if(this._purchaseReqInput.Vendor==null) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Vendor",
+                Message = "Vendor not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+        
+        if (this._purchaseReqInput.PurchaseItems.Count == 0) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Vendor",
+                Message = "Vendor not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+
+        if (string.IsNullOrEmpty(this._selectedShippingType)) {
+            okay = false;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Shipping",
+                Message = "Shipping type not selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+        }
+
+        if (okay) {
+            this._canSave = true;
+            this._requestAlerts.Add(new RequestAlert() {
+                Item="Purchase Request",
+                Message = "Purchase Request is ready for submission",
+                Okay = true,
+                Style = AlertStyle.Success
+            });
+        }
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    private Task DocumentLoadedHandler(Document obj) {
+        this._docLoaded = true;
+        return Task.CompletedTask;
     }
 
     Task GeneratePurchaseRequest() {
@@ -384,7 +338,7 @@
         this._purchaseReqInput.PurchaseItems = items;
         this._purchaseReqInput.Department = new Department(){Name = "Epi"};
         this._purchaseReqInput.Description = "Consultant Computers";
-        this._purchaseReqInput.ShippingType = ShippingType.Ground.Value;
+        this._purchaseReqInput.ShippingType = ShippingTypes.Ground.Value;
         this._purchaseReqInput.Urgent = true;
         this._purchaseReqInput.Title = "Consultant Computers";
         this._purchaseReqInput.Description = "The consultant computers are for the HQ consultants. " +
@@ -399,28 +353,6 @@
         return Task.CompletedTask;
     }
 
-    private async Task SelectedStepChangedHandler(int obj) {
-        this._selectedStepIndex = obj;
-        if (obj == 4) {
-            _mailMerge = [new RequestMailMerge() {
-                Title = this._purchaseReqInput.Title ?? "",
-                Approver = this._selectedApprover ?? "",
-                Requester = this._userAccount?.FirstName ?? "",
-                PrLink = "http://setihome.seti.com",
-                Description = this._purchaseReqInput.Description ?? "",
-                AdditionalComments = this._purchaseReqInput.AdditionalComments ?? "",
-            }];
-            this._pdfDataInput = this._purchaseReqInput;
-            
-        } else {
-            this._pdfDataInput = null;
-        }
-        this._canSave = false;
-    }
 
-    private Task DocumentLoadedHandler(Document obj) {
-        this._canSave = true;
-        return Task.CompletedTask;
-    }
 
 }

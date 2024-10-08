@@ -1,0 +1,63 @@
+﻿@using Domain.PurchaseRequests.Dto
+<h3>FinalizeView</h3>
+<RadzenStack Orientation="Orientation.Vertical" Gap="20">
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 JustifyContent="JustifyContent.Center" Gap="20">
+        <RadzenButton Text="Submit"
+                      ButtonStyle="ButtonStyle.Success"
+                      Icon="save"
+                      Click="@this.SavePurchaseRequestHandler"
+                      Disabled="@(!this._canSave)"
+                      Style="width: 180px; height: 50px;"/>
+        <RadzenButton Text="Cancel"
+                      ButtonStyle="ButtonStyle.Danger"
+                      Click="@this.CancelPurchaseRequestHandler"
+                      Icon="cancel"
+                      Style="width: 180px; height: 50px;"/>
+    </RadzenStack>
+    <AlertListView RequestAlerts="@this._requestAlerts"/>
+    <RadzenRow RowGap="5">
+        <RadzenColumn Size="6" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenText Text="Request Preview"
+                                TextStyle="TextStyle.H5"
+                                TextAlign="TextAlign.Center"/>
+                </RadzenCard>
+                <PdfViewer PurchaseRequestInput="@this.PurchaseRequestInput"></PdfViewer>
+            </RadzenStack>
+        </RadzenColumn>
+        <RadzenColumn Size="6" SizeMD="6">
+            <RadzenStack>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+                </RadzenCard>
+                <DxRichEdit @ref="@this._richEdit"
+                            @bind-DocumentContent="@this._documentContent"
+                            DocumentLoaded="@this.DocumentLoadedHandler"
+                            DocumentFormat="DocumentFormat.OpenXml"
+                            ViewType="ViewType.Simple"
+                            BarMode="BarMode.None"
+                            ReadOnly="true">
+                    <MailMergeSettings>
+                        <DxMailMergeSettings Data="@this._mailMerge"
+                                             ViewMergedData="true"
+                                             ActiveRecord="1"/>
+                    </MailMergeSettings>
+                </DxRichEdit>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+
+@code {
+    
+    [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
+    
+    DxRichEdit _richEdit;
+    byte[] _documentContent;
+    MailMergeData _mailMerge;
+    
+    
+}

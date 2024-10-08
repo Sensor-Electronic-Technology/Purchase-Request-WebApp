@@ -4,7 +4,7 @@
 
 <embed type="application/pdf" 
        src="@this._embededSrc"  
-       width="100%" height="600px"/>
+        width="100%" height="600px"/>
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
@@ -31,13 +31,4 @@
 
          //await InvokeAsync(StateHasChanged);
      }
-
-     /*private async Task Callback() {
-         var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
-         this.PurchaseRequestInput.TempFile=document.GeneratePdf();
-         this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
-         await InvokeAsync(StateHasChanged);
-     }*/
-     
-     
 }

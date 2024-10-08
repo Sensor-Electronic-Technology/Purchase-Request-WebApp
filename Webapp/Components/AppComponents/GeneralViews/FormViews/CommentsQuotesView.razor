@@ -1,0 +1,39 @@
+﻿@using SetiFileStore.FileClient
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenFormField Text="Additional Comments">
+        <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
+                        Value="@this.AdditionalComments"
+                        ValueChanged="@this.AdditionalCommentsChanged"
+                        Style="width: 200px; height:100px;"/>
+    </RadzenFormField>
+
+    <RadzenColumn Size="12">
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+            <RadzenUpload id="ddUpload"
+                          ChooseText="Drag and drop here or click to choose files"
+                          Auto="false"
+                          Multiple="true"
+                          Change="@this.OnClientChange"
+                          InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
+                          Style="width: 100%"/>
+        </RadzenCard>
+    </RadzenColumn>
+</RadzenStack>
+
+@code {
+    [Parameter] public List<FileData> Quotes { get; set; } = [];
+    [Parameter] public string? AdditionalComments { get; set; }
+    
+    [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }
+    [Parameter] public EventCallback<string?> AdditionalCommentsChanged { get; set; }
+    
+    async Task OnClientChange(UploadChangeEventArgs args) {
+        foreach (var file in args.Files.ToList()) {
+            await using var stream=file.OpenReadStream();
+            using var streamContent = new StreamContent(stream);
+            this.Quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
+        }
+        await this.QuotesChanged.InvokeAsync(this.Quotes);
+    }
+}

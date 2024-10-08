@@ -13,7 +13,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]
 
-<RadzenTabs>
+<RadzenTabs @bind-SelectedIndex="@this._selectedIndex">
     <Tabs>
         <RadzenTabsItem Icon="add_shopping_cart" Text="Overview" Style="background:#4a764a">
             <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
@@ -37,6 +37,7 @@
     private PurchaseRequest? _selectedRequest;
     private UserProfile? _userAccount = new();
     private bool _formVisible = false;
+    private int _selectedIndex = 0;
     private EditMode _requestFormMode = EditMode.NEW;
     
     protected override async Task OnInitializedAsync() {
@@ -54,6 +55,7 @@
     
     private async Task CancelHandler() {
         this._formVisible = false;
+        this._selectedIndex = 0;
         await InvokeAsync(StateHasChanged);
     }
     
@@ -65,6 +67,7 @@
 
     private async Task SaveHandler() {
         this._formVisible = false;
+        this._selectedIndex = 0;
         await this.Reload();
         await InvokeAsync(StateHasChanged);
     }

@@ -8,29 +8,50 @@
 </style>
 
 @if (this.RequestAlerts != null) {
-    <RadzenStack Gap="1" Style="margin: 0.5rem" Visible="true">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1" Style="margin: 0.5rem" Visible="true">
         <RadzenText TextStyle="TextStyle.H5"
-                    Text="Wafer Setup Status"
+                    Text="Purchase Request Alerts"
                     TextAlign="TextAlign.Center"
                     Style="font-weight: bold;"/>
-        @foreach (var alert in this.RequestAlerts) {
-            <RadzenCard Variant="Variant.Flat">
-                <RadzenStack Orientation="Orientation.Vertical"
-                             AlignItems="AlignItems.Center">
-                    <RadzenStack Orientation="Orientation.Horizontal"
-                                 Gap="10" JustifyContent="JustifyContent.Center"
-                                 AlignItems="AlignItems.Center">
-                        <RadzenText Text="@alert.Item"
+        <RadzenStack Orientation="Orientation.Horizontal" 
+                     Gap="10" 
+                     JustifyContent="JustifyContent.Center"
+                     AlignItems="AlignItems.Center"
+                     Wrap="FlexWrap.Wrap">
+            @foreach (var alert in this.RequestAlerts) {
+                <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
+                             Text="@alert.Message"
+                             Title="@alert.Item"
+                             Shade="Shade.Default"
+                             Size="AlertSize.Small"
+                             AllowClose="false" 
+                             Style="min-width: 1rem !important; width: 20%;"/>
+            
+            }
+        </RadzenStack>
+    </RadzenStack>
+}
+
+
+@*@foreach (var alert in this.RequestAlerts) {
+<RadzenCard Variant="Variant.Flat">
+    <RadzenStack Orientation="Orientation.Vertical"
+                 AlignItems="AlignItems.Center">
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     Gap="10" JustifyContent="JustifyContent.Center"
+                     AlignItems="AlignItems.Center">
+            $1$<RadzenText Text="@alert.Item"
                                     TextStyle="TextStyle.H6"
                                     Style="font-weight: bold;"
-                                    TextAlign="TextAlign.Center"/>
-                        <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
-                                     Text="@alert.Message"
-                                     Shade="Shade.Default"
-                                     Size="AlertSize.Small"
-                                     AllowClose="false" Style="min-width: 1rem !important;"/>
-                    </RadzenStack>
-                    @*<RadzenStack AlignItems="AlignItems.Start">
+                                    TextAlign="TextAlign.Center"/>#1#
+            <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
+                         Text="@alert.Message"
+                         Title="@alert.Item"
+                         Shade="Shade.Default"
+                         Size="AlertSize.Small"
+                         AllowClose="false" Style="min-width: 1rem !important;"/>
+        </RadzenStack>
+        $1$<RadzenStack AlignItems="AlignItems.Start">
                         <RadzenAlert AlertStyle="@alert.WaferIdAlert.Style"
                                      Title="WaferId Status"
                                      Text="@alert.WaferIdAlert.Message"
@@ -51,12 +72,10 @@
                                          Shade="Shade.Darker"
                                          Style="min-width: 35rem !important; max-width: 35rem !important;"/>
                         </RadzenStack>
-                    </RadzenStack>*@
-                </RadzenStack>
-            </RadzenCard>
-        }
+                    </RadzenStack>#1#
     </RadzenStack>
-}
+</RadzenCard>
+}*@
 
 @code {
     [Parameter] public List<RequestAlert>? RequestAlerts { get; set; } = new();

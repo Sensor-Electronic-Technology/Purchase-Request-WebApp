@@ -131,7 +131,7 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
         purchaseRequest.Department = new Department(){Name = "Epi"};
         purchaseRequest.Description = "Consultant Computers";
         purchaseRequest.Vendor = vendor;
-        purchaseRequest.ShippingType = ShippingType.Ground.Value;
+        purchaseRequest.ShippingType = ShippingTypes.Ground.Value;
         purchaseRequest.Requester = "Amanda Elmore";
         purchaseRequest.Urgent = true;
         purchaseRequest.Approver = "Rakesh Jain";
@@ -174,7 +174,7 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
         purchaseOrder.Department = "Support";
         purchaseOrder.Description = "Consultant Computers";
         purchaseOrder.Vendor = vendor;
-        purchaseOrder.ShippingMethod = ShippingType.Ground.Value;
+        purchaseOrder.ShippingMethod = ShippingTypes.Ground.Value;
         purchaseOrder.PaymentTerms = PaymentTerm.NetTerms.Value;
         purchaseOrder.Requester = "Amanda Elmore";
         purchaseOrder.ShipTo = "SETi";

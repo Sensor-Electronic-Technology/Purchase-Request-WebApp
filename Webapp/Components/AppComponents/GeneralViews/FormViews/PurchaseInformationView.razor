@@ -1,0 +1,51 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+<RadzenRow>
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenFieldset Text="Department" Style="text-align: center">
+                <RadzenDropDown TValue="Department"
+                                Data="@this.Departments"
+                                Value="@this.Department"
+                                ValueChanged="@this.DepartmentChanged"
+                                Placeholder="Select a department"
+                                TextProperty="Name"
+                                AllowClear="true"/>
+            </RadzenFieldset>
+            <RadzenFormField Text="Shipping">
+                <RadzenDropDown TValue="string"
+                                Data="@ShippingTypes.List"
+                                Value="@this.ShippingType"
+                                ValueChanged="@this.ShippingTypeChanged"
+                                Placeholder="Select an Shipping Method"
+                                ValueProperty="Value"
+                                TextProperty="Name"
+                                Style="width: 300px; height: fit-content; font-size: 18px !important;"
+                                AllowClear="true"/>
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenFieldset Style="text-align: center;">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H5"
+                            TextAlign="TextAlign.Center">Vendor</RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged"/>
+            </ChildContent>
+        </RadzenFieldset>
+    </RadzenColumn>
+</RadzenRow>
+
+@code {
+    [Parameter] public List<Department> Departments { get; set; } = new();
+    [Parameter] public string? ShippingType { get; set; }
+    [Parameter] public Vendor? Vendor { get; set; }
+    [Parameter] public Department? Department { get; set; }
+    
+    [Parameter] public EventCallback<Vendor?> VendorChanged { get; set; }
+    [Parameter] public EventCallback<Department?> DepartmentChanged { get; set; }
+    [Parameter] public EventCallback<string?> ShippingTypeChanged { get; set; }
+    
+}
