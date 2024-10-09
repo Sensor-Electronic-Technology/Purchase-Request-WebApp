@@ -6,8 +6,8 @@ namespace Domain.PurchaseRequests.Model;
 
 public class PurchaseRequest {
     public ObjectId _id { get; set; }
-    public string? Requester { get; set; }
-    public string? Approver { get; set; } = null!;
+    public PrRequester Requester { get; set; } = null!;
+    public PrApprover Approver { get; set; } = null!;
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
@@ -29,8 +29,12 @@ public class PurchaseRequest {
 
     public PurchaseRequestInput ToInput() {
         return new PurchaseRequestInput {
-            RequesterUsername = Requester,
-            ApproverName = Approver,
+            RequesterUsername = Requester?.Username,
+            RequesterName = Requester?.Name,
+            RequesterEmail = Requester?.Email,
+            ApproverName = Approver?.Name,
+            ApproverEmail = Approver?.Email,
+            ApproverId = Approver?.Username,
             Title = Title,
             Description = Description,
             AdditionalComments = AdditionalComments,

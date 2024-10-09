@@ -132,9 +132,9 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
         purchaseRequest.Description = "Consultant Computers";
         purchaseRequest.Vendor = vendor;
         purchaseRequest.ShippingType = ShippingTypes.Ground.Value;
-        purchaseRequest.Requester = "Amanda Elmore";
+        //purchaseRequest.Requester = "Amanda Elmore";
         purchaseRequest.Urgent = true;
-        purchaseRequest.Approver = "Rakesh Jain";
+        //purchaseRequest.Approver = "Rakesh Jain";
         purchaseRequest.Title = "Consultant Computers";
         purchaseRequest.Created = DateTime.Now;
         purchaseRequest.AdditionalComments = "The consultant computers are for the HQ consultants. " +

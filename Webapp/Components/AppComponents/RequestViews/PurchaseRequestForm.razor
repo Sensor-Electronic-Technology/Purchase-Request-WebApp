@@ -10,7 +10,6 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 
-
 <RadzenCard Variant="Variant.Filled">
     <RadzenStack>
         <RadzenCard class="rz-background-color-secondary">
@@ -283,7 +282,7 @@
     Task GeneratePurchaseRequest() {
         this._purchaseReqInput=this._purchaseRequestService.CreatePrInput(
             this._userAccount?.FirstName + " " + this._userAccount?.LastName,
-            this._userAccount.Email,this._userAccount._id);
+            this._userAccount?.Email,this._userAccount?._id);
 
         List<PurchaseItem> items = new();
         items.Add(new PurchaseItem() {
@@ -300,12 +299,12 @@
         this._purchaseReqInput.Department = new Department(){Name = "Epi"};
         this._purchaseReqInput.ShippingType = ShippingTypes.Ground.Value;
         this._purchaseReqInput.Urgent = true;
-        /*this._purchaseReqInput.Title = "Consultant Computers";
+        this._purchaseReqInput.Title = "Consultant Computers";
         this._purchaseReqInput.Description = "The consultant computers are for the HQ consultants. " +
                                              "One computer with windows 11 and a display. Another computer with windows 11 and a display. " +
                                              " Also two keyboards and a mouse for each computers.  " +
                                              "Another filler line to increase the Reason For Purchase. " +
-                                             " I want to make sure the wrapping works when writing to a single cell";*/
+                                             " I want to make sure the wrapping works when writing to a single cell";
         var approverAccount=this._approvers.FirstOrDefault(a => a.FirstName == "Rakesh");
         this._selectedApprover = approverAccount?.FirstName;
         this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
@@ -315,10 +314,11 @@
     }
 
     private void SelectedApproverChangedHandler(string approver) {
-        var approverAccount=this._approvers.FirstOrDefault(a => a.FirstName ==approver);
+        var approverAccount=this._approvers.FirstOrDefault(a => a.FirstName==approver);
         this._selectedApprover = approverAccount?.FirstName;
         this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
         this._purchaseReqInput.ApproverEmail=approverAccount?.Email;
+        this._purchaseReqInput.ApproverId=approverAccount?.Username;
     }
 
 }

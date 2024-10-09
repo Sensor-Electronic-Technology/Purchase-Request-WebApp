@@ -50,15 +50,22 @@ public class PurchaseRequestService {
         return input;
     }
     
-    
     public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
         var purchaseRequest=new PurchaseRequest {
             _id = input.Id ?? ObjectId.GenerateNewId(),
             Title=input.Title,
             Description=input.Description,
             Urgent=input.Urgent,
-            Approver= input.ApproverName,
-            Requester = input.RequesterUsername,
+            Approver = new PrApprover {
+                Name = input.ApproverName,
+                Email = input.ApproverEmail,
+                Username = input.ApproverId,
+            },
+            Requester =new PrRequester() {
+                Email = input.RequesterEmail,
+                Name = input.RequesterName,
+                Username = input.RequesterUsername,
+            },
             Department = input.Department,
             Vendor = input.Vendor,
             AdditionalComments = input.AdditionalComments,
@@ -92,6 +99,14 @@ public class PurchaseRequestService {
 
     public async Task<List<string>> GetUserEmails() {
         return await this._authApiService.GetUserEmails();
+    }
+    
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests() {
+        return await this._requestDataService.GetPurchaseRequests();
+    }
+    
+    public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
+        return await this._requestDataService.GetApproverRequests(username);
     }
     
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {

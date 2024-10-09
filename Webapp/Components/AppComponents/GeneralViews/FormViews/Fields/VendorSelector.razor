@@ -5,43 +5,54 @@
 <RadzenStack Orientation="Orientation.Vertical"
              Gap="5"
              AlignItems="AlignItems.Center">
-    <RadzenDropDown TValue="Vendor"
-                    Value="@this.Vendor"
-                    ValueChanged="@VendorChangedHandler"
-                    Data="@this._vendors"
-                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                    FilterOperator="StringFilterOperator.StartsWith"
-                    AllowFiltering="true"
-                    TextProperty="Name"
-                    Placeholder="Select an vendor"
-                    AllowClear="true"
-                    Style="width: 400px;"/>
-    <RadzenSplitButton Click="@this.EditVendor" Text="New/Edit">
-        <ChildContent>
-            <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)"/>
-            <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.EDIT)"/>
-        </ChildContent>
-    </RadzenSplitButton>
-    <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
+    @if (this.Mode==EditMode.VIEW) {
+        <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
+    } else {
+        <RadzenFieldset Text="Vendor" Style="text-align: center">
+            <RadzenText TextAlign="TextAlign.Center" 
+                        Text="@this.Vendor?.Name"
+                        TextStyle="TextStyle.H6"/>
+        </RadzenFieldset>
+        <RadzenDropDown TValue="Vendor"
+                        Value="@this.Vendor"
+                        ValueChanged="@VendorChangedHandler"
+                        Data="@this._vendors"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        FilterOperator="StringFilterOperator.StartsWith"
+                        AllowFiltering="true"
+                        TextProperty="Name"
+                        Placeholder="Select an vendor"
+                        AllowClear="true"
+                        Style="width: 400px;"/>
+        <RadzenSplitButton Click="@this.EditVendor" Text="New/Edit">
+            <ChildContent>
+                <RadzenSplitButtonItem Text="Create New" Value="@nameof(EditMode.NEW)"/>
+                <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.EDIT)"/>
+            </ChildContent>
+        </RadzenSplitButton>
+        <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
+    }
+
 </RadzenStack>
 @code {
     
-    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Inject] private ContactDataService _contactDataService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private DialogService _dialogService { get; set; }
     
     [Parameter] public Vendor? Vendor { get; set; }
     [Parameter] public EventCallback<Vendor> VendorChanged { get; set; }
+    [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
     
     private List<Vendor> _vendors = new();
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._vendors=await this._purchaseRequestService.GetVendors();
+        this._vendors=await this._contactDataService.GetVendors();
     }
     
     async Task VendorUpdatedHandler(Vendor vendor) {
-        this._vendors=await this._purchaseRequestService.GetVendors();
+        this._vendors=await this._contactDataService.GetVendors();
         this.Vendor=this._vendors.FirstOrDefault(e=>e._id==vendor._id);
         Console.WriteLine($"Vendor Updated: {vendor.Name}");
         await InvokeAsync(StateHasChanged);

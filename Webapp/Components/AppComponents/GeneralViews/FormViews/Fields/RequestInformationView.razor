@@ -1,16 +1,27 @@
 ﻿@using SETiAuth.Domain.Shared.Authentication
-<h3>PurchaseInfoSetupView</h3>
+@using Webapp.Data
+
 <RadzenStack Orientation="Orientation.Vertical"
              AlignItems="AlignItems.Center">
-    <RadzenFormField Text="Approver">
-        <RadzenDropDown TValue="string"
-                        Data="@this.ApproverSelectList"
-                        Value="@this.SelectedApprover"
-                        ValueChanged="@SelectedApproverChanged"
-                        Placeholder="Select an approver"
-                        Style="width: 300px; height: fit-content; font-size: 22px !important;"
-                        AllowClear="true"/>
-    </RadzenFormField>
+    @if (this.Mode == EditMode.VIEW) {
+        <RadzenFormField Text="Approver">
+            <RadzenText Text="@this.SelectedApprover" 
+                        TextAlign="TextAlign.Center"
+                        Style="width: 300px; height: fit-content;"
+                        TextStyle="TextStyle.H6"/>
+        </RadzenFormField>
+    } else {
+        <RadzenFormField Text="Approver">
+            <RadzenDropDown TValue="string"
+                            Data="@this.ApproverSelectList"
+                            Value="@this.SelectedApprover"
+                            ValueChanged="@SelectedApproverChanged"
+                            Placeholder="Select an approver"
+                            Style="width: 300px; height: fit-content; font-size: 22px !important;"
+                            AllowClear="true"/>
+        </RadzenFormField>
+    }
+
     <RadzenText TextStyle="TextStyle.Subtitle1"
                 Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
     <RadzenFormField Text="Priority(Click)">
@@ -23,6 +34,7 @@
                             Shade="Shade.Light"
                             ToggleShade="Shade.Dark"
                             ToggleButtonStyle="ButtonStyle.Danger"
+                            Disabled="@(this.Mode==EditMode.VIEW)"
                             Style="width: 300px; height:80px; font-size: 22px !important;"/>
     </RadzenFormField>
     <RadzenFieldset Text="Title & Reason" Style="width: 100%">
@@ -57,6 +69,8 @@
     [Parameter] public EventCallback<string?> DescriptionChanged { get; set; }
     [Parameter] public EventCallback<string?> SelectedApproverChanged { get; set; }
     [Parameter] public EventCallback<bool> IsUrgentChanged { get; set; }
+    
+    [Parameter] public EditMode Mode { get; set; }
     
     
     

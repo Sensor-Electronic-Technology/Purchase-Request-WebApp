@@ -63,12 +63,12 @@
         await base.OnInitializedAsync();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
-            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
+            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester.Username == this._userAccount._id);
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
-            Console.WriteLine("Done Fetching Purchase Requests");
+            /*Console.WriteLine("Done Fetching Purchase Requests");
             foreach (var request in this._purchaseRequests) {
                 Console.WriteLine(request.Title);
-            }
+            }*/
         }
     }
     
@@ -99,8 +99,9 @@
     }
     
     private async Task Reload() {
-        this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester == this._userAccount._id);
-        Console.WriteLine("Reloading Purchase Requests");
+        if (this._userAccount != null) {
+            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester.Username == this._userAccount._id);
+        }
     }
 
     private Task ShowRequestFormHandler() {

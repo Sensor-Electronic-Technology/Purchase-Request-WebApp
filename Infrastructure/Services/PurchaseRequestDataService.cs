@@ -30,7 +30,7 @@ public class PurchaseRequestDataService {
     }
 
     public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
-        return await this._purchaseRequestCollection.Find(e=>e.Approver==username).ToListAsync();
+        return await this._purchaseRequestCollection.Find(e=>e.Approver.Username==username).ToListAsync();
     }
     
     public async Task InsertOne(PurchaseRequest purchaseRequest) {

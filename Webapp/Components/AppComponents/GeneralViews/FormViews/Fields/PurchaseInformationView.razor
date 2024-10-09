@@ -1,0 +1,95 @@
+﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+@using Infrastructure.Services
+@using Webapp.Data
+
+
+<AuthorizeView Roles="@PurchaseRequestRole.Approver">
+    <Authorized>
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+            <DepartmentSelector @bind-Department="@this.Department"/>
+            @*<RadzenFieldset Text="Department" Style="text-align: center">
+                <RadzenDropDown TValue="Department"
+                                Data="@this.Departments"
+                                Value="@this.Department"
+                                ValueChanged="@this.DepartmentChanged"
+                                Placeholder="Select a department"
+                                TextProperty="Name"
+                                AllowClear="true"/>
+            </RadzenFieldset>*@
+            <RadzenFieldset Text="Shipping">
+                <RadzenText TextAlign="TextAlign.Center" Text="@this.ShippingType"
+                            TextStyle="TextStyle.H6"
+                            Style="width: 300px; height: fit-content;"/>
+            </RadzenFieldset>
+            <RadzenFieldset Text="Vendor">
+                <VendorView Vendor="@this.Vendor" Mode="@EditMode.VIEW"/>
+            </RadzenFieldset>
+        </RadzenStack>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="@PurchaseRequestRole.Requester">
+    <Authorized>
+        <RadzenRow>
+            <RadzenColumn Size="6" SizeMD="6">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <DepartmentSelector @bind-Department="@this.Department"></DepartmentSelector>
+                    @*<RadzenFieldset Text="Department" Style="text-align: center">
+                        <RadzenDropDown TValue="Department"
+                                        Data="@this.Departments"
+                                        Value="@this.Department"
+                                        ValueChanged="@this.DepartmentChanged"
+                                        Placeholder="Select a department"
+                                        TextProperty="Name"
+                                        AllowClear="true"/>
+                    </RadzenFieldset>*@
+                    <RadzenFormField Text="Shipping">
+                        <RadzenDropDown TValue="string"
+                                        Data="@ShippingTypes.List"
+                                        Value="@this.ShippingType"
+                                        ValueChanged="@this.ShippingTypeChanged"
+                                        Placeholder="Select an Shipping Method"
+                                        ValueProperty="Value"
+                                        TextProperty="Name"
+                                        Style="width: 300px; height: fit-content; font-size: 18px !important;"
+                                        AllowClear="true"/>
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="6">
+                <RadzenFieldset Style="text-align: center;">
+                    <HeaderTemplate>
+                        <RadzenText TextStyle="TextStyle.H5"
+                                    TextAlign="TextAlign.Center">Vendor</RadzenText>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged" Mode="@this.Mode"/>
+                    </ChildContent>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    //[Inject] private DepartmentDataService _departmentDataService { get; set; }
+    //[Parameter] public List<Department> Departments { get; set; } = new();
+    [Parameter] public string? ShippingType { get; set; }
+    [Parameter] public Vendor? Vendor { get; set; }
+    [Parameter] public Department? Department { get; set; }
+    
+    [Parameter] public EventCallback<Vendor?> VendorChanged { get; set; }
+    [Parameter] public EventCallback<Department?> DepartmentChanged { get; set; }
+    [Parameter] public EventCallback<string?> ShippingTypeChanged { get; set; }
+    
+    [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
+
+    /*protected override async Task OnInitializedAsync() {
+         await base.OnInitializedAsync();
+            this.Departments = await this._departmentDataService.GetDepartments();
+    }*/
+
+}

@@ -9,6 +9,7 @@ public class PurchaseRequestInput {
     public ObjectId? Id { get; set; }
     public string? ApproverName { get; set; }
     public string? ApproverEmail { get; set; }
+    public string? ApproverId { get; set; }
     public string? RequesterName { get; set; }
     public string? RequesterUsername { get; set; }
     public string? RequesterEmail { get; set; }
