@@ -38,7 +38,7 @@
                                 TextStyle="TextStyle.H5"
                                 TextAlign="TextAlign.Center"/>
                 </RadzenCard>
-                <PdfViewer PurchaseRequestInput="@this.PurchaseRequestInput"></PdfViewer>
+                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequestInput"></PrPdfPreview>
             </RadzenStack>
         </RadzenColumn>
         <RadzenColumn Size="6" SizeMD="6">
@@ -50,6 +50,8 @@
                             @bind-DocumentContent="@this.DocumentContent"
                             DocumentLoaded="@this.DocumentLoadedHandler"
                             DocumentFormat="DocumentFormat.OpenXml"
+                            BarMode="BarMode.None"
+                            ViewType="ViewType.Simple"
                             ReadOnly="false">
                     <MailMergeSettings>
                         <DxMailMergeSettings Data="@this.MailMerge"

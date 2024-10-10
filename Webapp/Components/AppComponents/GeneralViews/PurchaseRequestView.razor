@@ -13,17 +13,17 @@
                 <RadzenStack>
                     <AuthorizeView Roles="@PurchaseRequestRole.Approver.Name">
                         <Authorized>
-                            <PrApproverActionView PurchaseRequest="@this.PurchaseRequest"/>
+                            <PrApproverActionView PurchaseRequest="@this.PurchaseRequest" ActionCompleted="@this.ActionCompleted"/>
                         </Authorized>
                     </AuthorizeView>
                     <AuthorizeView Roles="@PurchaseRequestRole.Requester.Name">
                         <Authorized>
-                            <PrApproverActionView PurchaseRequest="@this.PurchaseRequest"/>
+                            <RadzenText Text="Requester Placeholder"/>
                         </Authorized>
                     </AuthorizeView>
                     <AuthorizeView Roles="@PurchaseRequestRole.Purchaser.Name">
                         <Authorized>
-                            <PrApproverActionView PurchaseRequest="@this.PurchaseRequest"/>
+                            <RadzenText Text="Requester Placeholder"/>
                         </Authorized>
                     </AuthorizeView>
                 </RadzenStack>
@@ -85,6 +85,12 @@
                             <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"/>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Comments/Quotes">
+                            <RadzenStack>
+                                <RadzenTextArea Placeholder="Enter comments here"
+                                                Style="width: 100%"
+                                                @bind-Value="@this.PurchaseRequest.AdditionalComments"/>
+                                <QuotesView Quotes="@this.PurchaseRequest.Quotes"/>
+                            </RadzenStack>
                         </RadzenTabsItem>
                     </Tabs>
                 </RadzenTabs>
@@ -98,6 +104,8 @@
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }=EditMode.VIEW;
+    [Parameter] public EventCallback ActionCompleted { get; set; }
+    
     private List<Department> _departments = [];
     private string _columnWidth = "width: 100%";
 

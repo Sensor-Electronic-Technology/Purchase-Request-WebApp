@@ -1,15 +1,26 @@
 ﻿
+<embed type="application/pdf" 
+       src="@this._embededSrc"  
+       width="100%" height="600px"/>
 
-@if(!string.IsNullOrEmpty(this.PdfPath)) {
-    <iframe class="pdf"
-            src="@this.PdfPath"
-            allow="fullscreen"
-            width="1000"
-            height="800">
-    </iframe>
-}
 @code {
-    [Parameter]
-    public string? PdfPath { get; set; }
+    [Parameter] public byte[]? FileBytes { get; set; }
+    private bool _prNull = true;
+    private string _embededSrc = string.Empty;
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+    }
 
+    protected override async Task OnParametersSetAsync() {
+        await base.OnParametersSetAsync();
+        if (FileBytes is { Length: > 0 }) {
+            if (this._prNull) {
+                this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes)+"#zoom=75%";
+                this._prNull = false;
+            }
+        } else {
+            this._prNull = true;
+            this._embededSrc = string.Empty;
+        }
+    }
 }

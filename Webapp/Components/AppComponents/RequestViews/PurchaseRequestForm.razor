@@ -25,7 +25,7 @@
                              SelectedIndexChanged="SelectedStepChangedHandler"
                              Style="min-height: 600px;">
                     <Steps>
-                        <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Department & Vendor">
+                        <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
                                                     FirstName="@(this._userAccount.FirstName+" "+this._userAccount.LastName)"
                                                     SelectedApprover="@this._selectedApprover"
@@ -34,20 +34,19 @@
                                                     @bind-Description="@this._purchaseReqInput.Description"
                                                     @bind-IsUrgent="@this._purchaseReqInput.Urgent"/>
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Purchase Information"  PreviousText="Approver & Priority" NextText="Purchase Items">
-                            <PurchaseInformationView Departments="@this._departments"
-                                                     @bind-Department="@this._purchaseReqInput.Department"
+                        <RadzenStepsItem Text="Purchase Information" PreviousText="Request Information" NextText="Purchase Items">
+                            <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department" Mode="EditMode.EDIT"
                                                      @bind-Vendor="@this._purchaseReqInput.Vendor"
                                                      @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Purchase Items" PreviousText="Purchase Information" NextText="Comments & Quotes">
+                        <RadzenStepsItem Text="Purchase Items" PreviousText="Request Information" NextText="Comments & Quotes">
                             <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"/>
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Comments & Quotes">
+                        <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
                             <CommentsQuotesView @bind-Quotes="@this._quotes"
                                                 @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Finalize">
+                        <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
                             <FinalizeView PurchaseRequestInput="@this._finalizeDataInput" 
                                           CanSave="@this._canSave"
                                           RequestAlerts="@this._requestAlerts"

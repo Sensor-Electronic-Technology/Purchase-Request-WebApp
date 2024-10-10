@@ -1,7 +1,10 @@
 ﻿@using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 
-<RadzenFieldset Text="Additional CC Emails" Collapsed="true" CollapseTitle="Additional CC Emails" AllowCollapse="true">
+<RadzenFieldset Text="Additional CC Emails" 
+                Collapsed="@this.IsCollapsed" 
+                CollapseTitle="Additional CC Emails" 
+                AllowCollapse="true">
         <RadzenPickList @bind-Source="@Source"
                         @bind-Target="@Target"
                         Style="height:300px; width:100%;"
@@ -28,6 +31,7 @@
 </RadzenFieldset>
 
 @code {
+    [Parameter] public bool IsCollapsed { get; set; }
     [Parameter]
     public IEnumerable<UserAccountDto> Target {
         get=>this._target;

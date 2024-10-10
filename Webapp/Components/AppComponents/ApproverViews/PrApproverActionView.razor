@@ -5,7 +5,7 @@
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Services.Authentication
 <RadzenCard class="rz-background-color-info-dark">
-<RadzenStack>
+<RadzenStack Orientation="Orientation.Vertical">
     <RadzenCard class="rz-background-color-series-4">
         <RadzenText Text="Approve/Reject Form"
                     TextAlign="TextAlign.Center"
@@ -23,7 +23,7 @@
                                 Value="@this._selectedAction"
                                 ValueChanged="@this.ApproveActionChangedHandler"/>
             </RadzenFieldset>
-            <EmailPickList @bind-Target="@this.EmailCcList" Source="this.EmailList"/>
+            <EmailPickList @bind-Target="@this.EmailCcList" Source="this.EmailList" IsCollapsed="false"/>
             <RadzenFormField Text="Comments">
                 <RadzenTextArea bind-Value="@this._comments"/>
             </RadzenFormField>
@@ -48,8 +48,19 @@
             break;
         }
     }
-    <RadzenButton Text="Submit"
-                  Click="@this.SubmitHandler"/>
+    <RadzenFieldset Text="Submit/Cancel">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+            <RadzenButton Text="Submit"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Click="@this.SubmitHandler"
+                          Style="width: 150px; height: 60px;"/>
+            <RadzenButton Text="Cancel"
+                          ButtonStyle="ButtonStyle.Danger"
+                          Click="@this.ActionCompleted"
+                          Style="width: 150px; height: 60px;"/>
+        </RadzenStack>
+    </RadzenFieldset>
+
 </RadzenStack>
 </RadzenCard>
 
@@ -58,6 +69,8 @@
     [Inject] private AuthApiService _authApiService { get; set; }
     [Inject] private UserService _userService { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
+    [Parameter] public EventCallback ActionCompleted { get; set; }
+    
     private List<string> _needsApproveActions = [PurchaseRequestAction.Approve.Name, PurchaseRequestAction.Reject.Name];
     private List<string> _approvedActions=[PurchaseRequestAction.Cancel.Name];
     private List<string> _orderedActions=[PurchaseRequestAction.Cancel.Name];
@@ -120,6 +133,7 @@
                 break;
             }
         }
+        await this.ActionCompleted.InvokeAsync();
     }
     
     private async Task ApproveHandler() {
@@ -131,8 +145,9 @@
     }
     
     private async Task CancelHandler() {
-
+        
     }
+    
 
     private async Task Load() {
         this.EmailList = await this._authApiService.GetUsers();

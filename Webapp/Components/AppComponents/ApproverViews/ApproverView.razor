@@ -18,7 +18,9 @@
         </RadzenTabsItem>
         <RadzenTabsItem Text="@this._templateTabText" 
                         Visible="@this._templateTabVisible" Style="background: #cc7119">
-            <PurchaseRequestView PurchaseRequest="@this._actionRequest" Mode="EditMode.EDIT"/>
+            <PurchaseRequestView PurchaseRequest="@this._actionRequest" 
+                                 ActionCompleted="@this.ActionCompletedHandler" 
+                                 Mode="EditMode.EDIT"/>
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -40,11 +42,7 @@
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._userAccount = this._userService.GetSessionUserProfile();
-        if (this._userAccount != null) {
-            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(e=>e.Approver.Username == this._userAccount._id);
-            this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
-        }
+        await this.Load();
     }
 
     private async Task ApproveHandler() {
@@ -71,7 +69,12 @@
     private async Task SaveHandler() {
         this._templateTabVisible = false;
         this._selectedIndex = 0;
-        await this.Reload();
+        await this.Load();
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task ActionCompletedHandler() {
+        await this.Load();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -79,9 +82,15 @@
         Console.WriteLine(JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true }));
         return Task.CompletedTask;
     }
-    private async Task Reload() {
+    private async Task Load() {
+        this._templateTabVisible = false;
+        this._selectedIndex = 0;
+        this._actionRequest = null;
+        this._selectedRequest = null;
+        this._userAccount = this._userService.GetSessionUserProfile();
         if (this._userAccount != null) {
-            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Approver.Username == this._userAccount._id);
+            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(e=>e.Approver.Username == this._userAccount._id);
+            this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
         }
     }
 

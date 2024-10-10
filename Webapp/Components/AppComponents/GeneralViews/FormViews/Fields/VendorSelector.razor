@@ -8,11 +8,6 @@
     @if (this.Mode==EditMode.VIEW) {
         <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
     } else {
-        <RadzenFieldset Text="Vendor" Style="text-align: center">
-            <RadzenText TextAlign="TextAlign.Center" 
-                        Text="@this.Vendor?.Name"
-                        TextStyle="TextStyle.H6"/>
-        </RadzenFieldset>
         <RadzenDropDown TValue="Vendor"
                         Value="@this.Vendor"
                         ValueChanged="@VendorChangedHandler"

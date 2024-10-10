@@ -1,0 +1,37 @@
+﻿@using SetiFileStore.FileClient
+
+@if(this.Quotes==null || !this.Quotes.Any()) {
+    <RadzenText Text="Purchase request has no quotes"/>
+} else {
+    <RadzenTabs>
+        <Tabs>
+            @foreach(var file in this._files) {
+                <RadzenTabsItem Text="@file.Name">
+                    <PdfPreview FileBytes="@file.Data"/>
+                </RadzenTabsItem>
+            }
+        </Tabs>
+    </RadzenTabs>
+}
+
+
+@code {
+    [Inject] private FileService _fileService { get; set; }
+    [Parameter] public IEnumerable<string>? Quotes { get; set; }
+    private List<FileData> _files = [];
+    
+
+    protected override async Task OnParametersSetAsync() {
+        await base.OnParametersSetAsync();
+        foreach(var fileId in this.Quotes) {
+            var fileData = await this._fileService.DownloadFile(fileId);
+            if(fileData!=null) {
+                this._files.Add(fileData);
+            }
+        }
+    }
+
+    private string GetText(string quote) {
+        return quote;
+    }
+}

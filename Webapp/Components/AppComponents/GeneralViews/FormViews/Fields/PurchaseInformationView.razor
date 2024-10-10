@@ -3,13 +3,41 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
 @using Webapp.Data
+<RadzenRow>
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <DepartmentSelector @bind-Department="@this.Department"/>
+            <RadzenFormField Text="Shipping">
+                <RadzenDropDown TValue="string"
+                                Data="@ShippingTypes.List"
+                                Value="@this.ShippingType"
+                                ValueChanged="@this.ShippingTypeChanged"
+                                Placeholder="Select an Shipping Method"
+                                ValueProperty="Value"
+                                TextProperty="Name"
+                                Style="width: 300px; height: fit-content; font-size: 18px !important;"
+                                AllowClear="true"/>
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenFieldset Style="text-align: center;">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H5"
+                            TextAlign="TextAlign.Center">Vendor</RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged" Mode="EditMode.EDIT"/>
+            </ChildContent>
+        </RadzenFieldset>
+    </RadzenColumn>
+</RadzenRow>
 
-
-<AuthorizeView Roles="@PurchaseRequestRole.Approver">
+@*<AuthorizeView Roles="@PurchaseRequestRole.Approver">
     <Authorized>
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
             <DepartmentSelector @bind-Department="@this.Department"/>
-            @*<RadzenFieldset Text="Department" Style="text-align: center">
+            $1$<RadzenFieldset Text="Department" Style="text-align: center">
                 <RadzenDropDown TValue="Department"
                                 Data="@this.Departments"
                                 Value="@this.Department"
@@ -17,7 +45,7 @@
                                 Placeholder="Select a department"
                                 TextProperty="Name"
                                 AllowClear="true"/>
-            </RadzenFieldset>*@
+            </RadzenFieldset>#1#
             <RadzenFieldset Text="Shipping">
                 <RadzenText TextAlign="TextAlign.Center" Text="@this.ShippingType"
                             TextStyle="TextStyle.H6"
@@ -35,8 +63,8 @@
         <RadzenRow>
             <RadzenColumn Size="6" SizeMD="6">
                 <RadzenStack Orientation="Orientation.Vertical">
-                    <DepartmentSelector @bind-Department="@this.Department"></DepartmentSelector>
-                    @*<RadzenFieldset Text="Department" Style="text-align: center">
+                    <DepartmentSelector @bind-Department="@this.Department"/>
+                    $1$<RadzenFieldset Text="Department" Style="text-align: center">
                         <RadzenDropDown TValue="Department"
                                         Data="@this.Departments"
                                         Value="@this.Department"
@@ -44,7 +72,7 @@
                                         Placeholder="Select a department"
                                         TextProperty="Name"
                                         AllowClear="true"/>
-                    </RadzenFieldset>*@
+                    </RadzenFieldset>#1#
                     <RadzenFormField Text="Shipping">
                         <RadzenDropDown TValue="string"
                                         Data="@ShippingTypes.List"
@@ -71,12 +99,11 @@
             </RadzenColumn>
         </RadzenRow>
     </Authorized>
-</AuthorizeView>
+</AuthorizeView>*@
 
 
 @code {
-    //[Inject] private DepartmentDataService _departmentDataService { get; set; }
-    //[Parameter] public List<Department> Departments { get; set; } = new();
+
     [Parameter] public string? ShippingType { get; set; }
     [Parameter] public Vendor? Vendor { get; set; }
     [Parameter] public Department? Department { get; set; }
@@ -86,10 +113,5 @@
     [Parameter] public EventCallback<string?> ShippingTypeChanged { get; set; }
     
     [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
-
-    /*protected override async Task OnInitializedAsync() {
-         await base.OnInitializedAsync();
-            this.Departments = await this._departmentDataService.GetDepartments();
-    }*/
 
 }
