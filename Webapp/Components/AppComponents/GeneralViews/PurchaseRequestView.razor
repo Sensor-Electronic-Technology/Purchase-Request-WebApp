@@ -46,7 +46,7 @@
                 </RadzenFieldset>
             </RadzenCard>
             <RadzenCard>
-                <RadzenTabs>
+                <RadzenTabs RenderMode="TabRenderMode.Server">
                     <Tabs>
                         <RadzenTabsItem Text="Request Information">
                             <RequestInformationView Description="@this.PurchaseRequest.Description"
@@ -95,7 +95,6 @@
                     </Tabs>
                 </RadzenTabs>
             </RadzenCard>
-            
         </RadzenCard>
     </RadzenStack>
 }

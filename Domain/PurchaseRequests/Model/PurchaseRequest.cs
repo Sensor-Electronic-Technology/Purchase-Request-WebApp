@@ -29,6 +29,7 @@ public class PurchaseRequest {
 
     public PurchaseRequestInput ToInput() {
         return new PurchaseRequestInput {
+            Id = _id,
             RequesterUsername = Requester?.Username,
             RequesterName = Requester?.Name,
             RequesterEmail = Requester?.Email,
@@ -46,5 +47,30 @@ public class PurchaseRequest {
             Urgent = Urgent,
             Quotes = Quotes,
         };
+    }
+
+    public PurchaseRequest FromInput(PurchaseRequestInput input) {
+        this._id = input.Id ?? ObjectId.GenerateNewId();
+        this.Requester = new PrRequester {
+            Email = input.RequesterEmail,
+            Name = input.RequesterName,
+            Username = input.RequesterUsername,
+        };
+        this.Approver = new PrApprover {
+            Email = input.ApproverEmail,
+            Name = input.ApproverName,
+            Username = input.ApproverId,
+        };
+        this.Title = input.Title;
+        this.Description = input.Description;
+        this.AdditionalComments = input.AdditionalComments;
+        this.ShippingType = input.ShippingType;
+        this.PrUrl = input.PrUrl;
+        this.Department = input.Department;
+        this.Vendor = input.Vendor;
+        this.PurchaseItems = input.PurchaseItems;
+        this.Urgent = input.Urgent;
+        this.Quotes = input.Quotes;
+        return this;
     }
 }

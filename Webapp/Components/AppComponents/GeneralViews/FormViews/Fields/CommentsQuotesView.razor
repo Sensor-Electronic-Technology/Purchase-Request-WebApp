@@ -1,4 +1,5 @@
 ﻿@using SetiFileStore.FileClient
+@using Webapp.Data
 <style>
     #ddUpload {
         left: 0;
@@ -22,6 +23,7 @@
     </RadzenFormField>
 
     <RadzenColumn Size="12">
+    @if (this.Mode == EditMode.NEW) {
         <RadzenCard Variant="Variant.Outlined">
             <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
             <RadzenUpload id="ddUpload"
@@ -32,11 +34,35 @@
                           InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
                           Style="width: 100%"/>
         </RadzenCard>
+    } else {
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="Add Additional Quotes">
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                        <RadzenUpload id="ddUpload"
+                                      ChooseText="Drag and drop here or click to choose files"
+                                      Auto="false"
+                                      Multiple="true"
+                                      Change="@this.OnClientChange"
+                                      InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
+                                      Style="width: 100%"/>
+                    </RadzenCard>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Current Quotes">
+                    <QuotesView Quotes="@this.CurrentQuoteIds"></QuotesView>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    }
+
     </RadzenColumn>
 </RadzenStack>
 
 @code {
     [Parameter] public List<FileData> Quotes { get; set; } = [];
+    [Parameter] public List<string> CurrentQuoteIds { get; set; }
+    [Parameter] public EditMode Mode { get; set; }
     [Parameter] public string? AdditionalComments { get; set; }
     
     [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }

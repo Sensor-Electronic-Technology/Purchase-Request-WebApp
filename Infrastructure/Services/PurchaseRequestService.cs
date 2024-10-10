@@ -84,6 +84,17 @@ public class PurchaseRequestService {
             [input.RequesterEmail ?? ""]);
         return true;
     }
+
+    public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
+        bool success=await this._requestDataService.UpdateOne(new PurchaseRequest().FromInput(input));
+        if(success) {
+            await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
+                [input.RequesterEmail ?? ""],
+                [input.RequesterEmail ?? ""]);
+            return true;
+        }
+        return false;
+    }
     
     public async Task<List<Vendor>> GetVendors() {
         return await this._contactDataService.GetVendors();

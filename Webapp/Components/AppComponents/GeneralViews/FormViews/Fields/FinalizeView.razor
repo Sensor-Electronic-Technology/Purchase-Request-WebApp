@@ -17,13 +17,13 @@
 <RadzenStack Orientation="Orientation.Vertical" Gap="20">
     <RadzenStack Orientation="Orientation.Horizontal"
                  JustifyContent="JustifyContent.Center" Gap="20">
-        <RadzenButton Text="Submit"
+        <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
                       ButtonStyle="ButtonStyle.Success"
                       Icon="save"
                       Click="@this.SaveClicked"
                       Disabled="@(!this.CanSave)"
                       Style="width: 180px; height: 50px;"/>
-        <RadzenButton Text="Cancel"
+        <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
                       ButtonStyle="ButtonStyle.Danger"
                       Click="@this.CancelClicked"
                       Icon="cancel"
@@ -74,6 +74,7 @@
      public List<RequestMailMerge> MailMerge { get; set; } = [];
     [Parameter] public byte[] DocumentContent { get; set; }
     [Parameter] public byte[] MailDocument { get; set; }
+    [Parameter] public EditMode Mode { get; set; }
  
     [Parameter] public EventCallback<bool> DocLoadedChanged { get; set; }
     [Parameter] public EventCallback<byte[]> MailDocumentChanged { get; set; }

@@ -1,0 +1,35 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Webapp.Services
+
+<RadzenStack>
+    <RadzenStack>
+        <RadzenButton Text="Submit Cancellation" Click="@this.SubmitHandler"/>
+        <RadzenButton Text="Cancel Cancellation" Click="@this.CancelHandler"/>
+    </RadzenStack>
+    <RadzenFormField Text="Cancellation Reason(Optional)">
+        <RadzenTextArea Placeholder="Enter any cancellation reason"
+                        @bind-Value="@this.AdditionalComments"
+                        Style="width: 200px; height:100px;"/>
+    </RadzenFormField>
+</RadzenStack>
+
+@code {
+    [Inject] private PrEditStatus _editStatus { get; set; }
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public string? AdditionalComments { get; set; }
+    [Parameter] public EventCallback ActionCompleted { get; set; }
+
+    protected override async Task OnInitializedAsync() { 
+        await base.OnInitializedAsync();
+    }
+
+
+    private async Task SubmitHandler() {
+        
+    }
+    
+    private async Task CancelHandler() {
+        
+    }
+
+}

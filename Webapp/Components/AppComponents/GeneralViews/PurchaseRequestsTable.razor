@@ -34,7 +34,11 @@
                                             @request.Created.ToString("MM/dd/yy")
                                         </Template>
                                     </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester"/>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Requester)" Title="Requester">
+                                        <Template Context="request">
+                                            @request.Requester.Name
+                                        </Template>
+                                    </RadzenDataGridColumn>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Status)" Title="Status">
                                         <Template Context="request">
                                             @switch (request.Status) {
@@ -156,7 +160,7 @@
                     Console.WriteLine("Creating Requester Context Menu");
                     this._contextMenuService.Open(args,
                         new List<ContextMenuItem> {
-                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
+                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "autorenew" },
                             new ContextMenuItem(){ Text = "Cancel Request", Value = 2, Icon = "highlight_off" },
                         }, (e) => {
                             this._dataGrid.SelectRow(args.Data);

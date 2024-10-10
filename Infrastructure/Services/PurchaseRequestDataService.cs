@@ -37,6 +37,11 @@ public class PurchaseRequestDataService {
         await this._purchaseRequestCollection.InsertOneAsync(purchaseRequest);
     }
     
+    public async Task<bool> UpdateOne(PurchaseRequest purchaseRequest) {
+        var result = await this._purchaseRequestCollection.ReplaceOneAsync(pr => pr._id == purchaseRequest._id, purchaseRequest);
+        return result.IsAcknowledged && result.ModifiedCount > 0;
+    }
+    
     public async Task<bool> Exists(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).AnyAsync();
     }

@@ -5,7 +5,9 @@
 @using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
+@using Webapp.Services
 @using Webapp.Services.Authentication
+@implements IAsyncDisposable
 
 
 <RadzenTabs @bind-SelectedIndex="@this._selectedIndex">
@@ -30,6 +32,8 @@
 @code {
     [Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Inject] private PrEditStatus _editStatus { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
     
     private List<PurchaseRequest> _purchaseRequests = [];
     private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
@@ -42,14 +46,32 @@
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
+        this._editStatus.OnTimeout += this.PrEditTimeout;
         await this.Load();
     }
 
+    private void PrEditTimeout(string Id) {
+        if(this._actionRequest != null && this._actionRequest._id.ToString() == Id) {
+            this._actionRequest = null;
+            this._templateTabVisible = false;
+            this._selectedIndex = 0;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     private async Task ApproveHandler() {
-        this._actionRequest = this._selectedRequest;
-        this._templateTabVisible = true;
-        this._templateTabText = "Approve/Reject Request";
-        this._selectedIndex = 1;
+        if (this._selectedRequest != null) {
+            if (this._editStatus.IsAvailable(this._selectedRequest._id.ToString())) {
+                this._actionRequest = this._selectedRequest;
+                this._templateTabVisible = true;
+                this._templateTabText = "Approve/Reject Request";
+                this._selectedIndex = 1;
+            }else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
+                                                                                    " editing this request. " +
+                                                                                    "Please try again later.");
+            }
+        }
     }
     
     private async Task CancelHandler() {
@@ -92,6 +114,11 @@
             this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(e=>e.Approver.Username == this._userAccount._id);
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
         }
+    }
+
+    public ValueTask DisposeAsync() {
+        this._editStatus.OnTimeout -= this.PrEditTimeout;
+        return ValueTask.CompletedTask;
     }
 
 }
