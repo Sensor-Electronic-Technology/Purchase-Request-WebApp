@@ -1,26 +1,26 @@
 ﻿namespace Webapp.Services;
 
-public class EditStatusCleanup:BackgroundService {
-    private readonly PrEditStatus _editStatus;
+public class PrEditTrackerCleanup:BackgroundService {
+    private readonly PrEditingTracker _editingTracker;
     private Dictionary<string,DateTime> _timers=new();
-    private readonly ILogger<EditStatusCleanup> _logger;
+    private readonly ILogger<PrEditTrackerCleanup> _logger;
     
-    public EditStatusCleanup(PrEditStatus editStatus,ILogger<EditStatusCleanup> logger) {
-        this._editStatus = editStatus;
-        this._editStatus.OnAddToEditingList+=this.AddTimer;
-        this._editStatus.OnRemoveFromEditingList+=this.RemoveTimer;
+    public PrEditTrackerCleanup(PrEditingTracker editingTracker,ILogger<PrEditTrackerCleanup> logger) {
+        this._editingTracker = editingTracker;
+        this._editingTracker.OnAddToEditingList+=this.AddTimer;
+        this._editingTracker.OnRemoveFromEditingList+=this.RemoveTimer;
         this._logger=logger;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        using PeriodicTimer timer = new(TimeSpan.FromSeconds(1));
+        using PeriodicTimer timer = new(TimeSpan.FromMinutes(10));
         try {
             while (await timer.WaitForNextTickAsync(stoppingToken)) {
                 foreach(var id in this._timers.Keys) {
                     var seconds=DateTime.Now.Subtract(this._timers[id]).TotalSeconds;
                     if (seconds>10) {
                         Console.WriteLine($"Seconds: {seconds}");
-                        this._editStatus.Timeout(id);
+                        this._editingTracker.Timeout(id);
                         this.RemoveTimer(id);
                     }
                 }
@@ -39,10 +39,10 @@ public class EditStatusCleanup:BackgroundService {
         this._timers.Remove(id);
         this._logger.LogInformation("Removed timer for {Id}", id);
     }
-
+    
     public override void Dispose() {
-        this._editStatus.OnAddToEditingList-=this.AddTimer;
-        this._editStatus.OnRemoveFromEditingList-=this.RemoveTimer;
+        this._editingTracker.OnAddToEditingList-=this.AddTimer;
+        this._editingTracker.OnRemoveFromEditingList-=this.RemoveTimer;
         base.Dispose();
     }
 }

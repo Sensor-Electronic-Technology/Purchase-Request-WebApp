@@ -1,4 +1,4 @@
-﻿@using System.Text.Json
+﻿@*@using System.Text.Json
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.Users
@@ -32,7 +32,7 @@
 @code {
     [Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
-    [Inject] private PrEditStatus _editStatus { get; set; }
+    [Inject] private PrEditingTracker EditingTracker { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
     
     private List<PurchaseRequest> _purchaseRequests = [];
@@ -46,7 +46,7 @@
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._editStatus.OnTimeout += this.PrEditTimeout;
+        this.EditingTracker.OnTimeout += this.PrEditTimeout;
         await this.Load();
     }
 
@@ -61,7 +61,7 @@
 
     private async Task ApproveHandler() {
         if (this._selectedRequest != null) {
-            if (this._editStatus.IsAvailable(this._selectedRequest._id.ToString())) {
+            if (this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString())) {
                 this._actionRequest = this._selectedRequest;
                 this._templateTabVisible = true;
                 this._templateTabText = "Approve/Reject Request";
@@ -117,8 +117,8 @@
     }
 
     public ValueTask DisposeAsync() {
-        this._editStatus.OnTimeout -= this.PrEditTimeout;
+        this.EditingTracker.OnTimeout -= this.PrEditTimeout;
         return ValueTask.CompletedTask;
     }
 
-}
+}*@

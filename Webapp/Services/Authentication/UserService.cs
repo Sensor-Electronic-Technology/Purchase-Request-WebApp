@@ -26,6 +26,10 @@ public class UserService {
         return this._session.UserAccount.Role;
     }
     
+    public string GetUsername() {
+        return this._session.UserAccount.Username;
+    }
+    
     public async Task<bool> ProfileExists(string username) {
         return await this._profileService.ProfileExists(username);
     }

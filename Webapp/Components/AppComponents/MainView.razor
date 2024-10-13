@@ -1,35 +1,58 @@
-﻿@*@using Domain.Authentication
+﻿@using Blazored.LocalStorage
+@using Domain.Authentication
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.Users
 @using Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
-@implements IAsyncDisposable
-@rendermode InteractiveServer
-@#1#attribute [Authorize(Roles = $"{nameof(PurchaseRequestRole.Requester)}, {nameof(PurchaseRequestRole.Admin)}")]#1#
 
 <RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
         <RadzenTabsItem Icon="dashboard" Text="Overview" Style="background:#4a764a">
-            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests" 
+            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests"
                                    ModifyRequest="@this.ModifyHandler"
                                    CancelRequest="@this.CancelRequestHandler"
+                                   ApproveRequest="@this.ApproveRequestHandler"
                                    @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
             <RequestQueueView PurchaseReqStatuses="@this._purchaseReqStatuses"/>
         </RadzenTabsItem>
-        <RadzenTabsItem Icon="add_shopping_cart" Text="Create New" Style="background: #0a53be">
+        <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
             <PurchaseRequestForm ActionCompleted="@this.CompletedHandler" Mode="EditMode.NEW"/>
         </RadzenTabsItem>
         <RadzenTabsItem Text="@this._templateTabText" Visible="@this._templateTabVisible" Icon="@this._tabIcon"
                         Style="background: #cc7119">
-            @if(this._userAction==PrUserAction.MODIFY) {
+            @switch(this._userAction) {
+                case PrUserAction.MODIFY:
+                    <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
+                                         Mode="@EditMode.EDIT"
+                                         ActionCompleted="@this.CompletedHandler"/>
+                    break;
+                case PrUserAction.CANCEL:
+                    <CancelRequestView PurchaseRequest="@this._actionRequest"
+                                       ActionCompleted="@this.CompletedHandler"/>
+                    break;
+                case PrUserAction.ORDER:
+                    <p><strong>Coming Soon....</strong></p>
+                    break;
+                case PrUserAction.APPROVE:
+                    <ApproveActionView PurchaseRequest="@this._actionRequest" 
+                                       ActionCompleted="@this.CompletedHandler"/>
+                    break;
+                default:
+                    <p>Invalid action</p>
+                    break;
+            }
+            
+            
+            @if (this._userAction == PrUserAction.MODIFY) {
                 <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
                                      Mode="@EditMode.EDIT"
                                      ActionCompleted="@this.CompletedHandler"/>
             } else {
-                <CancelRequestView PurchaseRequest="@this._actionRequest" 
+                <CancelRequestView PurchaseRequest="@this._actionRequest"
                                    ActionCompleted="@this.CompletedHandler"/>
             }
 
@@ -43,6 +66,8 @@
     [Inject] private DialogService _dialogService { get; set; }
     [Inject] private UserService _userService { get; set; }
     [Inject] private PrEditingTracker EditingTracker { get; set; }
+    [Inject] private ILogger<MainView> _logger { get; set; }
+    [Inject] private SessionStorageService _localStorage { get; set; }
     
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
@@ -59,14 +84,18 @@
     
     private Dictionary<PrUserAction, TabTemplate> _tabTemplates=new() { 
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
-        { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") } };
+        { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") },
+        { PrUserAction.APPROVE, new TabTemplate("Approve/Reject Request", "assignment_turned_in") }, 
+        { PrUserAction.ORDER, new TabTemplate("Order Request", "add_shopping_cart") }
+    };
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this.EditingTracker.OnTimeout += this.EditTrackerTimeout;
+        this._logger.LogInformation("MainView Initialized");
         await this.Load();
     }
-    
+
     private async Task ModifyHandler() {
         if (this._selectedRequest != null) {
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
@@ -75,8 +104,9 @@
                 this.TransitionTab(PrUserAction.MODIFY);
                 this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
+                this._localStorage.SetItem(this._userAccount._id, this._actionRequest._id.ToString());
             } else {
-                this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
                                                                                     "Please try again later.");
             }
@@ -89,6 +119,38 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.CANCEL);
+                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                await InvokeAsync(StateHasChanged);
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
+                                                                                    " editing this request. " +
+                                                                                    "Please try again later.");
+            }
+        }
+    }
+    
+    private async Task ApproveRequestHandler() {
+        if (this._selectedRequest != null) {
+            var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
+            if (string.IsNullOrEmpty(user)) {
+                this._actionRequest = this._selectedRequest;
+                this.TransitionTab(PrUserAction.APPROVE);
+                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                await InvokeAsync(StateHasChanged);
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
+                                                                                    " editing this request. " +
+                                                                                    "Please try again later.");
+            }
+        }
+    }
+    
+    private async Task OrderRequestHandler() {
+        if (this._selectedRequest != null) {
+            var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
+            if (string.IsNullOrEmpty(user)) {
+                this._actionRequest = this._selectedRequest;
+                this.TransitionTab(PrUserAction.ORDER);
                 this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
             } else {
@@ -106,11 +168,14 @@
         await this.Load();
     }
     
-    private void EditTrackerTimeout(string id) {
-        if(this._actionRequest != null && this._actionRequest._id.ToString() == id) {
-            this.Reset();
-            InvokeAsync(StateHasChanged);
-        }
+    private void EditTrackerTimeout(string username,string id) {
+        if(this._userAccount._id == username) {
+            if(this._actionRequest != null && this._actionRequest._id.ToString() == id) {
+                this._selectedIndex = 0;
+                this.Reset();
+                InvokeAsync(StateHasChanged);
+            }
+        } 
     }
     
     private void TabIndexChangedHandler(int tabIndex) {
@@ -141,23 +206,25 @@
             this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
         }
     }
-    
-    public async Task Load() {
+
+    private async Task Load() {
         this._selectedIndex = 0;
         this.Reset();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
-            this._purchaseRequests = await this._purchaseRequestService.GetUserPurchaseRequests(pr=>pr.Requester.Username == this._userAccount._id);
+            this.EditingTracker.UserTryClear(this._userAccount._id);
+            this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userAccount._id,this._userService.GetUserRole());
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
+            Console.WriteLine($"User: {this._userAccount._id} has {_purchaseRequests.Count} requests");
         }
         await InvokeAsync(StateHasChanged);
     }
-
-
     
     public ValueTask DisposeAsync() {
         this.EditingTracker.OnTimeout -= this.EditTrackerTimeout;
         return ValueTask.CompletedTask;
     }
 
-}*@
+    public record SessionStorage(string Username, string PrId);
+
+}

@@ -1,9 +1,19 @@
 ﻿@page "/"
+@using Domain.Authentication
 @using Webapp.Components.AppComponents.RequestViews
 @inject IJSRuntime js
 <PageTitle>Home</PageTitle>
 
-<AuthorizeView Roles="Requester">
+<AuthorizeView Roles="@this.GetRoles()">
+    <Authorized>
+        <MainView/>
+    </Authorized>
+    <NotAuthorized>
+        <RadzenText Text="You are not authorized to view this page" TextStyle="TextStyle.H4"/>
+    </NotAuthorized>
+</AuthorizeView>
+
+@*<AuthorizeView Roles="Requester">
     <RequesterView/>
 </AuthorizeView>
 
@@ -17,10 +27,17 @@
 
 <AuthorizeView Roles="Purchaser">
 
-</AuthorizeView>
+</AuthorizeView>*@
 
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationState { get; set; }
+
+    private string GetRoles() {
+        return $"{PurchaseRequestRole.Purchaser.Name}," +
+               $"{PurchaseRequestRole.Approver.Name}," +
+               $"{PurchaseRequestRole.Requester.Name}," +
+               $"{PurchaseRequestRole.Admin.Name}";
+    }
 }

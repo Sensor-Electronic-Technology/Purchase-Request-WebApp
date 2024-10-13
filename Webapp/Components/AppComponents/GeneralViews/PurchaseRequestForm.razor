@@ -83,8 +83,7 @@
     [Inject] private FileService _fileService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
     
-    [Parameter] public EventCallback CancelCallback { get; set; }
-    [Parameter] public EventCallback SaveCallback { get; set; }
+    [Parameter] public EventCallback ActionCompleted { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     
@@ -102,7 +101,6 @@
     private List<RequestAlert> _requestAlerts = [];
     private bool _canSave = false;
     private bool _docLoaded = false;
-
     
     private List<RequestMailMerge> _mailMerge;
     
@@ -171,8 +169,7 @@
                     "Error",
                     "Purchase Request submission failed");
             }
-            await Task.Delay(200);
-            await this.SaveCallback.InvokeAsync();
+            await this.ActionCompleted.InvokeAsync();
         } else {
             if (this._quotes.Count> 0) {
                 this._spinnerService.Show("Uploading Quotes....");
@@ -191,8 +188,7 @@
                     "Error",
                     "Purchase Request submission failed");
             }
-            await Task.Delay(200);
-            await this.SaveCallback.InvokeAsync();
+            await this.ActionCompleted.InvokeAsync();
             this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
         }
 
@@ -200,7 +196,7 @@
     
     private async Task CancelPurchaseRequestHandler() {
         this._quotes.Clear();
-        await this.CancelCallback.InvokeAsync();
+        await this.ActionCompleted.InvokeAsync();
     }
     
 

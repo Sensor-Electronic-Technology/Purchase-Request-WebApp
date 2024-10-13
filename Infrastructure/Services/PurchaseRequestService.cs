@@ -112,8 +112,8 @@ public class PurchaseRequestService {
         return await this._authApiService.GetUserEmails();
     }
     
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests() {
-        return await this._requestDataService.GetPurchaseRequests();
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
+        return await this._requestDataService.GetPurchaseRequests(username,role);
     }
     
     public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Domain.Authentication;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.TypeConstants;
@@ -15,6 +16,28 @@ public class PurchaseRequestDataService {
     public PurchaseRequestDataService(IMongoClient client, IOptions<DatabaseSettings> options) {
         var database = client.GetDatabase(options.Value.PurchaseRequestDatabase ?? "purchase_req_db");
         this._purchaseRequestCollection = database.GetCollection<PurchaseRequest>(options.Value.PurchaseRequestCollection ?? "purchase_requests");
+    }
+
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
+        if(PurchaseRequestRole.TryFromName(role, out var prRole)) {
+            switch (prRole.Name) {
+                case nameof(PurchaseRequestRole.Requester): {
+                    return await this._purchaseRequestCollection.Find(pr => pr.Requester.Username == username)
+                        .ToListAsync();
+                }
+                case nameof(PurchaseRequestRole.Approver): {
+                    return await this._purchaseRequestCollection.Find(pr =>pr.Approver.Username == username)
+                        .ToListAsync();
+                }
+                case nameof(PurchaseRequestRole.Purchaser): {
+                    return await this._purchaseRequestCollection.Find(pr => pr.Status == PrStatus.Approved)
+                        .ToListAsync();
+                }
+                default:
+                    return [];
+            }
+        }
+        return [];
     }
     
     public async Task<List<PurchaseRequest>> GetPurchaseRequests() {

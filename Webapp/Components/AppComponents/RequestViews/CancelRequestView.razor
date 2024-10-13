@@ -14,7 +14,7 @@
 </RadzenStack>
 
 @code {
-    [Inject] private PrEditStatus _editStatus { get; set; }
+    [Inject] private PrEditingTracker EditingTracker { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public string? AdditionalComments { get; set; }
     [Parameter] public EventCallback ActionCompleted { get; set; }

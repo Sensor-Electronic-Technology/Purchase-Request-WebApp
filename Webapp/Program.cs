@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Domain;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -32,11 +33,13 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuratio
                                                             ?? "mongodb://172.20.3.41:27017"));
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<PrEditStatus>();
+builder.Services.AddSingleton<PrEditingTracker>();
+builder.Services.AddSingleton<SessionStorageService>();
+builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddHostedService<EditStatusCleanup>();
+builder.Services.AddHostedService<PrEditTrackerCleanup>();
 //builder.Services.AddHttpClient<FileService>(x=>x.BaseAddress = new Uri(builder.Configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/"));
 builder.Services.AddSetiFileClient();
 builder.Services.AddInfrastructure();
