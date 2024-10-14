@@ -86,14 +86,23 @@ public class PurchaseRequestService {
     }
 
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
+        if(!input.Id.HasValue) return false;
+        var pr=await this._requestDataService.GetPurchaseRequest(input.Id.Value);
         bool success=await this._requestDataService.UpdateOne(new PurchaseRequest().FromInput(input));
-        if(success) {
-            await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
-                [input.RequesterEmail ?? ""],
-                [input.RequesterEmail ?? ""]);
-            return true;
-        }
-        return false;
+        if(!success) return false;
+        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
+            [input.RequesterEmail ?? ""],
+            [input.RequesterEmail ?? ""]);
+        return true;
+    }
+
+    public async Task<bool> CancelPurchaseRequest(ObjectId id, string title,string? comments, byte[] docBytes) {
+        var deleted = await this._requestDataService.DeletePurchaseRequest(id);
+        if (!deleted) return false;
+        await this._emailService.SendCancellationEmail(docBytes,title,
+            ["aelmendorf@s-et.com" ?? ""],
+            ["aelmendorf@s-et.com" ?? ""]);
+        return true;
     }
     
     public async Task<List<Vendor>> GetVendors() {

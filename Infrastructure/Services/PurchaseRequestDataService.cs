@@ -39,6 +39,11 @@ public class PurchaseRequestDataService {
         }
         return [];
     }
+
+    public async Task<bool> DeletePurchaseRequest(ObjectId id) {
+        var result=await this._purchaseRequestCollection.DeleteOneAsync(e => e._id == id);
+        return result.IsAcknowledged && result.DeletedCount > 0;
+    }
     
     public async Task<List<PurchaseRequest>> GetPurchaseRequests() {
         return await this._purchaseRequestCollection.Find(pr => true).ToListAsync();

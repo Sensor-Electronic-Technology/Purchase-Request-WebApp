@@ -1,4 +1,6 @@
 ﻿@using Domain.PurchaseRequests.Dto
+@using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
 <style>
     #ddUpload {
@@ -30,6 +32,7 @@
                       Style="width: 180px; height: 50px;"/>
     </RadzenStack>
     <AlertListView RequestAlerts="@this.RequestAlerts"/>
+    <EmailPickList @bind-Target="@this.EmailCcList" Source="this.EmailList" IsCollapsed="false"/>
     <RadzenRow RowGap="5">
         <RadzenColumn Size="6" SizeMD="6">
             <RadzenStack Orientation="Orientation.Vertical">
@@ -67,11 +70,11 @@
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Inject] private AuthApiService _authService { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
     [Parameter] public bool DocLoaded { get; set; }
     [Parameter] public bool CanSave { get; set; }
     [Parameter] public List<RequestAlert> RequestAlerts { get; set; } = [];
-     public List<RequestMailMerge> MailMerge { get; set; } = [];
     [Parameter] public byte[] DocumentContent { get; set; }
     [Parameter] public byte[] MailDocument { get; set; }
     [Parameter] public EditMode Mode { get; set; }
@@ -83,10 +86,31 @@
     [Parameter] public EventCallback CancelClicked { get; set; }
     
     DxRichEdit _richEdit;
+    
+    private List<RequestMailMerge> MailMerge { get; set; } = [];
+    private IEnumerable<UserAccountDto> _ccEmailList=[];
+    private IEnumerable<UserAccountDto> _emailList=[];
+    private IEnumerable<UserAccountDto> EmailCcList {
+        get => this._ccEmailList;
+        set {
+            if (this._ccEmailList != value) {
+                this._ccEmailList = value;
+            }
+        }
+    }
+    private IEnumerable<UserAccountDto> EmailList {
+        get => this._emailList;
+        set {
+            if (this._emailList != value) {
+                this._emailList = value;
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this.DocumentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
+        this.EmailList=await this._authService.GetUsers();
     }
 
     protected override Task OnParametersSetAsync() {

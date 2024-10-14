@@ -47,14 +47,14 @@
             }
             
             
-            @if (this._userAction == PrUserAction.MODIFY) {
+            @*@if (this._userAction == PrUserAction.MODIFY) {
                 <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
                                      Mode="@EditMode.EDIT"
                                      ActionCompleted="@this.CompletedHandler"/>
             } else {
                 <CancelRequestView PurchaseRequest="@this._actionRequest"
                                    ActionCompleted="@this.CompletedHandler"/>
-            }
+            }*@
 
         </RadzenTabsItem>
     </Tabs>

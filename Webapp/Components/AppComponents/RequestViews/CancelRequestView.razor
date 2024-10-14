@@ -1,35 +1,131 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Model
+@using Infrastructure.Services
 @using Webapp.Services
 
-<RadzenStack>
-    <RadzenStack>
-        <RadzenButton Text="Submit Cancellation" Click="@this.SubmitHandler"/>
-        <RadzenButton Text="Cancel Cancellation" Click="@this.CancelHandler"/>
-    </RadzenStack>
-    <RadzenFormField Text="Cancellation Reason(Optional)">
-        <RadzenTextArea Placeholder="Enter any cancellation reason"
-                        @bind-Value="@this.AdditionalComments"
-                        Style="width: 200px; height:100px;"/>
-    </RadzenFormField>
-</RadzenStack>
+<RadzenRow>
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenStack>
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H4" TextAlign="TextAlign.Center"><strong>Cancellation Request</strong></RadzenText>
+                <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">Enter the reason then press submit to cancel the purchase request.</RadzenText>
+                <br/>
+                <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">An email will be sent to the approver and any copied emails</RadzenText>
+            </RadzenCard>
+            <RadzenFormField Text="Cancellation Reason(Optional)">
+                <RadzenTextArea Placeholder="Enter any cancellation reason"
+                                Value="@this._comments"
+                                ValueChanged="@this.CommentsChangedHandler"
+                                Style="width: 200px; height:100px;"/>
+            </RadzenFormField>
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.Center">
+                <RadzenButton Text="Submit Cancellation"
+                              Icon="check_circle"
+                              Click="@this.SubmitHandler"
+                              Style="width: 180px; height: 70px;"/>
+                <RadzenButton Text="Cancel Cancellation"
+                              Icon="delete"
+                              ButtonStyle="ButtonStyle.Danger"
+                              Click="@this.CancelHandler"
+                              Style="width: 180px; height: 70px;"/>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenColumn>
+
+    <RadzenColumn Size="6" SizeMD="6">
+        <RadzenStack>
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+            </RadzenCard>
+            <DxRichEdit @ref="@this._richEdit"
+                        @bind-DocumentContent="@this._documentContent"
+                        DocumentLoaded="@this.DocumentLoadedHandler"
+                        DocumentFormat="DocumentFormat.OpenXml"
+                        BarMode="BarMode.None"
+                        ViewType="ViewType.Simple"
+                        ReadOnly="false">
+                <MailMergeSettings>
+                    <DxMailMergeSettings Data="@this.MailMerge"
+                                         ViewMergedData="true"
+                                         ActiveRecord="1"/>
+                </MailMergeSettings>
+            </DxRichEdit>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
 
 @code {
     [Inject] private PrEditingTracker EditingTracker { get; set; }
-    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
-    [Parameter] public string? AdditionalComments { get; set; }
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } 
     [Parameter] public EventCallback ActionCompleted { get; set; }
+    [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Inject] private SpinnerService _spinnerService { get; set; }
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    
+    private DxRichEdit? _richEdit;
+    private bool _docLoaded = false;
+    private byte[] _documentContent;
+    private byte[] _mailDocument;
+    public string? _comments { get; set; }
+    private List<RequestMailMerge> MailMerge { get; set; } = [];
 
     protected override async Task OnInitializedAsync() { 
         await base.OnInitializedAsync();
+        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/CancelTemplate.docx");
     }
-
-
+    
     private async Task SubmitHandler() {
-        
+        if(this.PurchaseRequest==null) return;
+        this._spinnerService.Show("Submitting Cancellation Request");
+        this.MailMerge = [new RequestMailMerge() {
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            PrLink = this.PurchaseRequest?.PrUrl ?? "",
+            Description = this.PurchaseRequest?.Description ?? "",
+            AdditionalComments = this._comments ?? "",
+        }];
+        this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        var success=await this._purchaseRequestService.CancelPurchaseRequest(this.PurchaseRequest._id,
+            this.PurchaseRequest.Title ?? "",
+            this._comments,this._mailDocument);
+        this._spinnerService.Hide();
+        await this.ActionCompleted.InvokeAsync();
     }
     
     private async Task CancelHandler() {
-        
+        await this.ActionCompleted.InvokeAsync();
+    }
+    
+    private async Task CommentsChangedHandler(string value) {
+        this._comments = value;
+        this.MailMerge = [new RequestMailMerge() {
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            PrLink = this.PurchaseRequest?.PrUrl ?? "",
+            Description = this.PurchaseRequest?.Description ?? "",
+            AdditionalComments = this._comments ?? "",
+        }];
+        this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task DocumentLoadedHandler(Document obj) {
+        this._docLoaded = true;
+        this.MailMerge = [new RequestMailMerge() {
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            PrLink = this.PurchaseRequest?.PrUrl ?? "",
+            Description = this.PurchaseRequest?.Description ?? "",
+            AdditionalComments = this._comments ?? "",
+        }];
+        this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await InvokeAsync(StateHasChanged);
+        //await this._richEdit.LoadDocumentAsync(this.MailDocument, DocumentFormat.OpenXml);
     }
 
 }

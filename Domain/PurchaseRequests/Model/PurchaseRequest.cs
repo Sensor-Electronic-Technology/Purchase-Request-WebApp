@@ -17,6 +17,7 @@ public class PurchaseRequest {
     public Vendor? Vendor { get; set; }
     public List<PurchaseItem> PurchaseItems { get; set; } = [];
     public decimal TotalCost=>PurchaseItems.Sum(x=>x.TotalCost);
+    public List<string> EmailCopyList { get; set; } = [];
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
     public PurchaseOrder? PurchaseOrder { get; set; }

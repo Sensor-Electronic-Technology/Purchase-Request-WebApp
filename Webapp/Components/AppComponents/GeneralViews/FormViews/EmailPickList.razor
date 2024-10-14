@@ -4,7 +4,7 @@
 <RadzenFieldset Text="Additional CC Emails" 
                 Collapsed="@this.IsCollapsed" 
                 CollapseTitle="Additional CC Emails" 
-                AllowCollapse="true">
+                AllowCollapse="true" Style="font-size: 22px !important;">
         <RadzenPickList @bind-Source="@Source"
                         @bind-Target="@Target"
                         Style="height:300px; width:100%;"
@@ -12,7 +12,8 @@
                         TextProperty="@nameof(UserAccountDto.FirstName)"
                         AllowFiltering="true"
                         Multiple="true" 
-                        ShowHeader="true" Disabled="false"
+                        ShowHeader="true" 
+                        Disabled="false"
                         ButtonGap="10"
                         ButtonJustifyContent="JustifyContent.Center"
                         ButtonStyle="ButtonStyle.Info"
@@ -25,7 +26,8 @@
                 <RadzenText Text="Selected" TextStyle="TextStyle.H6"/>
             </TargetHeader>
             <Template>
-                <RadzenText Text="@this.GetText(context)"/>
+                @($"{context.FirstName} {context.LastName} : {context.Email}")
+                @*<RadzenText Text="@this.GetText(context)"/>*@
             </Template>
         </RadzenPickList>
 </RadzenFieldset>
@@ -38,7 +40,7 @@
         set {
             if(this._target!=value) {
                 this._target = value;
-                this.TargetChanged.InvokeAsync(this._target);
+
             }
         }
     }

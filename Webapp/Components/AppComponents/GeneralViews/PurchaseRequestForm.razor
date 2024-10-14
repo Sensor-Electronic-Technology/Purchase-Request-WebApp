@@ -32,7 +32,8 @@
                                                     SelectedApproverChanged="SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
                                                     @bind-Description="@this._purchaseReqInput.Description"
-                                                    @bind-IsUrgent="@this._purchaseReqInput.Urgent"/>
+                                                    @bind-IsUrgent="@this._purchaseReqInput.Urgent"
+                                                    Mode="EditMode.EDIT"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Information" PreviousText="Request Information" NextText="Purchase Items">
                             <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department" Mode="EditMode.EDIT"
@@ -45,7 +46,7 @@
                         <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
                             <CommentsQuotesView @bind-Quotes="@this._quotes"
                                                 Mode="EditMode.EDIT"
-                                                 CurrentQuoteIds="@this._purchaseReqInput.Quotes"
+                                                CurrentQuoteIds="@this._purchaseReqInput.Quotes"
                                                 @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
@@ -111,15 +112,10 @@
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
         if(this._userAccount!=null) {
-            await this.GeneratePurchaseRequest();
+            //await this.GeneratePurchaseRequest();
+            this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
+            this._selectedApprover=this._approvers.FirstOrDefault(e=>e.Username==this._purchaseReqInput.ApproverId)?.FirstName;
         }
-    }
-    
-    protected override Task OnParametersSetAsync() {
-        if (this.PurchaseRequest != null && this.Mode == EditMode.EDIT) {
-            this._purchaseReqInput = this.PurchaseRequest.ToInput();
-        }
-        return base.OnParametersSetAsync();
     }
     
     private async Task UploadFiles() {
@@ -174,9 +170,12 @@
             if (this._quotes.Count> 0) {
                 this._spinnerService.Show("Uploading Quotes....");
                 await this.UploadFiles();
+                this._spinnerService.UpdateMessage("Submitting Purchase Request....");
+            } else {
+                this._spinnerService.Show("Submitting Purchase Request....");
             }
-            this._spinnerService.UpdateMessage("Submitting Purchase Request....");
-            var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+            
+            var success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
             this._spinnerService.Hide();
             await InvokeAsync(StateHasChanged);
             if(success) {
@@ -189,7 +188,6 @@
                     "Purchase Request submission failed");
             }
             await this.ActionCompleted.InvokeAsync();
-            this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
         }
 
     }

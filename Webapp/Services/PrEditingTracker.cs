@@ -25,7 +25,11 @@ public class PrEditingTracker {
 
     public string? IsAvailable(string id) {
         using(this._lock.EnterScope()) {
-            return this.EditingList.FirstOrDefault(e=>e.Value==id).Key;
+            if (this.EditingList.ContainsKey(id)) {
+                return this.EditingList[id];
+            } else {
+                return default;
+            }
         }
     }
 
