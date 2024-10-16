@@ -1,18 +1,63 @@
 ﻿@using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 
-<RadzenFieldset Text="Additional CC Emails" 
-                Collapsed="@this.IsCollapsed" 
-                CollapseTitle="Additional CC Emails" 
-                AllowCollapse="true" Style="font-size: 22px !important;">
+<RadzenAccordion Style="background: #0a53be">
+    <Items>
+        <RadzenAccordionItem>
+            <Template>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center">
+                    <RadzenIcon Icon="account_box"></RadzenIcon>
+                    <RadzenText Text="Additional Emails(CC)" TextStyle="TextStyle.H5"/>
+                </RadzenStack>
+                
+            </Template>
+            <ChildContent>
+                <RadzenPickList @bind-Source="@Source"
+                                Target="@Target"
+                                TargetChanged="TargetChangedHandler"
+                                Style="height:300px; width:100%;"
+                                TItem="UserAccountDto"
+                                TextProperty="@nameof(UserAccountDto.Username)"
+                                AllowFiltering="true"
+                                Multiple="true"
+                                ShowHeader="true"
+                                Disabled="false"
+                                ButtonGap="10"
+                                ButtonJustifyContent="JustifyContent.Center"
+                                ButtonStyle="ButtonStyle.Info"
+                                ButtonSize="ButtonSize.Medium"
+                                ButtonVariant="Variant.Filled">
+                    <SourceHeader>
+                        <RadzenText Text="Users" TextStyle="TextStyle.H6"/>
+                    </SourceHeader>
+                    <TargetHeader>
+                        <RadzenText Text="Selected" TextStyle="TextStyle.H6"/>
+                    </TargetHeader>
+                    <Template>
+                        @($"{context.FirstName} {context.LastName} : {context.Email}")
+                    </Template>
+                </RadzenPickList>
+            </ChildContent>
+        </RadzenAccordionItem>
+    </Items>
+</RadzenAccordion>
+
+@*<RadzenFieldset Collapsed="@this.IsCollapsed"
+                CollapseTitle="Additional CC Emails"
+                AllowCollapse="true" >
+    <HeaderTemplate>
+        <RadzenText Text="Additional CC Emails" TextStyle="TextStyle.H5"/>
+    </HeaderTemplate>
+    <SummaryTemplate>
         <RadzenPickList @bind-Source="@Source"
-                        @bind-Target="@Target"
+                        Target="@Target"
+                        TargetChanged="TargetChangedHandler"
                         Style="height:300px; width:100%;"
                         TItem="UserAccountDto"
-                        TextProperty="@nameof(UserAccountDto.FirstName)"
+                        TextProperty="@nameof(UserAccountDto.Username)"
                         AllowFiltering="true"
-                        Multiple="true" 
-                        ShowHeader="true" 
+                        Multiple="true"
+                        ShowHeader="true"
                         Disabled="false"
                         ButtonGap="10"
                         ButtonJustifyContent="JustifyContent.Center"
@@ -27,15 +72,18 @@
             </TargetHeader>
             <Template>
                 @($"{context.FirstName} {context.LastName} : {context.Email}")
-                @*<RadzenText Text="@this.GetText(context)"/>*@
             </Template>
         </RadzenPickList>
-</RadzenFieldset>
+    </SummaryTemplate>
+
+</RadzenFieldset>*@
 
 @code {
+    [Inject] private AuthApiService _authApiService { get; set; }
     [Parameter] public bool IsCollapsed { get; set; }
-    [Parameter]
-    public IEnumerable<UserAccountDto> Target {
+    [Parameter] public List<string> CcList { get; set; } = [];
+    [Parameter] public EventCallback<List<string>> CcListChanged { get; set; }
+    [Parameter] public IEnumerable<UserAccountDto> Target {
         get=>this._target;
         set {
             if(this._target!=value) {
@@ -44,23 +92,37 @@
             }
         }
     }
-    [Parameter] public EventCallback<IEnumerable<UserAccountDto>> TargetChanged { get; set; }
     private IEnumerable<UserAccountDto> _target;
-    [Parameter]
-    public IEnumerable<UserAccountDto> Source {
-        get {
-            return this._source;
-        }
+    [Parameter] public IEnumerable<UserAccountDto> Source {
+        get => this._source;
         set {
             if(this._source!=value) {
                 this._source = value;
             }
         }
     }
-
     private IEnumerable<UserAccountDto> _source;
-    
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        var emailList = await this._authApiService.GetUsers();
+        if (this.CcList.Any()) {
+            this.Target=emailList.Where(e => this.CcList.Contains(e.Email)).ToList();
+            emailList.RemoveAll(e => this.CcList.Contains(e.Email));
+        }
+        this.Source = emailList;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private string GetText(UserAccountDto user) {
         return $"{user.FirstName} {user.LastName} : {user.Email}";
     }
+
+    private void TargetChangedHandler(IEnumerable<UserAccountDto> obj) {
+        var userAccountDtos = obj.ToList();
+        this.Target=userAccountDtos;
+        this.CcList = userAccountDtos.Select(e => e.Email).ToList();
+        this.CcListChanged.InvokeAsync(this.CcList);
+    }
+
 }

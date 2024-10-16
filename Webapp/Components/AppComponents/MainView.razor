@@ -45,17 +45,6 @@
                     <p>Invalid action</p>
                     break;
             }
-            
-            
-            @*@if (this._userAction == PrUserAction.MODIFY) {
-                <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
-                                     Mode="@EditMode.EDIT"
-                                     ActionCompleted="@this.CompletedHandler"/>
-            } else {
-                <CancelRequestView PurchaseRequest="@this._actionRequest"
-                                   ActionCompleted="@this.CompletedHandler"/>
-            }*@
-
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -161,10 +150,8 @@
         }
     }
 
-    private async Task CompletedHandler() {
-        if (this._selectedRequest != null) {
-            this.EditingTracker.FinishEditing(this._selectedRequest._id.ToString());
-        }
+    private async Task CompletedHandler(string id) {
+        this.EditingTracker.FinishEditing(id);
         await this.Load();
     }
     

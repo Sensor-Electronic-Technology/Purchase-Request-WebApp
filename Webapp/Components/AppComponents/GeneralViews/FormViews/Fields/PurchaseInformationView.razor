@@ -6,7 +6,7 @@
 <RadzenRow>
     <RadzenColumn Size="6" SizeMD="6">
         <RadzenStack Orientation="Orientation.Vertical">
-            <DepartmentSelector @bind-Department="@this.Department"/>
+            <DepartmentSelector Department="@this.Department" DepartmentChanged="@DepartmentChanged"/>
             <RadzenFormField Text="Shipping">
                 <RadzenDropDown TValue="string"
                                 Data="@ShippingTypes.List"

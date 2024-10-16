@@ -20,6 +20,7 @@ public class PurchaseRequestInput {
     public string? PrUrl { get; set; }
     public byte[]? TempFile { get; set; }=Array.Empty<byte>();
     public byte[]? EmailTemplate { get; set; }=Array.Empty<byte>();
+    public List<string> EmailCcList { get; set; } = [];
     public Vendor? Vendor { get; set; }
     public Department? Department { get; set; }
     public List<PurchaseItem> PurchaseItems { get; set; } = [];
@@ -27,4 +28,9 @@ public class PurchaseRequestInput {
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
     public List<FileInput> Attachments { get; set; } = [];
+    public DateTime Created { get; set; }
+    public DateTime ApprovedDate { get; set; }
+    public DateTime RejectedDate { get; set; }
+    public DateTime OrderedDate { get; set; }
+    public DateTime ReceivedDate { get; set; }
 }

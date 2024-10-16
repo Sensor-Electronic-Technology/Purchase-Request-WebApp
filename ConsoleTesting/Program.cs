@@ -19,11 +19,13 @@ using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Companion;
+using TimeProvider = Infrastructure.Services.TimeProvider;
+
 //Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
 //await TestMongoIdString();
 //await TestMongoQueryIdString();
 //await TestSendEmail();
-await CreateVendors();
+//await CreateVendors();
 //await CreateDepartments();
 //await TestExcel();
 //await PdfWork();
@@ -44,8 +46,10 @@ foreach (var a in arr) {
 //await fileService.UploadMultipleFiles(["C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf","C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest-2.pdf"]);
 //await fileService.UploadFile("C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf");
 
+Console.WriteLine(TimeProvider.Now());
+
 async Task TestReadContentJson() {
-    var jsonString =
+    var jsonString = 
         "[\n  {\n    \"objectId\": \"66f6f924d35e2cf395eadd6f\",\n    \"fileName\": \"PurchaseRequest-2.pdf\",\n    \"isSuccessful\": true,\n    \"errorMessage\": null\n  },\n  {\n    \"objectId\": \"66f6f925d35e2cf395eadd71\",\n    \"fileName\": \"PurchaseRequest - Copy.pdf\",\n    \"isSuccessful\": true,\n    \"errorMessage\": null\n  }\n]";
     var jsonArray=JsonSerializer.Deserialize<JsonArray>(jsonString);
     foreach (var jsonNode in jsonArray) {

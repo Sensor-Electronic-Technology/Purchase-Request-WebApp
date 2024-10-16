@@ -33,30 +33,31 @@
                                                     @bind-Title="@this._purchaseReqInput.Title"
                                                     @bind-Description="@this._purchaseReqInput.Description"
                                                     @bind-IsUrgent="@this._purchaseReqInput.Urgent"
-                                                    Mode="EditMode.EDIT"/>
+                                                    Mode="@this.Mode"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Information" PreviousText="Request Information" NextText="Purchase Items">
-                            <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department" Mode="EditMode.EDIT"
+                            <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department" 
+                                                     Mode="@this.Mode"
                                                      @bind-Vendor="@this._purchaseReqInput.Vendor"
                                                      @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Items" PreviousText="Request Information" NextText="Comments & Quotes">
-                            <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"/>
+                            <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
+                                                Mode="@this.Mode"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
                             <CommentsQuotesView @bind-Quotes="@this._quotes"
-                                                Mode="EditMode.EDIT"
+                                                Mode="@this.Mode"
                                                 CurrentQuoteIds="@this._purchaseReqInput.Quotes"
                                                 @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
-                            <FinalizeView PurchaseRequestInput="@this._finalizeDataInput" 
+                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput" 
                                           CanSave="@this._canSave"
-                                          Mode="EditMode.EDIT"
+                                          Mode="@this.Mode"
                                           RequestAlerts="@this._requestAlerts"
                                           SaveClicked="@this.SavePurchaseRequestHandler"
                                           CancelClicked="@this.CancelPurchaseRequestHandler"
-                                          @bind-MailDocument="@this._purchaseReqInput.EmailTemplate"
                                           @bind-DocLoaded="@this._docLoaded"/>
                         </RadzenStepsItem>
                     </Steps>
@@ -84,7 +85,7 @@
     [Inject] private FileService _fileService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
     
-    [Parameter] public EventCallback ActionCompleted { get; set; }
+    [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     
@@ -103,8 +104,6 @@
     private bool _canSave = false;
     private bool _docLoaded = false;
     
-    private List<RequestMailMerge> _mailMerge;
-    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._approvers = await this._purchaseRequestService.GetApprovers();
@@ -112,9 +111,16 @@
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
         if(this._userAccount!=null) {
-            //await this.GeneratePurchaseRequest();
-            this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
-            this._selectedApprover=this._approvers.FirstOrDefault(e=>e.Username==this._purchaseReqInput.ApproverId)?.FirstName;
+            if (this.Mode == EditMode.NEW) {
+                await this.GeneratePurchaseRequest();
+                this._purchaseReqInput.RequesterUsername=this._userAccount._id;
+                this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
+                this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
+            } else {
+                this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
+                var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
+                this._selectedApprover = approverAccount?.FirstName;
+            }
         }
     }
     
@@ -147,57 +153,48 @@
         }
     }
     private async Task SavePurchaseRequestHandler() {
-        if (this.Mode == EditMode.NEW) {
-            if (this._quotes.Count> 0) {
-                this._spinnerService.Show("Uploading Quotes....");
-                await this.UploadFiles();
-            }
-            this._spinnerService.UpdateMessage("Submitting Purchase Request....");
-            var success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
-            this._spinnerService.Hide();
-            await InvokeAsync(StateHasChanged);
-            if(success) {
-                this._notificationService.Notify(NotificationSeverity.Success, 
-                    "Success",
-                    "Purchase Request has been submitted successfully");
-            } else {
-                this._notificationService.Notify(NotificationSeverity.Error, 
-                    "Error",
-                    "Purchase Request submission failed");
-            }
-            await this.ActionCompleted.InvokeAsync();
-        } else {
-            if (this._quotes.Count> 0) {
-                this._spinnerService.Show("Uploading Quotes....");
-                await this.UploadFiles();
-                this._spinnerService.UpdateMessage("Submitting Purchase Request....");
-            } else {
-                this._spinnerService.Show("Submitting Purchase Request....");
-            }
-            
-            var success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
-            this._spinnerService.Hide();
-            await InvokeAsync(StateHasChanged);
-            if(success) {
-                this._notificationService.Notify(NotificationSeverity.Success, 
-                    "Success",
-                    "Purchase Request has been submitted successfully");
-            } else {
-                this._notificationService.Notify(NotificationSeverity.Error, 
-                    "Error",
-                    "Purchase Request submission failed");
-            }
-            await this.ActionCompleted.InvokeAsync();
+        if (this._finalizeDataInput == null) {
+            this._notificationService.Notify(NotificationSeverity.Error, 
+                "Error",
+                "Purchase Request not ready(NULL) for submission");
+            return;
         }
-
+        if (this._quotes.Count> 0) {
+            this._spinnerService.Show("Uploading Quotes....");
+            await this.UploadFiles();
+            this._spinnerService.UpdateMessage("Submitting Purchase Request....");
+        } else {
+            this._spinnerService.Show("Submitting Purchase Request....");
+        }
+        this._purchaseReqInput = this._finalizeDataInput;
+        bool success = false;
+        if (this.Mode == EditMode.NEW) {
+            success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+        } else {
+            success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
+        }
+        
+        this._spinnerService.Hide();
+        await InvokeAsync(StateHasChanged);
+        if(success) {
+            this._notificationService.Notify(NotificationSeverity.Success, 
+                "Success",
+                $"Purchase Request has been {(this.Mode==EditMode.NEW ? "submitted":"updated")} successfully");
+        } else {
+            this._notificationService.Notify(NotificationSeverity.Error, 
+                "Error",
+                $"Purchase Request {(this.Mode==EditMode.NEW ? "submission":"update")} failed");
+        }
+        var id = this._purchaseReqInput.Id.HasValue ? string.Empty:(this._purchaseReqInput.Id?.ToString() ?? "");
+        await this.ActionCompleted.InvokeAsync(id);
     }
     
     private async Task CancelPurchaseRequestHandler() {
         this._quotes.Clear();
-        await this.ActionCompleted.InvokeAsync();
+        var id = this._purchaseReqInput.Id.HasValue ? string.Empty:(this._purchaseReqInput.Id?.ToString() ?? "");
+        await this.ActionCompleted.InvokeAsync(id);
     }
     
-
     private async Task LoadData() {
         this._approvers = await this._purchaseRequestService.GetApprovers();
         this._userAccount = this._userService.GetSessionUserProfile();

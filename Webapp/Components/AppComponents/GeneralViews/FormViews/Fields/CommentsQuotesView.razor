@@ -1,4 +1,5 @@
-﻿@using SetiFileStore.FileClient
+﻿@using System.Timers
+@using SetiFileStore.FileClient
 @using Webapp.Data
 <style>
     #ddUpload {
@@ -27,6 +28,7 @@
         <RadzenCard Variant="Variant.Outlined">
             <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
             <RadzenUpload id="ddUpload"
+                          @ref="@this._upload"
                           ChooseText="Drag and drop here or click to choose files"
                           Auto="false"
                           Multiple="true"
@@ -41,6 +43,7 @@
                     <RadzenCard Variant="Variant.Outlined">
                         <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
                         <RadzenUpload id="ddUpload"
+                                      @ref="@this._upload"
                                       ChooseText="Drag and drop here or click to choose files"
                                       Auto="false"
                                       Multiple="true"
@@ -60,6 +63,7 @@
 </RadzenStack>
 
 @code {
+    [Inject] public NotificationService _notifyService { get; set; }
     [Parameter] public List<FileData> Quotes { get; set; } = [];
     [Parameter] public List<string> CurrentQuoteIds { get; set; }
     [Parameter] public EditMode Mode { get; set; }
@@ -67,13 +71,26 @@
     
     [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }
     [Parameter] public EventCallback<string?> AdditionalCommentsChanged { get; set; }
+
+    private RadzenUpload _upload;
     
     async Task OnClientChange(UploadChangeEventArgs args) {
         foreach (var file in args.Files.ToList()) {
-            await using var stream=file.OpenReadStream();
-            using var streamContent = new StreamContent(stream);
-            this.Quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
+            long maxSize = 10* 1024 * 1024;
+            if(file.Size>maxSize) {
+                this._notifyService.Notify(NotificationSeverity.Error,
+                    "File too large",
+                    $"The file({file.Name}) is too large." +
+                    " Files must be less than or equal to 10MB." +
+                    $"File size: {Math.Round(file.Size/1E6,2)}MB",duration:10000);
+                await this._upload.RemoveFile(file.Name);
+            } else {
+                await using var stream=file.OpenReadStream(maxSize);
+                using var streamContent = new StreamContent(stream);
+                this.Quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
+            }
         }
         await this.QuotesChanged.InvokeAsync(this.Quotes);
     }
+
 }

@@ -7,7 +7,7 @@
     <RadzenDropDown TValue="Department"
                     Data="@this._departments"
                     Value="@this.Department"
-                    ValueChanged="@this.DepartmentChanged"
+                    ValueChanged="@this.DepartmentChangedHandler"
                     Placeholder="Select a department"
                     TextProperty="Name"
                     AllowClear="true"/>
@@ -46,12 +46,16 @@
     [Parameter] public Department? Department { get; set; }
     [Parameter] public EventCallback<Department?> DepartmentChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
-    
     private List<Department> _departments { get; set; } = new();
     
     protected override async Task OnInitializedAsync() { 
         await base.OnInitializedAsync();
         this._departments = await this._departmentDataService.GetDepartments();
+    }
+    
+    private async Task DepartmentChangedHandler(Department? department) {
+        this.Department = department;
+        await this.DepartmentChanged.InvokeAsync(department);
     }
 
 }

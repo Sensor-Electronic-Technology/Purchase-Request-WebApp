@@ -2,76 +2,70 @@
 @using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
-<style>
-    #ddUpload {
-        left: 0;
-        --rz-upload-button-bar-background-color: transparent;
-        --rz-upload-button-bar-padding: 0;
-    }
 
-    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
-        width: 100%;
-        text-align: center;
-        font-size: 16px;
-        padding: 100px 0;
-    }
-</style>
-<RadzenStack Orientation="Orientation.Vertical" Gap="20">
-    <RadzenStack Orientation="Orientation.Horizontal"
-                 JustifyContent="JustifyContent.Center" Gap="20">
-        <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
-                      ButtonStyle="ButtonStyle.Success"
-                      Icon="save"
-                      Click="@this.SaveClicked"
-                      Disabled="@(!this.CanSave)"
-                      Style="width: 180px; height: 50px;"/>
-        <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
-                      ButtonStyle="ButtonStyle.Danger"
-                      Click="@this.CancelClicked"
-                      Icon="cancel"
-                      Style="width: 180px; height: 50px;"/>
+@if (this.PurchaseRequestInput == null) {
+    <p>Loading....</p>
+} else {
+    <RadzenStack Orientation="Orientation.Vertical" Gap="20">
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     JustifyContent="JustifyContent.Center" Gap="20">
+            <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
+                          ButtonStyle="ButtonStyle.Success"
+                          Icon="save"
+                          Click="@this.SaveClicked"
+                          Disabled="@(!this.CanSave)"
+                          Style="width: 180px; height: 50px;"/>
+            <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
+                          ButtonStyle="ButtonStyle.Danger"
+                          Click="@this.CancelClicked"
+                          Icon="cancel"
+                          Style="width: 180px; height: 50px;"/>
+        </RadzenStack>
+        <AlertListView RequestAlerts="@this.RequestAlerts"/>
+        <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
+                       CcListChanged="@Callback"
+                       IsCollapsed="false"/>
+        <RadzenRow RowGap="5">
+            <RadzenColumn Size="6" SizeMD="6">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenText Text="Request Preview"
+                                    TextStyle="TextStyle.H5"
+                                    TextAlign="TextAlign.Center"/>
+                    </RadzenCard>
+                    <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequestInput"/>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="6">
+                <RadzenStack>
+                    <RadzenCard Variant="Variant.Outlined">
+                        <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+                    </RadzenCard>
+                    <DxRichEdit @ref="@this._richEdit"
+                                @bind-DocumentContent="@this.DocumentContent"
+                                DocumentLoaded="@this.DocumentLoadedHandler"
+                                DocumentFormat="DocumentFormat.OpenXml"
+                                BarMode="BarMode.None"
+                                ViewType="ViewType.Simple"
+                                ReadOnly="false">
+                        <MailMergeSettings>
+                            <DxMailMergeSettings Data="@this.MailMerge"
+                                                 ViewMergedData="true"
+                                                 ActiveRecord="1"/>
+                        </MailMergeSettings>
+                    </DxRichEdit>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
     </RadzenStack>
-    <AlertListView RequestAlerts="@this.RequestAlerts"/>
-    <EmailPickList @bind-Target="@this.EmailCcList" Source="this.EmailList" IsCollapsed="false"/>
-    <RadzenRow RowGap="5">
-        <RadzenColumn Size="6" SizeMD="6">
-            <RadzenStack Orientation="Orientation.Vertical">
-                <RadzenCard Variant="Variant.Outlined">
-                    <RadzenText Text="Request Preview"
-                                TextStyle="TextStyle.H5"
-                                TextAlign="TextAlign.Center"/>
-                </RadzenCard>
-                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequestInput"></PrPdfPreview>
-            </RadzenStack>
-        </RadzenColumn>
-        <RadzenColumn Size="6" SizeMD="6">
-            <RadzenStack>
-                <RadzenCard Variant="Variant.Outlined">
-                    <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
-                </RadzenCard>
-                <DxRichEdit @ref="@this._richEdit"
-                            @bind-DocumentContent="@this.DocumentContent"
-                            DocumentLoaded="@this.DocumentLoadedHandler"
-                            DocumentFormat="DocumentFormat.OpenXml"
-                            BarMode="BarMode.None"
-                            ViewType="ViewType.Simple"
-                            ReadOnly="false">
-                    <MailMergeSettings>
-                        <DxMailMergeSettings Data="@this.MailMerge"
-                                             ViewMergedData="true"
-                                             ActiveRecord="1"/>
-                    </MailMergeSettings>
-                </DxRichEdit>
-            </RadzenStack>
-        </RadzenColumn>
-    </RadzenRow>
-</RadzenStack>
-
+    
+}
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
     [Inject] private AuthApiService _authService { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
+    [Parameter] public EventCallback<PurchaseRequestInput?> PurchaseRequestInputChanged { get; set; }
     [Parameter] public bool DocLoaded { get; set; }
     [Parameter] public bool CanSave { get; set; }
     [Parameter] public List<RequestAlert> RequestAlerts { get; set; } = [];
@@ -88,29 +82,11 @@
     DxRichEdit _richEdit;
     
     private List<RequestMailMerge> MailMerge { get; set; } = [];
-    private IEnumerable<UserAccountDto> _ccEmailList=[];
-    private IEnumerable<UserAccountDto> _emailList=[];
-    private IEnumerable<UserAccountDto> EmailCcList {
-        get => this._ccEmailList;
-        set {
-            if (this._ccEmailList != value) {
-                this._ccEmailList = value;
-            }
-        }
-    }
-    private IEnumerable<UserAccountDto> EmailList {
-        get => this._emailList;
-        set {
-            if (this._emailList != value) {
-                this._emailList = value;
-            }
-        }
-    }
 
+    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this.DocumentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
-        this.EmailList=await this._authService.GetUsers();
     }
 
     protected override Task OnParametersSetAsync() {
@@ -126,10 +102,23 @@
     }
 
     private async Task DocumentLoadedHandler(Document obj) {
+        if(this.PurchaseRequestInput == null) {
+            return;
+        }
         this.DocLoaded = true;
-        this.MailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        this.PurchaseRequestInput.EmailTemplate=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         //await this._richEdit.LoadDocumentAsync(this.MailDocument, DocumentFormat.OpenXml);
-        await this.MailDocumentChanged.InvokeAsync(this.MailDocument);
+        //await this.MailDocumentChanged.InvokeAsync(this.MailDocument);
+        await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
         await this.DocLoadedChanged.InvokeAsync(this.DocLoaded);
     }
+
+    private async Task Callback(List<string> obj) {
+        if(this.PurchaseRequestInput == null) {
+            return;
+        }
+        this.PurchaseRequestInput.EmailCcList=obj;
+        await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
+    }
+
 }

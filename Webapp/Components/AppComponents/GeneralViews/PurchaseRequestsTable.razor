@@ -26,7 +26,8 @@
                                             Value="@this._selectedPurchaseRequests"
                                             CellRender="@this.CellRender"
                                             Render="@this.OnRender"
-                                            ValueChanged="@this.SelectedChangedHandler">
+                                            ValueChanged="@this.SelectedChangedHandler"
+                                            RowSelect="RowSelectedHandler">
                                 <Columns>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At">
@@ -246,4 +247,13 @@
             }
         }
     }
+
+    private async Task RowSelectedHandler(PurchaseRequest obj) {
+        if (this.SelectedPurchaseRequest != null) {
+            if(this.SelectedPurchaseRequest._id==obj._id) {
+                await this.ClearSelectionHandler();
+            }
+        }
+    }
+
 }

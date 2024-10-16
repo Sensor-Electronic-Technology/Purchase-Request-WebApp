@@ -42,7 +42,6 @@ public class AuthApiService {
     }
     
     public async Task<List<UserAccountDto>> GetPurchasers() {
-        Console.WriteLine($"AuthDomain: {this._configuration["AuthDomain"]}");
         var response=this._client.PostAsJsonAsync(HttpClientConstants.GetUsersEndpoint,
             new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = PurchaseRequestRole.Purchaser.Name });
         var usersResponse=await response.Result.Content.ReadFromJsonAsync<GetUsersResponse>();

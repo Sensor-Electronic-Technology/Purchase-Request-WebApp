@@ -1,14 +1,9 @@
 ﻿using System.Linq.Expressions;
-using Domain.PurchaseRequests;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Model;
-using Domain.PurchaseRequests.TypeConstants;
-using Domain.Settings;
-using Microsoft.Extensions.Options;
 using MongoDB.Bson;
-using MongoDB.Driver;
-using QuestPDF;
 using SETiAuth.Domain.Shared.Authentication;
+using SetiFileStore.FileClient;
 
 namespace Infrastructure.Services;
 
@@ -19,19 +14,19 @@ public class PurchaseRequestService {
     private readonly UserProfileService _userProfileService;
     private readonly AuthApiService _authApiService;
     private readonly EmailService _emailService;
-    //private readonly 
+    private readonly FileService _fileService;
     
     public PurchaseRequestService(PurchaseRequestDataService requestDataService,UserProfileService userProfileService,
         DepartmentDataService departmentDataService,ContactDataService contactDataService, EmailService emailService,
-        AuthApiService authService) {
+        AuthApiService authService,FileService fileService) {
         this._requestDataService = requestDataService;
         this._contactDataService = contactDataService;
         this._emailService = emailService;
         this._authApiService = authService;
         this._userProfileService=userProfileService;
         this._departmentDataService = departmentDataService;
+        this._fileService = fileService;
     }
-    
 
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._requestDataService.GetPurchaseRequest(id);
@@ -69,10 +64,11 @@ public class PurchaseRequestService {
             Department = input.Department,
             Vendor = input.Vendor,
             AdditionalComments = input.AdditionalComments,
-            Created = DateTime.Now,
+            Created = TimeProvider.Now(),
             Quotes = input.Quotes,
             ShippingType = input.ShippingType,
             PurchaseItems = input.PurchaseItems,
+            EmailCopyList = input.EmailCcList
         };
         input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
         purchaseRequest.PrUrl = input.PrUrl;
@@ -87,8 +83,8 @@ public class PurchaseRequestService {
 
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
         if(!input.Id.HasValue) return false;
-        var pr=await this._requestDataService.GetPurchaseRequest(input.Id.Value);
-        bool success=await this._requestDataService.UpdateOne(new PurchaseRequest().FromInput(input));
+        var pr = new PurchaseRequest().FromInput(input);
+        bool success=await this._requestDataService.UpdateOne(pr);
         if(!success) return false;
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
             [input.RequesterEmail ?? ""],
@@ -96,10 +92,13 @@ public class PurchaseRequestService {
         return true;
     }
 
-    public async Task<bool> CancelPurchaseRequest(ObjectId id, string title,string? comments, byte[] docBytes) {
-        var deleted = await this._requestDataService.DeletePurchaseRequest(id);
+    public async Task<bool> CancelPurchaseRequest(CancelPurchaseRequestInput input) {
+        var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
         if (!deleted) return false;
-        await this._emailService.SendCancellationEmail(docBytes,title,
+        foreach (var quote in input.FileIds) {
+            await this._fileService.DeleteFile(quote);
+        }
+        await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [],input.Title ?? "Unknown",
             ["aelmendorf@s-et.com" ?? ""],
             ["aelmendorf@s-et.com" ?? ""]);
         return true;

@@ -31,22 +31,28 @@ public class PurchaseRequest {
     public PurchaseRequestInput ToInput() {
         return new PurchaseRequestInput {
             Id = _id,
-            RequesterUsername = Requester?.Username,
-            RequesterName = Requester?.Name,
-            RequesterEmail = Requester?.Email,
-            ApproverName = Approver?.Name,
-            ApproverEmail = Approver?.Email,
-            ApproverId = Approver?.Username,
-            Title = Title,
-            Description = Description,
-            AdditionalComments = AdditionalComments,
-            ShippingType = ShippingType,
-            PrUrl = PrUrl,
-            Department = Department,
-            Vendor = Vendor,
-            PurchaseItems = PurchaseItems,
-            Urgent = Urgent,
-            Quotes = Quotes,
+            RequesterUsername = this.Requester?.Username,
+            RequesterName = this.Requester?.Name,
+            RequesterEmail = this.Requester?.Email,
+            ApproverName = this.Approver?.Name,
+            ApproverEmail = this.Approver?.Email,
+            ApproverId = this.Approver?.Username,
+            Title = this.Title,
+            Description = this.Description,
+            AdditionalComments = this.AdditionalComments,
+            ShippingType = this.ShippingType,
+            PrUrl = this.PrUrl,
+            Department = this.Department,
+            Vendor = this.Vendor,
+            PurchaseItems = this.PurchaseItems,
+            Urgent = this.Urgent,
+            Quotes = this.Quotes,
+            EmailCcList = this.EmailCopyList,
+            Created = this.Created,
+            ApprovedDate = this.ApprovedDate,
+            RejectedDate = this.RejectedDate,
+            OrderedDate = this.OrderedDate,
+            ReceivedDate = this.ReceivedDate,
         };
     }
 
@@ -72,6 +78,12 @@ public class PurchaseRequest {
         this.PurchaseItems = input.PurchaseItems;
         this.Urgent = input.Urgent;
         this.Quotes = input.Quotes;
+        this.Created = input.Created;
+        this.EmailCopyList=input.EmailCcList;
+        this.ApprovedDate = input.ApprovedDate;
+        this.RejectedDate = input.RejectedDate;
+        this.OrderedDate = input.OrderedDate;
+        this.ReceivedDate = input.ReceivedDate;
         return this;
     }
 }
