@@ -5,11 +5,13 @@
     <Items>
         <RadzenAccordionItem>
             <Template>
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center">
+                <RadzenText TextStyle="@this.TextStyle" class="rz-display-flex rz-align-items-center rz-m-0">
+                    <RadzenIcon Icon="account_box" class="rz-me-1" /><b>Additional Emails(CC)</b>
+                </RadzenText>
+                @*<RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center">
                     <RadzenIcon Icon="account_box"></RadzenIcon>
-                    <RadzenText Text="Additional Emails(CC)" TextStyle="TextStyle.H5"/>
-                </RadzenStack>
-                
+                    <RadzenText Text="Additional Emails(CC)" TextStyle="@this.TextStyle"/>
+                </RadzenStack>*@
             </Template>
             <ChildContent>
                 <RadzenPickList @bind-Source="@Source"
@@ -28,10 +30,10 @@
                                 ButtonSize="ButtonSize.Medium"
                                 ButtonVariant="Variant.Filled">
                     <SourceHeader>
-                        <RadzenText Text="Users" TextStyle="TextStyle.H6"/>
+                        <RadzenText Text="Users" TextStyle="@this.TextStyle"/>
                     </SourceHeader>
                     <TargetHeader>
-                        <RadzenText Text="Selected" TextStyle="TextStyle.H6"/>
+                        <RadzenText Text="Selected" TextStyle="@this.TextStyle"/>
                     </TargetHeader>
                     <Template>
                         @($"{context.FirstName} {context.LastName} : {context.Email}")
@@ -83,6 +85,7 @@
     [Parameter] public bool IsCollapsed { get; set; }
     [Parameter] public List<string> CcList { get; set; } = [];
     [Parameter] public EventCallback<List<string>> CcListChanged { get; set; }
+    [Parameter] public TextStyle TextStyle { get; set; } = TextStyle.H6;
     [Parameter] public IEnumerable<UserAccountDto> Target {
         get=>this._target;
         set {

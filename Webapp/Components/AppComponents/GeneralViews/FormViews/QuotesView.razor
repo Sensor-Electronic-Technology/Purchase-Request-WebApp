@@ -1,4 +1,5 @@
 ﻿@using SetiFileStore.FileClient
+@using DevExpress.Blazor.PdfViewer;
 
 @if(this.Quotes==null || !this.Quotes.Any()) {
     <RadzenText Text="Purchase request has no quotes"/>
@@ -6,8 +7,16 @@
     <RadzenTabs>
         <Tabs>
             @foreach(var file in this._files) {
-                <RadzenTabsItem Text="@file.Name">
-                    <PdfPreview FileBytes="@file.Data"/>
+                <RadzenTabsItem>
+                    <Template>
+                        <RadzenStack>
+                            <RadzenButton Icon="delete"/>
+                        </RadzenStack>
+                    </Template>
+                    <ChildContent>
+                        <RadzenText Text="@file.Name"/>
+                        <DxPdfViewer DocumentContent="@file.Data"/>
+                    </ChildContent>
                 </RadzenTabsItem>
             }
         </Tabs>

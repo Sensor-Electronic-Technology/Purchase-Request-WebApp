@@ -31,6 +31,7 @@ builder.Services.AddAuthenticationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
                                                             ?? "mongodb://172.20.3.41:27017"));
+builder.Services.AddDevExpressServerSideBlazorReportViewer();
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<PrEditingTracker>();

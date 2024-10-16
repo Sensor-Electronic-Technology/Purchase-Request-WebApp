@@ -6,29 +6,7 @@
 @if (this.PurchaseRequest == null) {
     <p class="text-center">No purchase request selected</p>
 } else {
-
     <RadzenStack Orientation="Orientation.Horizontal">
-        @if (this.Mode != EditMode.VIEW) {
-            <RadzenCard class="text-center" Style="@this._columnWidth">
-                <RadzenStack>
-                    <AuthorizeView Roles="@PurchaseRequestRole.Approver.Name">
-                        <Authorized>
-                            <PrApproverActionView PurchaseRequest="@this.PurchaseRequest" ActionCompleted="@this.ActionCompleted"/>
-                        </Authorized>
-                    </AuthorizeView>
-                    <AuthorizeView Roles="@PurchaseRequestRole.Requester.Name">
-                        <Authorized>
-                            <RadzenText Text="Requester Placeholder"/>
-                        </Authorized>
-                    </AuthorizeView>
-                    <AuthorizeView Roles="@PurchaseRequestRole.Purchaser.Name">
-                        <Authorized>
-                            <RadzenText Text="Requester Placeholder"/>
-                        </Authorized>
-                    </AuthorizeView>
-                </RadzenStack>
-            </RadzenCard>
-        }
         <RadzenCard Style="@this._columnWidth">
             <RadzenCard>
                 <RadzenFieldset Text="Purchase Request">
@@ -56,29 +34,21 @@
                                                     Mode="EditMode.VIEW"/>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Purchase Information">
-                            <AuthorizeView Roles="@PurchaseRequestRole.Approver">
-                                <Authorized>
-                                    <PurchaseInformationView Department="@this.PurchaseRequest.Department"
-                                                             Vendor="@this.PurchaseRequest.Vendor"
-                                                             ShippingType="@this.PurchaseRequest.ShippingType"/>
-                                </Authorized>
-                            </AuthorizeView>
-                        </RadzenTabsItem>
-                        <RadzenTabsItem Text="Request Info">
-                            <RadzenStack>
-                                <RadzenFormField Text="Requester">
-                                    <RadzenTextBox @bind-Value="@this.PurchaseRequest.Requester.Name"/>
-                                </RadzenFormField>
-                                <RadzenFormField Text="Purchase Request Title">
-                                    <RadzenTextBox Placeholder="Enter the title of the purchase request"
-                                                   @bind-Value="@this.PurchaseRequest.Title"
-                                                   Style="width: 100%"/>
-                                </RadzenFormField>
-                                <RadzenFormField Text="Purchase Request Reason">
-                                    <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
-                                                    @bind-Value="@this.PurchaseRequest.Description"
-                                                    Style="width: 100%; height:100px;"/>
-                                </RadzenFormField>
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                                <RadzenStack Orientation="Orientation.Horizontal">
+                                    <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
+                                    <RadzenFieldset Text="Shipping">
+                                        <RadzenText TextAlign="TextAlign.Center"
+                                                    Text="@this.PurchaseRequest.ShippingType"
+                                                    TextStyle="TextStyle.H6"
+                                                    Style="width: 300px; height: fit-content;"/>
+                                    </RadzenFieldset>
+                                </RadzenStack>
+
+                                <RadzenFieldset Text="Vendor">
+                                    <VendorView Vendor="@this.PurchaseRequest.Vendor"
+                                                Mode="@EditMode.VIEW"/>
+                                </RadzenFieldset>
                             </RadzenStack>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Items">
@@ -86,10 +56,9 @@
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Comments/Quotes">
                             <RadzenStack>
-                                <RadzenTextArea Placeholder="Enter comments here"
-                                                Style="width: 100%"
-                                                @bind-Value="@this.PurchaseRequest.AdditionalComments"/>
-                                <QuotesView Quotes="@this.PurchaseRequest.Quotes"/>
+                                <CommentsQuotesView CurrentQuoteIds="@this.PurchaseRequest.Quotes"
+                                                    AdditionalComments="@this.PurchaseRequest.AdditionalComments"
+                                                    Mode="EditMode.VIEW"/>
                             </RadzenStack>
                         </RadzenTabsItem>
                     </Tabs>
@@ -102,6 +71,7 @@
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest?> PurchaseRequestChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; }=EditMode.VIEW;
     [Parameter] public EventCallback ActionCompleted { get; set; }
     

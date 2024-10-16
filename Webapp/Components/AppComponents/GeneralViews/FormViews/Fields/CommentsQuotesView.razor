@@ -22,44 +22,49 @@
                         ValueChanged="@this.AdditionalCommentsChanged"
                         Style="width: 200px; height:100px;"/>
     </RadzenFormField>
-
-    <RadzenColumn Size="12">
-    @if (this.Mode == EditMode.NEW) {
-        <RadzenCard Variant="Variant.Outlined">
-            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-            <RadzenUpload id="ddUpload"
-                          @ref="@this._upload"
-                          ChooseText="Drag and drop here or click to choose files"
-                          Auto="false"
-                          Multiple="true"
-                          Change="@this.OnClientChange"
-                          InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
-                          Style="width: 100%"/>
-        </RadzenCard>
-    } else {
-        <RadzenTabs>
-            <Tabs>
-                <RadzenTabsItem Text="Add Additional Quotes">
-                    <RadzenCard Variant="Variant.Outlined">
-                        <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-                        <RadzenUpload id="ddUpload"
-                                      @ref="@this._upload"
-                                      ChooseText="Drag and drop here or click to choose files"
-                                      Auto="false"
-                                      Multiple="true"
-                                      Change="@this.OnClientChange"
-                                      InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
-                                      Style="width: 100%"/>
-                    </RadzenCard>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Current Quotes">
-                    <QuotesView Quotes="@this.CurrentQuoteIds"></QuotesView>
-                </RadzenTabsItem>
-            </Tabs>
-        </RadzenTabs>
+    @switch (this.Mode) {
+        case EditMode.NEW: {
+            <RadzenCard Variant="Variant.Outlined">
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                <RadzenUpload id="ddUpload"
+                              @ref="@this._upload"
+                              ChooseText="Drag and drop here or click to choose files"
+                              Auto="false"
+                              Multiple="true"
+                              Change="@this.OnClientChange"
+                              InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
+                              Style="width: 100%"/>
+            </RadzenCard>
+            break;
+        }
+        case EditMode.EDIT: {
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Add Additional Quotes">
+                        <RadzenCard Variant="Variant.Outlined">
+                            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                            <RadzenUpload id="ddUpload"
+                                          @ref="@this._upload"
+                                          ChooseText="Drag and drop here or click to choose files"
+                                          Auto="false"
+                                          Multiple="true"
+                                          Change="@this.OnClientChange"
+                                          InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
+                                          Style="width: 100%"/>
+                        </RadzenCard>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Current Quotes">
+                        <QuotesView Quotes="@this.CurrentQuoteIds"></QuotesView>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+            break;
+        }
+        case EditMode.VIEW: {
+            <QuotesView Quotes="@this.CurrentQuoteIds"/>
+            break;
+        }
     }
-
-    </RadzenColumn>
 </RadzenStack>
 
 @code {

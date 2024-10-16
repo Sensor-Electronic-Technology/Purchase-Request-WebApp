@@ -21,6 +21,7 @@ public class PurchaseRequest {
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
     public PurchaseOrder? PurchaseOrder { get; set; }
+    public ApprovalResult? ApprovalResult { get; set; }
     public PrStatus Status { get; set; }
     public DateTime Created { get; set; }
     public DateTime ApprovedDate { get; set; }

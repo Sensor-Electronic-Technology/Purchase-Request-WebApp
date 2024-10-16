@@ -1,12 +1,19 @@
 ﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
 @using Webapp.Services.Authentication
-<RadzenRow>
-    <RadzenColumn Size="4" SizeMD="4">
+<style>
+    .rz-panel-titlebar {
+        flex-direction: row-reverse;
+        justify-content:left;
+    }
+</style>
+<RadzenSplitter>
+    <RadzenSplitterPane Size="45%" Collapsible="false">
         <RadzenCard class="rz-background-color-info-dark">
             <RadzenStack Orientation="Orientation.Vertical">
                 <RadzenCard class="rz-background-color-series-4">
@@ -17,173 +24,45 @@
                                 TextAlign="TextAlign.Center"
                                 TextStyle="TextStyle.Subtitle1"/>
                 </RadzenCard>
-                @switch (this.PurchaseRequest.Status) {
-                case PrStatus.NeedsApproval: {
-                <RadzenFieldset Text="Select Action">
-                    <RadzenDropDown TValue="string"
-                                    Data="@this._needsApproveActions"
-                                    AllowClear="true"
-                                    Value="@this._selectedAction"
-                                    ValueChanged="@this.ApproveActionChangedHandler"/>
-                </RadzenFieldset>
-                <EmailPickList CcList="@this._ccList"
-                               IsCollapsed="false"/>
-                <RadzenFormField Text="Comments">
-                    <RadzenTextArea bind-Value="@this._comments"/>
-                </RadzenFormField>
-                break;
-                }
-                case PrStatus.Approved: {
-                <RadzenFieldset>
-                    <RadzenDropDown TValue="string"
-                                    Data="@this._approvedActions"
-                                    Value="@this._selectedAction"
-                                    ValueChanged="@this.ApproveActionChangedHandler"/>
-                </RadzenFieldset>
-                break;
-                }
-                case PrStatus.Ordered: {
-                <RadzenFieldset>
-                    <RadzenDropDown TValue="string"
-                                    Data="@this._orderedActions"
-                                    Value="@this._selectedAction"
-                                    ValueChanged="@this.ApproveActionChangedHandler"/>
-                </RadzenFieldset>
-                break;
-                }
-                }
-                <RadzenFieldset Text="Submit/Cancel">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                        <RadzenButton Text="Submit"
-                                      ButtonStyle="ButtonStyle.Primary"
-                                      Click="@this.SubmitHandler"
-                                      Style="width: 150px; height: 60px;"/>
-                        <RadzenButton Text="Cancel"
-                                      ButtonStyle="ButtonStyle.Danger"
-                                      Click="@this.CancelHandler"
-                                      Style="width: 150px; height: 60px;"/>
-                    </RadzenStack>
-                </RadzenFieldset>
-
+                <RadzenCard>
+                    <NeedsApprovalView @bind-PurchaseRequest="@PurchaseRequest" 
+                                       @bind-ApproveRequestInput="@this._approveRequestInput"
+                                       Submit="@this.SubmitHandler"
+                                       Cancel="@this.CancelHandler"/>
+                </RadzenCard>
             </RadzenStack>
         </RadzenCard>
-    </RadzenColumn>
-    <RadzenColumn Size="8" SizeMD="8">
-        <PurchaseRequestForm PurchaseRequest="@PurchaseRequest"
-                             Mode="EditMode.EDIT"
-                             ActionCompleted="@ActionCompleted"/>
-    </RadzenColumn>
-</RadzenRow>
-
-
-
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="55%">
+        <PurchaseRequestView @bind-PurchaseRequest="@this.PurchaseRequest"
+                             Mode="EditMode.VIEW"/>
+    </RadzenSplitterPane>
+</RadzenSplitter>
 @code {
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private AuthApiService _authApiService { get; set; }
     [Inject] private UserService _userService { get; set; }
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     
-    private List<string> _needsApproveActions = [PurchaseRequestAction.Approve.Name, PurchaseRequestAction.Reject.Name];
     private List<string> _approvedActions=[PurchaseRequestAction.Cancel.Name];
     private List<string> _orderedActions=[PurchaseRequestAction.Cancel.Name];
     private List<string> _ccList = [];
+    private List<string> _emailList = [];
 
-
-    private string? _comments;
-
-    private string? _selectedAction;
-
+    private ApproveRequestInput _approveRequestInput=new();
+    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        await this.Load();
     }
-
-    private async Task ApproveActionChangedHandler(string action) {
-        this._selectedAction = action;
-    }
-
+    
     private async Task SubmitHandler() {
-        if (this._selectedAction == null) {
-            this._notificationService.Notify(NotificationSeverity.Error,"No Action Selected","Please select a Action");
-            return;
-        }
-        switch (this.PurchaseRequest.Status) {
-            case PrStatus.NeedsApproval: {
-                switch (this._selectedAction) {
-                    case nameof(PurchaseRequestAction.Approve): {
-                        await this.ApproveHandler();
-                        break;
-                    }
-                    case nameof(PurchaseRequestAction.Reject): {
-                        await this.RejectHandler();
-                        break;
-                    }
-                }
-                break;
-            }
-            case PrStatus.Approved: 
-            case PrStatus.Ordered: {
-                /*switch (this._selectedAction) {
-                    case nameof(PurchaseRequestAction.Cancel): {
-                        //CancelHandlerRequest
-                        break;   
-                    }
-                    case nameof(PurchaseRequestAction.Order): {
-                        //CancelHandlerRequest
-                        break;   
-                    }
-                    case nameof(PurchaseRequestAction.Receive): {
-                        //CancelHandlerRequest
-                        break;   
-                    }
-                }*/
-                if(this._selectedAction==nameof(PurchaseRequestAction.Cancel)) {
-                    //CancelHandlerRequest
-                }
-                break;
-            }
-        }
+        var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
     }
     
-    private async Task ApproveHandler() {
-
-    }
-    
-    private async Task RejectHandler() {
-
-    }
-    
-    private async Task Load() {
-        var role = this._userService.GetUserRole();
-        switch (this.PurchaseRequest.Status) {
-            case PrStatus.NeedsApproval: {
-                var purchasers = await this._authApiService.GetPurchasers();
-                this._ccList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
-                    .Select(e=>e.Email)
-                    .ToList();
-                if (this.PurchaseRequest.EmailCopyList.Any()) {
-                    this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
-                }
-                
-                break;  
-            }
-            case PrStatus.Approved: {
-                break;
-            }
-            case PrStatus.Ordered: {
-                break;
-            }
-            case PrStatus.Delivered: {
-                break;
-            }
-        }
-    }
-
-
     private async Task CancelHandler() {
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
     }
-
 }

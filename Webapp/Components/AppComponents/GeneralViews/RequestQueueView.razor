@@ -34,6 +34,11 @@
                                 class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
                     <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
                 </RadzenDropZone>
+
+                <RadzenDropZone Value="PrStatus.Rejected"
+                                class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                    <RadzenText Text="Rejected" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                </RadzenDropZone>
             </RadzenStack>
         </ChildContent>
         <Template>
@@ -45,12 +50,12 @@
 
 @code {
     [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; }
-    Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value && item.Status != PrStatus.Delivered;
+    Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value;
     
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "cursor:not-allowed";
         args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
-        args.Visible = args.Item.Status != PrStatus.Delivered;
+        //args.Visible = args.Item.Status != PrStatus.Delivered;
     }
 }

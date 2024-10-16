@@ -119,6 +119,7 @@
     private async Task CommentsChangedHandler(string value) {
         this._comments = value;
         this.MailMerge = [new RequestMailMerge() {
+            PrAction = "Cancellation Notification",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseRequest?.Requester.Name ?? "",
@@ -133,6 +134,7 @@
     private async Task DocumentLoadedHandler(Document obj) {
         this._docLoaded = true;
         this.MailMerge = [new RequestMailMerge() {
+            PrAction = "Cancellation Notification",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseRequest?.Requester.Name ?? "",

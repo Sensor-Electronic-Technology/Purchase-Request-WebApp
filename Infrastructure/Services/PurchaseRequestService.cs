@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Model;
+using Domain.PurchaseRequests.TypeConstants;
 using MongoDB.Bson;
 using SETiAuth.Domain.Shared.Authentication;
 using SetiFileStore.FileClient;
@@ -102,6 +103,34 @@ public class PurchaseRequestService {
             ["aelmendorf@s-et.com" ?? ""],
             ["aelmendorf@s-et.com" ?? ""]);
         return true;
+    }
+    
+    public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
+        bool approved = input.Action==PurchaseRequestAction.Approve ? true : false;
+        request.ApprovalResult = new ApprovalResult() {
+            Approved = approved, 
+            Comments = input.Comment ?? "",
+        };
+        if(input.Action == PurchaseRequestAction.Approve) {
+            request.ApprovedDate = TimeProvider.Now();
+        } else {
+            request.RejectedDate = TimeProvider.Now();
+        }
+        request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
+        List<FileData> files = [];
+        foreach (var quote in request.Quotes) {
+            var fileData=await this._fileService.DownloadFile(quote);
+            if (fileData != null) {
+                files.Add(fileData);
+            }
+        }
+        var success=await this._requestDataService.UpdateOne(request);
+        if(!success) return false;
+        await this._emailService.SendApprovalEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",approved,
+            files,
+            [request.Requester.Email ?? ""],
+            [request.Requester.Email ?? ""]);
+        return false;
     }
     
     public async Task<List<Vendor>> GetVendors() {

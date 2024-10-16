@@ -5,4 +5,5 @@ public enum PrStatus {
     Approved,
     Ordered,
     Delivered,
+    Rejected,
 }

@@ -13,10 +13,16 @@
                     RowCreate="@OnCreateRow" Sort="@Reset"
                     Page="@Reset" Filter="@Reset">
         <HeaderTemplate>
-            <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle"
-                          Text="Add New Purchase Item"
-                          Click="@InsertRow"
-                          Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())" />
+            @if (this.Mode == EditMode.VIEW) {
+                <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" class="rz-display-flex rz-align-items-center rz-m-0">
+                    <RadzenIcon Icon="shopping_cart" class="rz-me-1" /><b>Purchase Items</b>
+                </RadzenText>
+            } else {
+                <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle"
+                              Text="Add New Purchase Item"
+                              Click="@InsertRow"
+                              Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())"/>
+            }
         </HeaderTemplate>
         <Columns>
             <RadzenDataGridColumn Property="Quantity" Title="Quantity">
@@ -58,7 +64,8 @@
                     @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", purchaseItem.TotalCost)
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Filterable="false" Sortable="false"
+            @if (this.Mode != EditMode.VIEW) {
+                <RadzenDataGridColumn Filterable="false" Sortable="false"
                                   TextAlign="TextAlign.Right" Frozen="true"
                                   Width="150px"
                                   FrozenPosition="FrozenColumnPosition.Right">
@@ -87,6 +94,8 @@
 
                 </EditTemplate>
             </RadzenDataGridColumn>
+            }
+            
         </Columns>
     </RadzenDataGrid>
     <RadzenStack AlignItems="AlignItems.End">

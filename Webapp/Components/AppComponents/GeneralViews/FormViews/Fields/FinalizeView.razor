@@ -91,6 +91,7 @@
 
     protected override Task OnParametersSetAsync() {
         this.MailMerge = [new RequestMailMerge() {
+            PrAction = "Approval Requested",
             Title = this.PurchaseRequestInput?.Title ?? "",
             Approver = this.PurchaseRequestInput?.ApproverName ?? "",
             Requester = this.PurchaseRequestInput?.RequesterName ?? "",
