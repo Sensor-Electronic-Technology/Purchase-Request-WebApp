@@ -2,6 +2,8 @@
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.TypeConstants;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using SETiAuth.Domain.Shared.Authentication;
 using SetiFileStore.FileClient;
@@ -16,10 +18,12 @@ public class PurchaseRequestService {
     private readonly AuthApiService _authApiService;
     private readonly EmailService _emailService;
     private readonly FileService _fileService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<PurchaseRequestService> _logger;
     
     public PurchaseRequestService(PurchaseRequestDataService requestDataService,UserProfileService userProfileService,
         DepartmentDataService departmentDataService,ContactDataService contactDataService, EmailService emailService,
-        AuthApiService authService,FileService fileService) {
+        AuthApiService authService,FileService fileService,IServiceScopeFactory serviceScopeFactory,ILogger<PurchaseRequestService> logger) {
         this._requestDataService = requestDataService;
         this._contactDataService = contactDataService;
         this._emailService = emailService;
@@ -27,6 +31,8 @@ public class PurchaseRequestService {
         this._userProfileService=userProfileService;
         this._departmentDataService = departmentDataService;
         this._fileService = fileService;
+        this._serviceScopeFactory = serviceScopeFactory;
+        this._logger = logger;
     }
 
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
@@ -71,12 +77,20 @@ public class PurchaseRequestService {
             PurchaseItems = input.PurchaseItems,
             EmailCopyList = input.EmailCcList
         };
-        input.PrUrl=$"http://localhost:5015/approve/{purchaseRequest._id.ToString()}";
+        input.PrUrl=$"http://localhost:5015/action/{purchaseRequest._id.ToString()}/{PrUserAction.APPROVE}";
         purchaseRequest.PrUrl = input.PrUrl;
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
+        await Task.Delay(1000);
         if (!exists) return false;
-        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
+        /*_ = Task.Run(async () => {
+            await using var scope = this._serviceScopeFactory.CreateAsyncScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
+            await emailService.SendRequestEmail(input.EmailTemplate ?? [], input,
+                [input.RequesterEmail ?? ""],
+                [input.RequesterEmail ?? ""]);
+        });*/
+        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [], input,
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
         return true;
@@ -99,7 +113,7 @@ public class PurchaseRequestService {
         foreach (var quote in input.FileIds) {
             await this._fileService.DeleteFile(quote);
         }
-        await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [],input.Title ?? "Unknown",
+        await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [], input.Title ?? "Unknown",
             ["aelmendorf@s-et.com" ?? ""],
             ["aelmendorf@s-et.com" ?? ""]);
         return true;
@@ -117,6 +131,12 @@ public class PurchaseRequestService {
             request.RejectedDate = TimeProvider.Now();
         }
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
+        if (approved) {
+            request.PrUrl = $"http://localhost:5015/action/{request._id.ToString()}/{PrUserAction.ORDER}";
+        }
+        
+
+        var success=await this._requestDataService.UpdateOne(request);
         List<FileData> files = [];
         foreach (var quote in request.Quotes) {
             var fileData=await this._fileService.DownloadFile(quote);
@@ -124,10 +144,9 @@ public class PurchaseRequestService {
                 files.Add(fileData);
             }
         }
-        var success=await this._requestDataService.UpdateOne(request);
         if(!success) return false;
         await this._emailService.SendApprovalEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",approved,
-            files,
+            request.PrUrl ?? "",files,
             [request.Requester.Email ?? ""],
             [request.Requester.Email ?? ""]);
         return false;

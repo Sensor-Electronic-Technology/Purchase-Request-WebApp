@@ -1,4 +1,4 @@
-﻿namespace Webapp.Data;
+﻿namespace Domain.PurchaseRequests.TypeConstants;
 
 public enum PrUserAction {
     ORDER,

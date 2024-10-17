@@ -5,6 +5,7 @@
 @using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
+@using Webapp.Services
 @using Webapp.Services.Authentication
 <style>
     .rz-panel-titlebar {
@@ -43,6 +44,7 @@
     [Inject] private AuthApiService _authApiService { get; set; }
     [Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Inject] private SpinnerService _spinnerService { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     
@@ -58,8 +60,19 @@
     }
     
     private async Task SubmitHandler() {
-        var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
-        await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
+        if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Approve.Name) {
+            var message="Submitting Approval...";
+            this._spinnerService.Show(message);
+            var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
+            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
+        } else if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Reject.Name) {
+            var message="Submitting Rejection...";
+            this._spinnerService.Show(message);
+            var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
+            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
+        }
+        this._spinnerService.Hide();
+
     }
     
     private async Task CancelHandler() {

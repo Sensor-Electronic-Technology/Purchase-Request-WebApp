@@ -120,7 +120,7 @@ public class EmailService {
         }
     }
     
-    public async Task SendApprovalEmail(byte[] htmlBody,string title,bool approved,List<FileData> attachments,List<string> to, List<string> toCC) {
+    public async Task SendApprovalEmail(byte[] htmlBody,string title,bool approved,string? url,List<FileData> attachments,List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -140,6 +140,9 @@ public class EmailService {
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
             html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
+            if (approved && !string.IsNullOrWhiteSpace(url)) {
+                html = html.Replace("{prLink}",$"<a href=\"{url}\">Order Link</a>");
+            }
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };

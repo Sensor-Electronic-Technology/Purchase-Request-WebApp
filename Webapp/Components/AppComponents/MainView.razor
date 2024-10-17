@@ -2,6 +2,7 @@
 @using Domain.Authentication
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -55,6 +56,10 @@
     [Inject] private PrEditingTracker EditingTracker { get; set; }
     [Inject] private ILogger<MainView> _logger { get; set; }
     [Inject] private SessionStorageService _localStorage { get; set; }
+    [Inject] private NavigationManager _navigationManager { get; set; }
+    
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public int? Action { get; set; }
     
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
@@ -66,7 +71,6 @@
     private string _templateTabText="Template";
     private string _tabIcon="autorenew";
     private int _selectedIndex = 0;
-    private EditMode _requestFormMode = EditMode.NEW;
     private PrUserAction _userAction = PrUserAction.MODIFY;
     
     private Dictionary<PrUserAction, TabTemplate> _tabTemplates=new() { 
@@ -82,7 +86,44 @@
         this._logger.LogInformation("MainView Initialized");
         await this.Load();
     }
-    
+
+    protected override async Task OnParametersSetAsync() {
+        await base.OnParametersSetAsync();
+        var role=this._userService.GetUserRole();
+        if (!string.IsNullOrWhiteSpace(this.Id) && this.Action.HasValue && this._userAccount != null) {
+            this._selectedRequest = this._purchaseRequests.FirstOrDefault(e => e._id.ToString() == this.Id);
+            if (this._selectedRequest != null) {
+                this._userAction = (PrUserAction)this.Action.Value;
+                switch(this._userAction) {
+                    case PrUserAction.MODIFY:
+                        if(role==nameof(PurchaseRequestRole.Requester) && this._selectedRequest.Requester.Username==this._userAccount?._id) {
+                            await this.ModifyHandler();
+                        } else {
+                            this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
+                        }
+                        break;
+                    case PrUserAction.APPROVE:
+                        if(role==nameof(PurchaseRequestRole.Approver)) {
+                            await this.ApproveRequestHandler();
+                        } else {
+                            this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
+                        }
+                        break;
+                    case PrUserAction.ORDER:
+                        if(role==nameof(PurchaseRequestRole.Purchaser)) {
+                            await this.OrderRequestHandler();
+                        } else {
+                            this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
+                        }
+                        break;
+                    default:
+                        this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
+                        break;
+                }
+            }
+        }
+    }
+
     private async Task UserActionHandler(UserActionEventArg arg) {
         this._userAction = arg.Action;
         switch(this._userAction) {
@@ -172,7 +213,13 @@
 
     private async Task CompletedHandler(string id) {
         this.EditingTracker.FinishEditing(id);
-        await this.Load();
+        if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+            this._notificationService.Notify(NotificationSeverity.Info,"Info","Action completed successfully, Navigating");
+            await Task.Delay(2000);
+            this._navigationManager.NavigateTo("/");
+        } else {
+            await this.Load();
+        }
     }
     
     private void EditTrackerTimeout(string username,string id) {
@@ -182,7 +229,7 @@
                 this.Reset();
                 InvokeAsync(StateHasChanged);
             }
-        } 
+        }
     }
     
     private void TabIndexChangedHandler(int tabIndex) {
@@ -203,8 +250,7 @@
     
     private void TransitionTab(PrUserAction action) {
         this._userAction=action;
-        if (this._tabTemplates.ContainsKey(action)) {
-            var template=this._tabTemplates[action];
+        if (this._tabTemplates.TryGetValue(action, out var template)) {
             this._selectedIndex = 2;
             this._templateTabText = template.Name;
             this._tabIcon = template.Icon;
