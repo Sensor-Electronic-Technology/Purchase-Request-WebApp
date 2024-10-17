@@ -1,4 +1,5 @@
 ﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using SETiAuth.Domain.Shared.Authentication
@@ -6,6 +7,21 @@
 @using Webapp.Data
 @using Domain.Users
 @inject TooltipService tooltipService
+
+@if (this.PurchaseReqStatuses != null) {
+    <RequestQueueView PurchaseReqStatuses="@this.PurchaseReqStatuses"
+                      UserAction="QueueUserActionHandler"
+                      SelectedIdChanged="@SelectedStatusChangedHandler"/>
+} else {
+    <RadzenStack>
+        <RadzenProgressBarCircular ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate"
+                                   Size="ProgressBarCircularSize.Large"
+                                   Style="margin: auto; background: transparent; display: block;">
+        </RadzenProgressBarCircular>
+        <RadzenText Text="Loading" Style="color: white; font-size: 20px; font-weight: bold;"/>
+    </RadzenStack>
+}
 
 <RadzenRow>
     <RadzenSplitter Orientation="Orientation.Horizontal">
@@ -58,6 +74,10 @@
                                                     <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
                                                     @*<RadzenText Text="Delivered" Style="color: green"/>*@
                                                     break;
+                                                case PrStatus.Rejected:
+                                                    <span style='color: var(--rz-text-contrast-color)'>Rejected</span>
+                                                    @*<RadzenText Text="Delivered" Style="color: green"/>*@
+                                                    break;
                                                 default:
                                                     <span style='color: var(--rz-text-contrast-color)'>Unknown</span>
                                                     @*<RadzenText Text="Unknown" Style="color: black"/>*@
@@ -81,17 +101,22 @@
 </RadzenRow>
 
 
+    
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
     [Inject] private UserService _userService { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
     [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
+    [Parameter] public List<PurchaseRequestStatus>? PurchaseReqStatuses { get; set; }
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
-    [Parameter] public EventCallback ModifyRequest { get; set; }
+    /*[Parameter] public EventCallback ModifyRequest { get; set; }
     [Parameter] public EventCallback RejectRequest { get; set; }
     [Parameter] public EventCallback ApproveRequest { get; set; }
     [Parameter] public EventCallback CancelRequest { get; set; }
     [Parameter] public EventCallback OrderRequest { get; set; }
+    [Parameter] public EventCallback ReceiveOrder { get; set; }*/
+    [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
@@ -116,7 +141,7 @@
     
     void OnRender(DataGridRenderEventArgs<PurchaseRequest> args) {
         if(args.FirstRender) {
-            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Status", SortOrder = SortOrder.Descending });
+            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Status", SortOrder = SortOrder.Ascending });
             StateHasChanged();
         }
     }
@@ -125,21 +150,21 @@
         if (args.Column.Property == nameof(PurchaseRequest.Status)) {
             switch (args.Data.Status) {
                 case PrStatus.Approved:
-                    args.Attributes.Add("style", "background-color: var(--rz-warning)");
+                    args.Attributes.Add("style", "background-color: var(--rz-series-4)");
                     break;
                 case PrStatus.Delivered:
                     args.Attributes.Add("style", "background-color: var(--rz-success)");
                     break;
                 case PrStatus.Ordered:
-                    args.Attributes.Add("style", "background-color: var(--rz-danger)");
+                    args.Attributes.Add("style", "background-color: var(--rz-series-4)");
                     break;
                 case PrStatus.NeedsApproval:
                     args.Attributes.Add("style", "background-color: var(--rz-info)");
                     break;
+                case PrStatus.Rejected:
+                    args.Attributes.Add("style", "background-color: var(--rz-danger)");
+                    break;
             }
-            //args.Attributes.Add("style", $"background-color: {(args.Data.Quantity > 20 ? "var(--rz-success)" : "var(--rz-base-background-color)")};");
-            //args.Attributes.Add("class", args.Data.Quantity > 20 ? "my-class" : "my-other-class");
-            
         }
     }
 
@@ -149,6 +174,12 @@
         await SelectedPurchaseRequestChanged.InvokeAsync(null);
         this._viewPainCollapsed = true;
     }
+
+    private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args,MenuItemEventArgs e) {
+        await this._dataGrid.SelectRow(args.Data);
+        this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)e.Value, "")).Wait();
+        this._contextMenuService.Close();
+    }
     
     private void ContextMenuHandle(DataGridCellMouseEventArgs<PurchaseRequest> args) {
         var role = this._userService.GetUserRole();
@@ -157,94 +188,65 @@
             Console.WriteLine($"PrRole: {requestRole.Name}");
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
-                    Console.WriteLine("Creating Requester Context Menu");
-                    this._contextMenuService.Open(args,
-                        new List<ContextMenuItem> {
-                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "autorenew" },
-                            new ContextMenuItem(){ Text = "Cancel Request", Value = 2, Icon = "highlight_off" },
-                        }, (e) => {
-                            this._dataGrid.SelectRow(args.Data);
-                            switch((int)e.Value){
-                                case 1:
-                                    this.ModifyRequest.InvokeAsync().Wait();
-                                    break;
-                                case 2:
-                                    this.CancelRequest.InvokeAsync(args.Data);
-                                    break;
+                    if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
+                        List<ContextMenuItem> menuList = [
+                            new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+                            new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                        ];
+                        this._contextMenuService.Open(args, menuList, (e) => {
+                                this.ContextActionHandler(args, e).Wait();
                             }
-                            this._contextMenuService.Close();
-                        }
-                    );
+                        );
+                    }
                     break;
-                }
+            }
                 case nameof(PurchaseRequestRole.Approver): {
-                    this._contextMenuService.Open(args,
-                        new List<ContextMenuItem> {
-                            new ContextMenuItem(){ Text = "Approve/Reject Request", Value = 1, Icon = "done_all" },
-                        }, (e) => {
-                            this._dataGrid.SelectRow(args.Data);
-                            this.ApproveRequest.InvokeAsync().Wait();
-                            this._contextMenuService.Close();
-                        }
-                    );
+                    if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
+                        List<ContextMenuItem> menuList = [
+                            new ContextMenuItem(){ Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
+                        ];
+                        this._contextMenuService.Open(args, menuList, (e) => {
+                                this.ContextActionHandler(args, e).Wait();
+                            }
+                        );
+                    }
                     break;
                 }
                 case nameof(PurchaseRequestRole.Purchaser): {
-                    this._contextMenuService.Open(args,
-                        new List<ContextMenuItem> {
-                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
-                            new ContextMenuItem(){ Text = "Reject Request", Value = 2, Icon = "delete_forever" },
-                            new ContextMenuItem(){ Text = "Order Request", Value = 5, Icon = "add_shopping_cart" },
-                        }, (e) => {
-                            switch((int)e.Value){
-                                case 1:
-                                    this.ModifyRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 2:
-                                    this.RejectRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 5:
-                                    this.OrderRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                            }
-                            this._contextMenuService.Close();
+                    if (args.Data.Status == PrStatus.Approved || args.Data.Status == PrStatus.Ordered) {
+                        if (args.Data.Status == PrStatus.Approved) {
+                            List<ContextMenuItem> menuList = [
+                                new ContextMenuItem(){ Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if (args.Data.Status == PrStatus.Ordered) {
+                            List<ContextMenuItem> menuList = [
+                                new ContextMenuItem(){ Text = "Receive Order", Value = PrUserAction.RECEIVE, Icon = "input" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
                         }
-                    );
-                    break;
-                }
-                case nameof(PurchaseRequestRole.Admin): {
-                    this._contextMenuService.Open(args,
-                        new List<ContextMenuItem> {
-                            new ContextMenuItem(){ Text = "Modify Request", Value = 1, Icon = "cached" },
-                            new ContextMenuItem(){ Text = "Reject Request", Value = 2, Icon = "delete_forever" },
-                            new ContextMenuItem(){ Text = "Approve Request", Value = 3, Icon = "done_all" },
-                            new ContextMenuItem(){ Text = "Cancel Request", Value = 4, Icon = "highlight_off" },
-                            new ContextMenuItem(){ Text = "Order Request", Value = 5, Icon = "add_shopping_cart" },
-                        }, (e) => {
-                            switch((int)e.Value){
-                                case 1:
-                                    this.ModifyRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 2:
-                                    this.RejectRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 3:
-                                    this.ApproveRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 4:
-                                    this.CancelRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                                case 5:
-                                    this.OrderRequest.InvokeAsync(this.SelectedPurchaseRequest);
-                                    break;
-                            }
-                            this._contextMenuService.Close();
-                        }
-                    );
+                    }
                     break;
                 }
             }
         }
+    }
+    
+    private async Task SelectedStatusChangedHandler(string obj) {
+        //this._notificationService.Notify(NotificationSeverity.Info,"Selected",obj);
+        var pr=this.PurchaseRequests.FirstOrDefault(pr=>pr._id.ToString() == obj);
+        if (pr != null) {
+            await this._dataGrid.SelectRow(pr, true);
+        }
+        await InvokeAsync(StateHasChanged);
+        //return Task.CompletedTask;
     }
 
     /*private async Task RowSelectedHandler(PurchaseRequest obj) {
@@ -254,5 +256,13 @@
             }
         }
     }*/
+
+    private async Task QueueUserActionHandler(UserActionEventArg arg) {
+        var pr=this.PurchaseRequests.FirstOrDefault(pr=>pr._id.ToString() == arg.PrId);
+        if (pr != null) {
+            await this._dataGrid.SelectRow(pr, true);
+            await this.UserAction.InvokeAsync(arg);
+        }
+    }
 
 }

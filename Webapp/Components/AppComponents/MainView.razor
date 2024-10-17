@@ -13,11 +13,9 @@
     <Tabs>
         <RadzenTabsItem Icon="dashboard" Text="Overview" Style="background:#4a764a">
             <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests"
-                                   ModifyRequest="@this.ModifyHandler"
-                                   CancelRequest="@this.CancelRequestHandler"
-                                   ApproveRequest="@this.ApproveRequestHandler"
-                                   @bind-SelectedPurchaseRequest="@this._selectedRequest"/>
-            <RequestQueueView PurchaseReqStatuses="@this._purchaseReqStatuses"/>
+                                   @bind-SelectedPurchaseRequest="@this._selectedRequest"
+                                   UserAction="@this.UserActionHandler"
+                                   PurchaseReqStatuses="@this._purchaseReqStatuses"/>
         </RadzenTabsItem>
         <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
             <PurchaseRequestForm ActionCompleted="@this.CompletedHandler" Mode="EditMode.NEW"/>
@@ -83,6 +81,28 @@
         this.EditingTracker.OnTimeout += this.EditTrackerTimeout;
         this._logger.LogInformation("MainView Initialized");
         await this.Load();
+    }
+    
+    private async Task UserActionHandler(UserActionEventArg arg) {
+        this._userAction = arg.Action;
+        switch(this._userAction) {
+            case PrUserAction.MODIFY:
+                await this.ModifyHandler();
+                break;
+            case PrUserAction.CANCEL:
+                await this.CancelRequestHandler();
+                break;
+            case PrUserAction.APPROVE:
+                await this.ApproveRequestHandler();
+                break;
+            case PrUserAction.ORDER:
+                await this.OrderRequestHandler();
+                break;
+            default:
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
+                break;
+        }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ModifyHandler() {
@@ -171,7 +191,7 @@
             this.Reset();
         }
     }
-
+    
     private void Reset() {
         this._templateTabVisible = false;
         if(this._selectedRequest != null) {
@@ -201,6 +221,7 @@
         if(this._userAccount != null) {
             this.EditingTracker.UserTryClear(this._userAccount._id);
             this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userAccount._id,this._userService.GetUserRole());
+            this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
             Console.WriteLine($"User: {this._userAccount._id} has {_purchaseRequests.Count} requests");
         }
@@ -211,7 +232,5 @@
         this.EditingTracker.OnTimeout -= this.EditTrackerTimeout;
         return ValueTask.CompletedTask;
     }
-
-    public record SessionStorage(string Username, string PrId);
 
 }

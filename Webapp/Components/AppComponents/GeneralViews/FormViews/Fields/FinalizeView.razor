@@ -23,7 +23,7 @@
         </RadzenStack>
         <AlertListView RequestAlerts="@this.RequestAlerts"/>
         <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
-                       CcListChanged="@Callback"
+                       CcListChanged="@EmailListChangedHandler"
                        IsCollapsed="false"/>
         <RadzenRow RowGap="5">
             <RadzenColumn Size="6" SizeMD="6">
@@ -108,13 +108,11 @@
         }
         this.DocLoaded = true;
         this.PurchaseRequestInput.EmailTemplate=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        //await this._richEdit.LoadDocumentAsync(this.MailDocument, DocumentFormat.OpenXml);
-        //await this.MailDocumentChanged.InvokeAsync(this.MailDocument);
         await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
         await this.DocLoadedChanged.InvokeAsync(this.DocLoaded);
     }
 
-    private async Task Callback(List<string> obj) {
+    private async Task EmailListChangedHandler(List<string> obj) {
         if(this.PurchaseRequestInput == null) {
             return;
         }

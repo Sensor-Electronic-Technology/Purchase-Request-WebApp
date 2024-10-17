@@ -13,8 +13,9 @@
                     <RadzenStack Gap="10">
                         <RadzenRow JustifyContent="JustifyContent.Center">
                             <RadzenFieldset Text="Select Action" Style="width: 30%">
-                                <RadzenDropDown TValue="string"
+                                <RadzenDropDown TValue="PurchaseRequestAction"
                                                 Data="@this._needsApproveActions"
+                                                TextProperty="Name"
                                                 AllowClear="true"
                                                 Value="@this._selectedAction"
                                                 ValueChanged="@this.ApproveActionChangedHandler"
@@ -56,11 +57,14 @@
                         </MailMergeSettings>
                     </DxRichEdit>
                     <RadzenFieldset Text="Submit/Cancel">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                        <RadzenStack Orientation="Orientation.Horizontal" 
+                                     AlignItems="AlignItems.Center" 
+                                     JustifyContent="JustifyContent.Center">
                             <RadzenButton Text="Submit"
                                           ButtonStyle="ButtonStyle.Primary"
-                                          Click="@this.Submit"
-                                          Style="width: 150px; height: 60px;"/>
+                                          Click="@this.SubmitHandler"
+                                          Style="width: 150px; height: 60px;"
+                                          Disabled="@(this.ApproveRequestInput.Action==null)"/>
                             <RadzenButton Text="Cancel"
                                           ButtonStyle="ButtonStyle.Danger"
                                           Click="@this.Cancel"
@@ -90,29 +94,53 @@
     
     private List<ApproveMailMerge> MailMerge { get; set; } = [];
     
-    private List<string> _needsApproveActions = [
+    /*private List<string> _needsApproveActions = [
         PurchaseRequestAction.Approve.Name, 
         PurchaseRequestAction.Reject.Name
+    ];*/
+    
+    private List<PurchaseRequestAction> _needsApproveActions = [
+        PurchaseRequestAction.Approve, 
+        PurchaseRequestAction.Reject
     ];
     
     private List<string> _ccList = [];
     private List<string> _emailList = [];
+    private bool _docLoaded;
     private byte[] _documentContent;
-
-    private string? _selectedAction;
+    private PurchaseRequestAction? _selectedAction;
     
-    private Task ApproveActionChangedHandler(string action) {
-        this._selectedAction = action;
+    /*private Task ApproveActionChangedHandler(string action) {
         if (this.ApproveRequestInput != null) {
             if(PurchaseRequestAction.TryFromName(action, out var prAction)) {
+                this._selectedAction = action;
                 this.ApproveRequestInput.Action = prAction;
+                this.ApproveRequestInputChanged.InvokeAsync(this.ApproveRequestInput);
             }
+        }
+        return Task.CompletedTask;
+    }*/
+    
+    private Task ApproveActionChangedHandler(PurchaseRequestAction action) {
+        this._selectedAction=action;
+        if (this.ApproveRequestInput != null) {
+            this.ApproveRequestInput.Action = action;
+            this.ApproveRequestInputChanged.InvokeAsync(this.ApproveRequestInput);
         }
         return Task.CompletedTask;
     }
     
     protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._docLoaded = false;
         await this.Load();
+    }
+    
+    private async Task SubmitHandler() {
+        this.UpdateMailMerge();
+        this.ApproveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.ApproveRequestInputChanged.InvokeAsync(this.ApproveRequestInput);
+        await this.Submit.InvokeAsync();
     }
 
     private void UpdateMailMerge() {
@@ -120,18 +148,23 @@
             return;
         }
         string header = "";
-        if (this.ApproveRequestInput.Action == PurchaseRequestAction.Approve) {
-            header="Request Approved -- Needs Order";
+        if (this.ApproveRequestInput.Action != null) {
+            if (this.ApproveRequestInput.Action == PurchaseRequestAction.Approve) {
+                header="Request Approved -- Needs Order";
+            } else {
+                header="Request Rejected";
+            }
         } else {
-            header="Request Rejected";
+            header="Select Action";
         }
+
         this.MailMerge = [new ApproveMailMerge() {
             PrAction = header,
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseRequest?.Requester.Name ?? "",
             ApprovalComments = this.ApproveRequestInput.Comment ?? "",
-            CommentsTitle = $"{this.ApproveRequestInput.Action?.Name} Comments",
+            CommentsTitle = $"{this.ApproveRequestInput.Action?.Name ?? "Select Action"} Comments",
         }];
     }
     
@@ -141,9 +174,8 @@
         }
         this.UpdateMailMerge();
         this.ApproveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        /*this._documentContent=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.OpenXml);
-        await this._richEdit.LoadDocumentAsync(this._documentContent, DocumentFormat.OpenXml);*/
         await this.ApproveRequestInputChanged.InvokeAsync(this.ApproveRequestInput);
+        this._docLoaded = true;
     }
     
     private async Task EmailListChangedHandler(List<string> ccList) {
