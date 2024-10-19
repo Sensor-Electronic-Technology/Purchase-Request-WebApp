@@ -27,7 +27,7 @@
                     <Steps>
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
-                                                    FirstName="@(this._userAccount.FirstName+" "+this._userAccount.LastName)"
+                                                    FirstName="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
                                                     SelectedApprover="@this._selectedApprover"
                                                     SelectedApproverChanged="SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
@@ -46,19 +46,27 @@
                                                 Mode="@this.Mode"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
-                            <CommentsQuotesView @bind-Quotes="@this._quotes"
-                                                Mode="@this.Mode"
-                                                CurrentQuoteIds="@this._purchaseReqInput.Quotes"
-                                                @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
+                            <ChildContent>
+                                <CommentsQuotesView @bind-Quotes="@this._quotes"
+                                                    Mode="@this.Mode"
+                                                    CurrentQuoteIds="@this._purchaseReqInput.Quotes"
+                                                    @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
+                            </ChildContent>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
-                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput" 
+                            @*<FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
                                           CanSave="@this._canSave"
                                           Mode="@this.Mode"
                                           RequestAlerts="@this._requestAlerts"
                                           SaveClicked="@this.SavePurchaseRequestHandler"
                                           CancelClicked="@this.CancelPurchaseRequestHandler"
-                                          @bind-DocLoaded="@this._docLoaded"/>
+                                          @bind-DocLoaded="@this._docLoaded"/>*@
+                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
+                                          CanSave="@this._canSave"
+                                          Mode="@this.Mode"
+                                          RequestAlerts="@this._requestAlerts"
+                                          SaveClicked="@this.SavePurchaseRequestHandler"
+                                          CancelClicked="@this.CancelPurchaseRequestHandler"/>
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
@@ -209,7 +217,7 @@
             await this.VerifyPurchaseRequest();
         } else {
             this._finalizeDataInput = null;
-            this._docLoaded = false;
+            //this._docLoaded = false;
             this._canSave = false;
         }
 

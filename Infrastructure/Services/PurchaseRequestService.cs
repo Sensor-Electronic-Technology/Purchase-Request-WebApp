@@ -48,7 +48,7 @@ public class PurchaseRequestService {
             PurchaseItems = new List<PurchaseItem>(),
             Quotes = new List<string>(),
         };
-        input.PrUrl = $"http://localhost:5015/approve/{input.Id.ToString()}";
+        input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         return input;
     }
     
@@ -77,7 +77,7 @@ public class PurchaseRequestService {
             PurchaseItems = input.PurchaseItems,
             EmailCopyList = input.EmailCcList
         };
-        input.PrUrl=$"http://localhost:5015/action/{purchaseRequest._id.ToString()}/{PrUserAction.APPROVE}";
+        input.PrUrl=$"http://172.20.4.207/action/{purchaseRequest._id.ToString()}/{(int)PrUserAction.APPROVE}";
         purchaseRequest.PrUrl = input.PrUrl;
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
@@ -98,12 +98,23 @@ public class PurchaseRequestService {
 
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
         if(!input.Id.HasValue) return false;
+        input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         var pr = new PurchaseRequest().FromInput(input);
         bool success=await this._requestDataService.UpdateOne(pr);
         if(!success) return false;
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
+        
+        /*var ccList = new List<string>();
+        ccList.Add(input.ApproverEmail ?? "");
+        foreach (var email in input.EmailCcList) {
+            ccList.Add(email);
+        }
+        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
+            [input.RequesterEmail ?? ""],
+            [input.ApproverEmail ?? ""]);*/
+        
         return true;
     }
 
