@@ -9,6 +9,7 @@
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
+@using Webapp.Components.AppComponents.PurchaserViews
 
 <RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
@@ -34,7 +35,8 @@
                                        ActionCompleted="@this.CompletedHandler"/>
                     break;
                 case PrUserAction.ORDER:
-                    <p><strong>Coming Soon....</strong></p>
+                    <OrderActionView PurchaseRequest="@this._actionRequest"
+                                     ActionCompleted="@this.CompletedHandler"/>
                     break;
                 case PrUserAction.APPROVE:
                     <ApproveActionView PurchaseRequest="@this._actionRequest" 
@@ -46,6 +48,7 @@
             }
         </RadzenTabsItem>
     </Tabs>
+
 </RadzenTabs>
 
 @code {
