@@ -4,9 +4,9 @@ using MongoDB.Bson;
 namespace Webapp.Services;
 
 public class PrEditingTracker {
-    public event Action<string> OnAddToEditingList;
-    public event Action<string> OnRemoveFromEditingList;
-    public event Action<string,string> OnTimeout;
+    public event Action<string>? OnAddToEditingList;
+    public event Action<string>? OnRemoveFromEditingList;
+    public event Action<string,string>? OnTimeout;
     
     private Dictionary<string,string> _editingList = new Dictionary<string, string>(); 
     
@@ -46,7 +46,6 @@ public class PrEditingTracker {
     public void StartEditing(string username,string id) {
         using (this._lock.EnterScope()) {
             this.EditingList[id] = username;
-            /*this.OnAddToEditingList?.Invoke(new KeyValuePair<string,string>(username,id));*/
             this.OnAddToEditingList?.Invoke(id);
         }
     }

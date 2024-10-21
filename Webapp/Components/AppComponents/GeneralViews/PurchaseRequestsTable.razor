@@ -29,8 +29,10 @@
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenCard Style="width: 100%">
                     <RadzenStack>
-                        <RadzenCard>
-                            <RadzenText Text="Purchase Requests"/>
+                        <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 rz-background-color-secondary-light">
+                            <RadzenText Text="Purchase Requests"
+                                        TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                         <RadzenCard>
                             <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection" />

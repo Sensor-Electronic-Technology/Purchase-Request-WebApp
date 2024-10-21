@@ -12,6 +12,7 @@ using SetiFileStore.FileClient;
 using Webapp.Services;
 
 QuestPDF.Settings.License = LicenseType.Community;
+/*DevExpress.XtraPrinting.PrintingOptions.Pdf.RenderingEngine = DevExpress.XtraPrinting.XRPdfRenderingEngine.Skia;*/
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -23,15 +24,16 @@ builder.Services.AddDevExpressBlazor(options => {
     options.SizeMode = DevExpress.Blazor.SizeMode.Small;
 });
 builder.Services.AddMvc();
+builder.Services.AddBlazorBootstrap();
 builder.Services.AddScoped<SpinnerService>();
 builder.Services.AddDomain(builder);
+builder.Services.AddSingleton<RefreshNotifier>();
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
                                                             ?? "mongodb://172.20.3.41:27017"));
-builder.Services.AddDevExpressServerSideBlazorReportViewer();
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<PrEditingTracker>();

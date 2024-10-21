@@ -1,7 +1,8 @@
-﻿
-<embed type="application/pdf" 
+﻿@using BlazorBootstrap
+@*<embed type="application/pdf" 
        src="@this._embededSrc"  
-       width="100%" height="600px"/>
+       width="100%" height="600px"/>*@
+<PdfViewer Url="@_embededSrc"/>
 
 @code {
     [Parameter] public byte[]? FileBytes { get; set; }
@@ -15,7 +16,7 @@
         
         if (FileBytes is { Length: > 0 }) {
             if (this._prNull) {
-                this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes)+"#zoom=75%";
+                this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);
                 this._prNull = false;
             }
         } else {

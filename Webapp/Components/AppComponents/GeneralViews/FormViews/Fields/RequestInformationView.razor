@@ -2,7 +2,7 @@
 @using Webapp.Data
 
 <RadzenStack Orientation="Orientation.Vertical"
-             AlignItems="AlignItems.Center">
+             AlignItems="AlignItems.Center" Gap="5">
     @if (this.Mode == EditMode.VIEW) {
         <RadzenFormField Text="Approver">
             <RadzenText Text="@this.SelectedApprover" 
@@ -39,25 +39,27 @@
     <RadzenFieldset Text="Title & Reason" Style="width: 100%">
         <RadzenStack>
             <RadzenFormField Text="Requester">
-                <RadzenTextBox Value="@this.FirstName"/>
+                <RadzenTextBox Value="@this.Name"/>
             </RadzenFormField>
             <RadzenFormField Text="Purchase Request Title">
                 <RadzenTextBox Placeholder="Enter the title of the purchase request"
                                Value="@this.Title"
                                ValueChanged="@this.TitleChanged"
+                               ReadOnly="@(this.Mode==EditMode.VIEW)"
                                Style="width: 100%"/>
             </RadzenFormField>
             <RadzenFormField Text="Purchase Request Reason">
                 <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
                                 Value="@this.Description"
                                 ValueChanged="@this.DescriptionChanged"
+                                ReadOnly="@(this.Mode==EditMode.VIEW)"
                                 Style="width: 100%; height:100px;"/>
             </RadzenFormField>
         </RadzenStack>
     </RadzenFieldset>
 </RadzenStack>
 @code {
-    [Parameter] public string FirstName { get; set; }
+    [Parameter] public string? Name { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Description { get; set; }
     [Parameter] public string? SelectedApprover { get; set; }

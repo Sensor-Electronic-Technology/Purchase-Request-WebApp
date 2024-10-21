@@ -1,4 +1,5 @@
 ﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
@@ -91,7 +92,7 @@
 
     protected override Task OnParametersSetAsync() {
         this.MailMerge = [new RequestMailMerge() {
-            PrAction = "Approval Requested",
+            PrAction = this.PurchaseRequestInput?.Status==PrStatus.NeedsApproval ? "Approval Requested-Modified":"Approved Purchase Request Modified",
             Title = this.PurchaseRequestInput?.Title ?? "",
             Approver = this.PurchaseRequestInput?.ApproverName ?? "",
             Requester = this.PurchaseRequestInput?.RequesterName ?? "",

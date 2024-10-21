@@ -120,7 +120,11 @@ public class EmailService {
         }
     }
     
-    public async Task SendApprovalEmail(byte[] htmlBody,string title,bool approved,string? url,List<FileData> attachments,List<string> to, List<string> toCC) {
+    public async Task SendApprovalEmail(byte[] htmlBody,
+        string title,
+        bool approved,string? url,
+        byte[] prDoc,
+        List<FileData> attachments,List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -146,6 +150,7 @@ public class EmailService {
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };
+            builder.Attachments.Add($"{title}-PurchaseRequest.pdf", prDoc);
             foreach (var attachment in attachments) { 
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }

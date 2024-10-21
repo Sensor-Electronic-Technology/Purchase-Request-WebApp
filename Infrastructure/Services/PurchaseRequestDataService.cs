@@ -67,7 +67,7 @@ public class PurchaseRequestDataService {
     
     public async Task<bool> UpdateOne(PurchaseRequest purchaseRequest) {
         var result = await this._purchaseRequestCollection.ReplaceOneAsync(pr => pr._id == purchaseRequest._id, purchaseRequest);
-        return result.IsAcknowledged && result.ModifiedCount > 0;
+        return result.IsAcknowledged;
     }
     
     public async Task<bool> Exists(ObjectId id) {

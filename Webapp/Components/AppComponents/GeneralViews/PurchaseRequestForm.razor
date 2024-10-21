@@ -27,7 +27,7 @@
                     <Steps>
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
-                                                    FirstName="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
+                                                    Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
                                                     SelectedApprover="@this._selectedApprover"
                                                     SelectedApproverChanged="SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
@@ -49,7 +49,7 @@
                             <ChildContent>
                                 <CommentsQuotesView @bind-Quotes="@this._quotes"
                                                     Mode="@this.Mode"
-                                                    CurrentQuoteIds="@this._purchaseReqInput.Quotes"
+                                                    @bind-CurrentQuoteIds="@this._purchaseReqInput.Quotes"
                                                     @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                             </ChildContent>
                         </RadzenStepsItem>
@@ -160,7 +160,30 @@
                 "Files failed to upload");
         }
     }
+
+    private async Task DeleteFiles() {
+        if (this._purchaseReqInput == null) {
+            return;
+        }
+        var oldPr=await this._purchaseRequestService.GetPurchaseRequest(this._purchaseReqInput?.Id ?? ObjectId.Empty);
+        if (oldPr != null) {
+            if(oldPr.Quotes.Count > this._purchaseReqInput?.Quotes.Count) {
+                if (this._spinnerService.IsVisible) {
+                    this._spinnerService.UpdateMessage("Deleting requested files....");
+                } else {
+                    this._spinnerService.Show("Deleting requested files....");
+                }
+                foreach (var quote in oldPr.Quotes) {
+                    if (!this._purchaseReqInput.Quotes.Contains(quote)) {
+                        await this._fileService.DeleteFile(quote);
+                    }
+                }
+            }
+        }
+    }
+    
     private async Task SavePurchaseRequestHandler() {
+        bool spinnerActive = false;
         if (this._finalizeDataInput == null) {
             this._notificationService.Notify(NotificationSeverity.Error, 
                 "Error",
@@ -170,15 +193,24 @@
         if (this._quotes.Count> 0) {
             this._spinnerService.Show("Uploading Quotes....");
             await this.UploadFiles();
-            this._spinnerService.UpdateMessage("Submitting Purchase Request....");
-        } else {
-            this._spinnerService.Show("Submitting Purchase Request....");
         }
+
         this._purchaseReqInput = this._finalizeDataInput;
         bool success = false;
         if (this.Mode == EditMode.NEW) {
+            if(!this._spinnerService.IsVisible) {
+                this._spinnerService.Show("Submitting Purchase Request....");
+            } else {
+                this._spinnerService.UpdateMessage("Submitting Purchase Request....");
+            }
             success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
         } else {
+            await this.DeleteFiles();
+            if(!this._spinnerService.IsVisible) {
+                this._spinnerService.Show("Submitting Purchase Request....");
+            } else {
+                this._spinnerService.UpdateMessage("Submitting Purchase Request....");
+            }
             success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
         }
         

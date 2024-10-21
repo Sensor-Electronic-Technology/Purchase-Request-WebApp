@@ -1,10 +1,13 @@
 ﻿using System.Linq.Expressions;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Model;
+using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using QuestPDF.Fluent;
 using SETiAuth.Domain.Shared.Authentication;
 using SetiFileStore.FileClient;
 
@@ -18,12 +21,14 @@ public class PurchaseRequestService {
     private readonly AuthApiService _authApiService;
     private readonly EmailService _emailService;
     private readonly FileService _fileService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<PurchaseRequestService> _logger;
+    private readonly IWebHostEnvironment _environment;
     
     public PurchaseRequestService(PurchaseRequestDataService requestDataService,UserProfileService userProfileService,
         DepartmentDataService departmentDataService,ContactDataService contactDataService, EmailService emailService,
-        AuthApiService authService,FileService fileService,IServiceScopeFactory serviceScopeFactory,ILogger<PurchaseRequestService> logger) {
+        AuthApiService authService,FileService fileService,
+        IWebHostEnvironment environment,
+        ILogger<PurchaseRequestService> logger) {
         this._requestDataService = requestDataService;
         this._contactDataService = contactDataService;
         this._emailService = emailService;
@@ -31,7 +36,7 @@ public class PurchaseRequestService {
         this._userProfileService=userProfileService;
         this._departmentDataService = departmentDataService;
         this._fileService = fileService;
-        this._serviceScopeFactory = serviceScopeFactory;
+        this._environment = environment;
         this._logger = logger;
     }
 
@@ -81,15 +86,7 @@ public class PurchaseRequestService {
         purchaseRequest.PrUrl = input.PrUrl;
         await this._requestDataService.InsertOne(purchaseRequest);
         var exists = await this._requestDataService.Exists(purchaseRequest._id);
-        await Task.Delay(1000);
         if (!exists) return false;
-        /*_ = Task.Run(async () => {
-            await using var scope = this._serviceScopeFactory.CreateAsyncScope();
-            var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
-            await emailService.SendRequestEmail(input.EmailTemplate ?? [], input,
-                [input.RequesterEmail ?? ""],
-                [input.RequesterEmail ?? ""]);
-        });*/
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [], input,
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
@@ -97,23 +94,29 @@ public class PurchaseRequestService {
     }
 
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
+        Console.WriteLine($"Updating Purchase Request {input.Id}");
         if(!input.Id.HasValue) return false;
-        input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+        if (input.Status == PrStatus.NeedsApproval) {
+            input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+        } else {
+            input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.ORDER}";
+        }
+        
         var pr = new PurchaseRequest().FromInput(input);
         bool success=await this._requestDataService.UpdateOne(pr);
+        Console.WriteLine("Updated Purchase Request: "+success);
         if(!success) return false;
+        
+        foreach(var quote in input.Quotes) {
+            var fileData=await this._fileService.DownloadFile(quote);
+            if (fileData != null) {
+                input.Attachments.Add(new FileInput(fileData.Name,fileData.Data));
+            }
+        }
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
             [input.RequesterEmail ?? ""],
             [input.RequesterEmail ?? ""]);
         
-        /*var ccList = new List<string>();
-        ccList.Add(input.ApproverEmail ?? "");
-        foreach (var email in input.EmailCcList) {
-            ccList.Add(email);
-        }
-        await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
-            [input.RequesterEmail ?? ""],
-            [input.ApproverEmail ?? ""]);*/
         
         return true;
     }
@@ -141,12 +144,12 @@ public class PurchaseRequestService {
         } else {
             request.RejectedDate = TimeProvider.Now();
         }
+        
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
         if (approved) {
             request.PrUrl = $"http://localhost:5015/action/{request._id.ToString()}/{PrUserAction.ORDER}";
         }
         
-
         var success=await this._requestDataService.UpdateOne(request);
         List<FileData> files = [];
         foreach (var quote in request.Quotes) {
@@ -156,8 +159,11 @@ public class PurchaseRequestService {
             }
         }
         if(!success) return false;
+        var document = new PurchaseRequestDocument(request.ToInput(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
         await this._emailService.SendApprovalEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",approved,
-            request.PrUrl ?? "",files,
+            request.PrUrl ?? "",
+            document.GeneratePdf(),
+            files,
             [request.Requester.Email ?? ""],
             [request.Requester.Email ?? ""]);
         return false;

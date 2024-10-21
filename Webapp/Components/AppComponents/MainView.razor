@@ -6,6 +6,7 @@
 @using Domain.Users
 @using Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using MongoDB.Bson
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
@@ -156,8 +157,8 @@
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.MODIFY);
                 this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                //this._localStorage.SetItem(this._userAccount._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
-                this._localStorage.SetItem(this._userAccount._id, this._actionRequest._id.ToString());
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +

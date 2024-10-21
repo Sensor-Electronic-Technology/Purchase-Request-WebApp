@@ -54,6 +54,7 @@ public class PurchaseRequest {
             RejectedDate = this.RejectedDate,
             OrderedDate = this.OrderedDate,
             ReceivedDate = this.ReceivedDate,
+            Status = this.Status
         };
     }
 
@@ -85,6 +86,7 @@ public class PurchaseRequest {
         this.RejectedDate = input.RejectedDate;
         this.OrderedDate = input.OrderedDate;
         this.ReceivedDate = input.ReceivedDate;
+        this.Status = input.Status;
         return this;
     }
 }

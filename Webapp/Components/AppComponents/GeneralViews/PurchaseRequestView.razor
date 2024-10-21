@@ -2,6 +2,7 @@
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
+@using MongoDB.Bson
 @using Webapp.Data
 @if (this.PurchaseRequest == null) {
     <p class="text-center">No purchase request selected</p>
@@ -9,32 +10,41 @@
     <RadzenStack Orientation="Orientation.Horizontal">
         <RadzenCard Style="@this._columnWidth">
             <RadzenCard>
-                <RadzenFieldset Text="Purchase Request">
-                    <RadzenText Text="@(this.PurchaseRequest.Title)"
-                                TextStyle="TextStyle.H6"
-                                TextAlign="TextAlign.Center"/>
-                </RadzenFieldset>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenFieldset Text="Status">
-                    <RadzenAlert Text="@this.GetAlertText()"
-                                 AlertStyle="@this.GetAlertStyle()"
-                                 Size="AlertSize.Small"
-                                 AllowClose="false"/>
-                </RadzenFieldset>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenTabs RenderMode="TabRenderMode.Server">
+                <RadzenTabs RenderMode="TabRenderMode.Server" @bind-SelectedIndex="@this._tabIndex">
                     <Tabs>
                         <RadzenTabsItem Text="Request Information">
-                            <RequestInformationView Description="@this.PurchaseRequest.Description"
-                                                    Title="@this.PurchaseRequest.Title"
-                                                    IsUrgent="@this.PurchaseRequest.Urgent"
-                                                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
-                                                    Mode="EditMode.VIEW"/>
+                            <RadzenStack Gap="1">
+                                <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 rz-background-color-secondary-light">
+                                    <RadzenText Text="@(this.PurchaseRequest.Title)"
+                                                TextStyle="TextStyle.H6"
+                                                TextAlign="TextAlign.Center"/>
+                                </RadzenCard>
+
+                                <RadzenAlert Title="@this.GetAlertText()"
+                                             AlertStyle="@this.GetAlertStyle()"
+                                             Size="AlertSize.Small"
+                                             AllowClose="false" Style="font-size: 14px !important;"/>
+                                @if (this.PurchaseRequest.Status == PrStatus.Rejected) {
+                                    @if (this.PurchaseRequest.ApprovalResult != null) {
+                                        <RadzenFieldset Text="Rejection Comments">
+                                            <RadzenText TextAlign="TextAlign.Center"
+                                                        Text="@this.PurchaseRequest.ApprovalResult.Comments"
+                                                        TextStyle="TextStyle.H6"
+                                                        Style="width: 300px; height: fit-content;"/>
+                                        </RadzenFieldset>
+                                    }
+                                }
+                                <RequestInformationView Description="@this.PurchaseRequest.Description"
+                                                        Name="@this.PurchaseRequest.Requester?.Name"
+                                                        Title="@this.PurchaseRequest.Title"
+                                                        IsUrgent="@this.PurchaseRequest.Urgent"
+                                                        SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                        Mode="EditMode.VIEW"/>
+                            </RadzenStack>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Purchase Information">
-                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                            <RadzenStack Orientation="Orientation.Vertical" 
+                                         AlignItems="AlignItems.Center">
                                 <RadzenStack Orientation="Orientation.Horizontal">
                                     <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
                                     <RadzenFieldset Text="Shipping">
@@ -44,7 +54,6 @@
                                                     Style="width: 300px; height: fit-content;"/>
                                     </RadzenFieldset>
                                 </RadzenStack>
-
                                 <RadzenFieldset Text="Vendor">
                                     <VendorView Vendor="@this.PurchaseRequest.Vendor"
                                                 Mode="@EditMode.VIEW"/>
@@ -52,7 +61,8 @@
                             </RadzenStack>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Items">
-                            <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"/>
+                            <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
+                                                Mode="EditMode.VIEW"/>
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Comments/Quotes">
                             <RadzenStack>
@@ -77,6 +87,8 @@
     
     private List<Department> _departments = [];
     private string _columnWidth = "width: 100%";
+    private ObjectId _prId = ObjectId.Empty;
+    private int _tabIndex = 0;
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
@@ -85,22 +97,32 @@
 
     protected override Task OnParametersSetAsync() {
         this._columnWidth=(this.Mode == EditMode.VIEW) ? "width: 100%" : "width: 50%";
+        this._tabIndex = 0;
+        /*if(this._prId != this.PurchaseRequest?._id) {
+            if (this.PurchaseRequest != null) {
+                
+            }
+            this._prId = this.PurchaseRequest?._id ?? ObjectId.Empty;
+        }*/
         return base.OnParametersSetAsync();
     }
     
     private string GetAlertText() {
         switch (this.PurchaseRequest.Status) {
             case PrStatus.Approved: {
-                return "Approved,Pending Order";
+                return "Status: Approved, Pending Order";
             }
             case PrStatus.NeedsApproval: {
-                return "Pending Approval";
+                return "Status: Pending Approval";
             }
             case PrStatus.Ordered: {
-                return "Ordered";
+                return "Status: Ordered";
             }
             case PrStatus.Delivered: {
-                return "Delivered";
+                return "Status: Delivered";
+            }
+            case PrStatus.Rejected: {
+                return "Status: Rejected";
             }
             default: {
                 return "Unknown";
@@ -109,23 +131,29 @@
     }
     
     private AlertStyle GetAlertStyle() {
-        switch (this.PurchaseRequest.Status) {
-            case PrStatus.Approved: {
-                return AlertStyle.Info;
+        @if (this.PurchaseRequest != null) {
+            switch (this.PurchaseRequest.Status) {
+                case PrStatus.Approved: {
+                    return AlertStyle.Info;
+                }
+                case PrStatus.NeedsApproval: {
+                    return AlertStyle.Warning;
+                }
+                case PrStatus.Ordered: {
+                    return AlertStyle.Secondary;
+                }
+                case PrStatus.Delivered: {
+                    return AlertStyle.Success;
+                }
+                case PrStatus.Rejected: {
+                    return AlertStyle.Danger;
+                }
+                default: {
+                    return AlertStyle.Dark;
+                }
             }
-            case PrStatus.NeedsApproval: {
-                return AlertStyle.Warning;
-            }
-            case PrStatus.Ordered: {
-                return AlertStyle.Secondary;
-            }
-            case PrStatus.Delivered: {
-                return AlertStyle.Success;
-            }
-            default: {
-                return AlertStyle.Primary;
-            }
+        } else {
+            return AlertStyle.Dark;
         }
     }
-
 }

@@ -1,107 +1,36 @@
 ﻿@using System.Timers
 @using SetiFileStore.FileClient
 @using Webapp.Data
-<style>
-    #ddUpload {
-        left: 0;
-        --rz-upload-button-bar-background-color: transparent;
-        --rz-upload-button-bar-padding: 0;
-    }
 
-    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
-        width: 100%;
-        text-align: center;
-        font-size: 16px;
-        padding: 100px 0;
-    }
-</style>
 <RadzenStack Orientation="Orientation.Vertical">
-    <RadzenFormField Text="Additional Comments">
-        <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
-                        Value="@this.AdditionalComments"
-                        ValueChanged="@this.AdditionalCommentsChanged"
-                        Style="width: 200px; height:100px;"/>
-    </RadzenFormField>
-    @switch (this.Mode) {
-        case EditMode.NEW: {
-            <RadzenCard Variant="Variant.Outlined">
-                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-                <RadzenUpload id="ddUpload"
-                              @ref="@this._upload"
-                              ChooseText="Drag and drop here or click to choose files"
-                              Auto="false"
-                              Multiple="true"
-                              Change="@this.OnClientChange"
-                              InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
-                              Style="width: 100%"/>
-            </RadzenCard>
-            break;
-        }
-        case EditMode.EDIT: {
-            <RadzenTabs>
-                <Tabs>
-                    <RadzenTabsItem Text="Add Additional Quotes">
-                        <RadzenCard Variant="Variant.Outlined">
-                            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
-                            <RadzenUpload id="ddUpload"
-                                          @ref="@this._upload"
-                                          ChooseText="Drag and drop here or click to choose files"
-                                          Auto="false"
-                                          Multiple="true"
-                                          Change="@this.OnClientChange"
-                                          InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
-                                          Style="width: 100%"/>
-                        </RadzenCard>
-                    </RadzenTabsItem>
-                    <RadzenTabsItem Text="Current Quotes">
-                        <QuotesView Quotes="@this.CurrentQuoteIds"></QuotesView>
-                    </RadzenTabsItem>
-                </Tabs>
-            </RadzenTabs>
-            break;
-        }
-        case EditMode.VIEW: {
-            <QuotesView Quotes="@this.CurrentQuoteIds"/>
-            break;
-        }
-    }
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Additional Comments">
+                <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
+                                Value="@this.AdditionalComments"
+                                ValueChanged="@this.AdditionalCommentsChanged"
+                                Style="width: 100%; height:100px;"/>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Quotes">
+                <QuotesControl Quotes="@this.Quotes" Mode="@this.Mode"
+                               CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
+                               QuotesChanged="@this.QuotesChanged"
+                               CurrentQuoteIds="@CurrentQuoteIds"/>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+
 </RadzenStack>
 
 @code {
     [Inject] public NotificationService _notifyService { get; set; }
     [Parameter] public List<FileData> Quotes { get; set; } = [];
     [Parameter] public List<string> CurrentQuoteIds { get; set; }
+    [Parameter] public EventCallback<List<string>> CurrentQuoteIdsChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public string? AdditionalComments { get; set; }
-    [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }
     [Parameter] public EventCallback<string?> AdditionalCommentsChanged { get; set; }
-
-    private RadzenUpload _upload = new();
-
-    /*protected override Task OnInitializedAsync() {
-        if (this._upload != null) {
-            this._upload.ChildContent
-        }
-        return base.OnInitializedAsync();
-    }*/
-
-    async Task OnClientChange(UploadChangeEventArgs args) {
-        foreach (var file in args.Files.ToList()) {
-            long maxSize = 10* 1024 * 1024;
-            if(file.Size>maxSize) {
-                this._notifyService.Notify(NotificationSeverity.Error,
-                    "File too large",
-                    $"The file({file.Name}) is too large." +
-                    " Files must be less than or equal to 10MB." +
-                    $"File size: {Math.Round(file.Size/1E6,2)}MB",duration:10000);
-                await this._upload.RemoveFile(file.Name);
-            } else {
-                await using var stream=file.OpenReadStream(maxSize);
-                using var streamContent = new StreamContent(stream);
-                this.Quotes.Add(new FileData(file.Name,await streamContent.ReadAsByteArrayAsync()));
-            }
-        }
-        await this.QuotesChanged.InvokeAsync(this.Quotes);
-    }
+    [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }
+    
 
 }

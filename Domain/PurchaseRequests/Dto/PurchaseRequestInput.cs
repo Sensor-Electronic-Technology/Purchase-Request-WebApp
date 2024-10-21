@@ -1,4 +1,5 @@
 ﻿using Domain.PurchaseRequests.Model;
+using Domain.PurchaseRequests.TypeConstants;
 using MongoDB.Bson;
 
 namespace Domain.PurchaseRequests.Dto;
@@ -18,6 +19,7 @@ public class PurchaseRequestInput {
     public string? AdditionalComments { get; set; }
     public string? ShippingType { get; set; }
     public string? PrUrl { get; set; }
+    public PrStatus Status { get; set; }
     public byte[]? TempFile { get; set; }=Array.Empty<byte>();
     public byte[]? EmailTemplate { get; set; }=Array.Empty<byte>();
     public List<string> EmailCcList { get; set; } = [];
