@@ -19,6 +19,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddCircuitOptions(options => options.DetailedErrors = true)
     .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
+
+builder.Services.AddRadzenCookieThemeService(options => {
+    options.Name = "app-theme"; // The name of the cookie
+    options.Duration = TimeSpan.FromDays(365); // The duration of the cookie
+});
+
 builder.Services.AddDevExpressBlazor(options => {
     options.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5;
     options.SizeMode = DevExpress.Blazor.SizeMode.Small;

@@ -2,15 +2,20 @@
 @using Domain.PurchaseRequests.Pdf
 @using QuestPDF.Fluent
 
-<embed type="application/pdf" 
+@*<embed type="application/pdf" 
        src="@this._embededSrc"  
-        width="100%" height="600px"/>
+        width="100%" height="100%"/>*@
+@if (this.PurchaseRequestInput?.TempFile != null) {
+    <PdfPreview FileBytes="@this.PurchaseRequestInput.TempFile"></PdfPreview>
+}
+
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
     private bool _prNull = true;
-    private string _embededSrc = string.Empty;
+    private byte[]? _fileBytes;
+    //private string _embededSrc = string.Empty;
      protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
      }
@@ -22,7 +27,7 @@
              if (this._prNull) {
                  var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
                  this.PurchaseRequestInput.TempFile=document.GeneratePdf();
-                 this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
+                 //this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.PurchaseRequestInput.TempFile)+"#zoom=75%";
                  this._prNull = false;
              }
          } else {

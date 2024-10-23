@@ -1,0 +1,173 @@
+﻿@page "/quotes"
+@using Domain.PurchaseRequests.Dto
+@using Infrastructure.Services
+@using SetiFileStore.FileClient
+
+
+<RadzenSplitter>
+    <RadzenSplitterPane Size="50%">
+        <RadzenCard>
+            <RadzenStack>
+                <RadzenCard class="area-header">
+                        <RadzenText TextStyle="TextStyle.H6"
+                                    TextAlign="TextAlign.Center"
+                                    Text="Quotes Filter"/>
+                </RadzenCard>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenDataFilter @ref="dataFilter"
+                                      Auto="true" Data="@_quotes"
+                                      TItem="QuotesDto"
+                                      ViewChanged=@(view => _quotesGrid.Reload())>
+                        <Properties>
+                            <RadzenDataFilterProperty Property="@nameof(QuotesDto.PrTitle)" Title="Pr Title"/>
+                            <RadzenDataFilterProperty Property="@nameof(QuotesDto.Username)" Title="Username"/>
+                            <RadzenDataFilterProperty Property="@nameof(QuotesDto.FileId)" Title="Id"/>
+                            <RadzenDataFilterProperty Property="@nameof(QuotesDto.Filename)" Title="Filename"/>
+                        </Properties>
+                    </RadzenDataFilter>
+                </RadzenCard>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>
+                </RadzenCard>
+                <RadzenCard Style="width: 100%" Variant="Variant.Outlined">
+                    <RadzenStack Gap="1">
+                        <RadzenCard Variant="Variant.Outlined" class="area-header">
+                            <RadzenStack>
+                                <RadzenText Text="Quotes"
+                                            TextStyle="TextStyle.H6"
+                                            TextAlign="TextAlign.Center"/>
+                                <RadzenText TextStyle="TextStyle.Body1"
+                                            TextAlign="TextAlign.Center"
+                                            Text="Right click to download, Click to view"/>
+                            </RadzenStack>
+
+                        </RadzenCard>
+                        <RadzenCard>
+                            <RadzenDataGrid @ref="@this._quotesGrid"
+                                            TItem="QuotesDto"
+                                            Data="@(this._filteredQuotes)"
+                                            CellContextMenu="@this.ContextMenuHandle"
+                                            LoadData="@LoadData"
+                                            Count="@this._count"
+                                            IsLoading="@this._isLoading"
+                                            SelectionMode="DataGridSelectionMode.Single"
+                                            Value="@this._selectedQuotes"
+                                            ValueChanged="@this.SelectedQuoteChangedHandler"
+                                            AllowRowSelectOnRowClick="true">
+                                <Columns>
+                                    <RadzenDataGridColumn Property="@nameof(QuotesDto.FileId)" Title="Id"/>
+                                    <RadzenDataGridColumn Property="@nameof(QuotesDto.Filename)" Title="Filename"/>
+                                    <RadzenDataGridColumn Property="@nameof(QuotesDto.Username)" Title="Username"/>
+                                    <RadzenDataGridColumn Property="@nameof(QuotesDto.PrTitle)" Title="Pr Title"/>
+                                    <RadzenDataGridColumn Property="@nameof(QuotesDto.PrDescription)" Title="Description"/>
+                                    @*<RadzenDataGridColumn Property="@nameof(QuotesDto.Url)" Title="Url"/>*@
+                                </Columns>
+                            </RadzenDataGrid>
+                        </RadzenCard>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="50%" Collapsed="@this._quoteViewCollapsed">
+        <RadzenCard>
+            @if (this._quoteLoading) {
+                <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                    <RadzenProgressBarCircular ShowValue="false"
+                                               Mode="ProgressBarMode.Indeterminate"
+                                               Size="ProgressBarCircularSize.Large"
+                                               Style="margin: auto; background: transparent; display: block;">
+                    </RadzenProgressBarCircular>
+                    <RadzenText Text="Loading Quote" Style="color: white; font-size: 20px; font-weight: bold;"/>
+                </RadzenStack>
+            } else {
+                if (this._selectedFileData == null) {
+                    <RadzenCard class="area-header">
+                        <RadzenText TextAlign="TextAlign.Center"
+                                    Text="Select Quote to View"
+                                    TextStyle="TextStyle.H6"/>
+                    </RadzenCard>
+                } else {
+                    <RadzenStack>
+                        <RadzenCard class="area-header">
+                            <RadzenText TextAlign="TextAlign.Center"
+                                        Text="@("Filename:"+ this._selectedFileData.Name)"
+                                        TextStyle="TextStyle.H6"/>
+                        </RadzenCard>
+                        <RadzenCard class="info-area">
+                            <PdfPreview FileBytes="@this._selectedFileData.Data"></PdfPreview>
+                        </RadzenCard>
+                    </RadzenStack>
+                }
+            }
+        </RadzenCard>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+
+@code {
+    [Inject] private PurchaseRequestService _dataService { get; set; }
+    [Inject] private FileService _fileService { get; set; }
+    [Inject] private ContextMenuService _contextMenuService { get; set; }
+    [Inject] private IJSRuntime _jsRuntime { get; set; }
+    RadzenDataFilter<QuotesDto> dataFilter;
+    IEnumerable<QuotesDto> _filteredQuotes;
+    IEnumerable<QuotesDto> _quotes;
+    RadzenDataGrid<QuotesDto> _quotesGrid;
+    private IList<QuotesDto>? _selectedQuotes;
+    private FileData? _selectedFileData;
+    private bool _quoteLoading = false;
+    private bool _isLoading = false;
+    private int _count;
+    private bool _quoteViewCollapsed = true;
+
+    private async Task LoadData(LoadDataArgs args) {
+        await Task.Yield();
+        this._isLoading = true;
+        this._quotes = await _dataService.GetQuotes();
+        var query = this._quotes.AsQueryable();
+        query.Where(dataFilter);
+        
+        this._count = query.Count();
+        this._filteredQuotes = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
+        this._isLoading = false;
+    }
+
+    private async Task SelectedQuoteChangedHandler(IList<QuotesDto> selectedQuotes) {
+        this._quoteViewCollapsed = false;
+        this._selectedQuotes = selectedQuotes;
+        this._quoteLoading = true;
+        await InvokeAsync(StateHasChanged);
+        this._selectedFileData=await this._fileService.DownloadFileStream(selectedQuotes[0].FileId);
+        this._quoteLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task ClearSelectionHandler() {
+        this._selectedQuotes = null;
+        this._selectedFileData = null;
+        this._quoteViewCollapsed = true;
+        return Task.CompletedTask;
+    }    
+    
+    private void ContextMenuHandle(DataGridCellMouseEventArgs<QuotesDto> args) {
+        List<ContextMenuItem> menuList = [
+            new() { Text = "Download", Value = "Download", Icon = "autorenew" },
+        ];
+        this._contextMenuService.Open(args, menuList, (e) => {
+                this.ContextActionHandler(args, e).Wait();
+            }
+        );
+    }
+    
+    private async Task ContextActionHandler(DataGridCellMouseEventArgs<QuotesDto> args, MenuItemEventArgs e) {
+        if ((string)e.Value == "Download") {
+            await this._jsRuntime.InvokeAsync<object>("open", args.Data.Url, "_blank");
+            /*var fileData=await this._fileService.DownloadFileStream(args.Data.FileId);
+            if (fileData != null) {
+                
+            }*/
+        }
+    }
+
+
+}

@@ -8,8 +8,10 @@
 @using Domain.Users
 @inject TooltipService tooltipService
 
+
 @if (this.PurchaseReqStatuses != null) {
     <RequestQueueView PurchaseReqStatuses="@this.PurchaseReqStatuses"
+                      Collapsed="@this._queueCollapsed"
                       UserAction="QueueUserActionHandler"
                       SelectedIdChanged="@SelectedStatusChangedHandler"/>
 } else {
@@ -29,7 +31,7 @@
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenCard Style="width: 100%">
                     <RadzenStack>
-                        <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 rz-background-color-secondary-light">
+                        <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
                             <RadzenText Text="Purchase Requests"
                                         TextStyle="TextStyle.H6"
                                         TextAlign="TextAlign.Center"/>
@@ -112,18 +114,13 @@
     [Parameter] public List<PurchaseRequestStatus>? PurchaseReqStatuses { get; set; }
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
-    /*[Parameter] public EventCallback ModifyRequest { get; set; }
-    [Parameter] public EventCallback RejectRequest { get; set; }
-    [Parameter] public EventCallback ApproveRequest { get; set; }
-    [Parameter] public EventCallback CancelRequest { get; set; }
-    [Parameter] public EventCallback OrderRequest { get; set; }
-    [Parameter] public EventCallback ReceiveOrder { get; set; }*/
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private bool _viewPainCollapsed = true;
     private string _viewPaneSize = "50%";
+    private bool _queueCollapsed = false;
     
     private void CancelRequestHandler(PurchaseRequest request) {
         Console.WriteLine("Cancel Request");
@@ -136,6 +133,7 @@
             this._selectedPurchaseRequests=obj;
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
             this._viewPainCollapsed = false;
+            this._queueCollapsed = true;
         }
     }
     
@@ -175,6 +173,7 @@
         this.SelectedPurchaseRequest = null;
         await SelectedPurchaseRequestChanged.InvokeAsync(null);
         this._viewPainCollapsed = true;
+        this._queueCollapsed = false;
     }
 
     private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args,MenuItemEventArgs e) {
@@ -250,14 +249,6 @@
         await InvokeAsync(StateHasChanged);
         //return Task.CompletedTask;
     }
-
-    /*private async Task RowSelectedHandler(PurchaseRequest obj) {
-        if (this.SelectedPurchaseRequest != null) {
-            if(this.SelectedPurchaseRequest._id==obj._id) {
-                this._viewPainCollapsed = true;
-            }
-        }
-    }*/
 
     private async Task QueueUserActionHandler(UserActionEventArg arg) {
         var pr=this.PurchaseRequests.FirstOrDefault(pr=>pr._id.ToString() == arg.PrId);

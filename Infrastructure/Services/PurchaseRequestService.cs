@@ -4,11 +4,13 @@ using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using QuestPDF.Fluent;
 using SETiAuth.Domain.Shared.Authentication;
+using SetiFileStore.Domain.Contracts;
 using SetiFileStore.FileClient;
 
 namespace Infrastructure.Services;
@@ -23,11 +25,13 @@ public class PurchaseRequestService {
     private readonly FileService _fileService;
     private readonly ILogger<PurchaseRequestService> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
     
     public PurchaseRequestService(PurchaseRequestDataService requestDataService,UserProfileService userProfileService,
         DepartmentDataService departmentDataService,ContactDataService contactDataService, EmailService emailService,
         AuthApiService authService,FileService fileService,
         IWebHostEnvironment environment,
+        IConfiguration configuration,
         ILogger<PurchaseRequestService> logger) {
         this._requestDataService = requestDataService;
         this._contactDataService = contactDataService;
@@ -37,6 +41,7 @@ public class PurchaseRequestService {
         this._departmentDataService = departmentDataService;
         this._fileService = fileService;
         this._environment = environment;
+        this._configuration=configuration;  
         this._logger = logger;
     }
 
@@ -167,6 +172,24 @@ public class PurchaseRequestService {
             [request.Requester.Email ?? ""],
             [request.Requester.Email ?? ""]);
         return false;
+    }
+    
+    public async Task<List<QuotesDto>> GetQuotes() {
+        var quotes=await this._requestDataService.GetQuotes();
+        foreach(var quote in quotes) {
+            var fileData=await this._fileService.GetFileInfo(quote.FileId);
+            if (fileData != null) {
+                quote.Filename = fileData.Filename;
+            }
+            quote.Url = this._configuration["FileServiceUrl"];
+            if (!string.IsNullOrWhiteSpace(quote.Url)) {
+                quote.Url=quote.Url.Remove(quote.Url.Length-1);
+                quote.Url+=HttpConstants.FileDownloadInlinePath
+                    .Replace("{appDomain}","purchase_request")
+                    .Replace("{fileId}",quote.FileId);   
+            }
+        }
+        return quotes;
     }
     
     public async Task<List<Vendor>> GetVendors() {

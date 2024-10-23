@@ -10,7 +10,11 @@
         justify-content:left;
     }
 </style>
-<RadzenPanel Icon="dashboard" Text="Queue" AllowCollapse="true" CollapseTitle="Press to expand">
+<RadzenPanel Icon="dashboard" 
+             Collapsed="@this.Collapsed"
+             Text="Queue" 
+             AllowCollapse="true" 
+             CollapseTitle="Press to expand">
     <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
                              Data="@this.PurchaseReqStatuses"
                              CanDrop="args => false"
@@ -34,7 +38,7 @@
                 </RadzenDropZone>
 
                 <RadzenDropZone Value="PrStatus.Delivered"
-                                class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                                class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
                     <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
                 </RadzenDropZone>
 
@@ -44,13 +48,12 @@
                 </RadzenDropZone>
             </RadzenStack>
         </ChildContent>
-        @*<Template>
-            <strong>@context.Name</strong>
-        </Template>*@
         <Template Context="status">
             <RadzenSplitButton Click="@((item) =>this.StatusClickedHandler(item, status.Id))" 
                                Text="@status.Name"
-                               ButtonStyle="ButtonStyle.Info"
+                               ButtonStyle="ButtonStyle.Secondary"
+                               Shade="Shade.Darker"
+                               class="rz-radius-6"
                                Style="width: 100%">
                 <ChildContent>
                     @switch (this._role) {
@@ -90,6 +93,7 @@
     [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; }
     [Parameter] public EventCallback<string> SelectedIdChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
+    [Parameter] public bool Collapsed { get; set; }
 
     private string _role="";
     
@@ -113,9 +117,10 @@
     
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
         args.Attributes["draggable"] = "false";
-        args.Attributes["style"] = "padding-right:.5rem; padding-left:.5rem; padding-top:.5rem; padding-bottom:.5rem;";
-        args.Attributes["class"] = "rz-card rz-variant-filled rz-background-color-primary-light rz-color-on-primary-light";
+        args.Attributes["style"] = "padding-right:.1rem; padding-left:.1rem; padding-top:.1rem; padding-bottom:.1rem;";
+        args.Attributes["class"] = "rz-card rz-variant-filled";
         //args.Visible = args.Item.Status != PrStatus.Delivered;
+        //rz-background-color-primary-light rz-color-on-primary-light
     }
 
     async Task StatusClickedHandler(RadzenSplitButtonItem? item,string id){

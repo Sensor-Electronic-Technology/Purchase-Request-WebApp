@@ -1,8 +1,10 @@
 ﻿@using BlazorBootstrap
-@*<embed type="application/pdf" 
-       src="@this._embededSrc"  
-       width="100%" height="600px"/>*@
-<PdfViewer Url="@_embededSrc"/>
+<style>
+    .bg-body-tertiary {
+        background-color: var(--rz-secondary) !important;
+    }
+</style>
+<PdfViewer Url="@_embededSrc" Class="rz-overflow-scroll" Style="max-height: 900px;"/>
 
 @code {
     [Parameter] public byte[]? FileBytes { get; set; }
@@ -13,7 +15,6 @@
     }
 
     protected override async Task OnParametersSetAsync() {
-        
         if (FileBytes is { Length: > 0 }) {
             if (this._prNull) {
                 this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);

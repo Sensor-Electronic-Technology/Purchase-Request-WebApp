@@ -16,7 +16,7 @@
 </style>
 @switch (this.Mode) {
     case EditMode.NEW: {
-        <RadzenCard Variant="Variant.Outlined">
+        <RadzenCard Variant="Variant.Outlined" class="info-area">
             <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
             <RadzenUpload id="ddUpload"
                           @ref="@this._upload"
@@ -33,7 +33,7 @@
         <RadzenTabs>
             <Tabs>
                 <RadzenTabsItem Text="Add Additional Quotes">
-                    <RadzenCard Variant="Variant.Outlined">
+                    <RadzenCard Variant="Variant.Outlined" class="info-area">
                         <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
                         <RadzenUpload id="ddUpload"
                                       @ref="@this._upload"

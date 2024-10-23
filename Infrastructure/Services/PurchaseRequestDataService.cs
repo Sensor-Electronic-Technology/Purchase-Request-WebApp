@@ -7,6 +7,8 @@ using Domain.Settings;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+using Radzen;
 
 namespace Infrastructure.Services;
 
@@ -72,6 +74,21 @@ public class PurchaseRequestDataService {
     
     public async Task<bool> Exists(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).AnyAsync();
+    }
+
+    public IMongoQueryable<PurchaseRequest>? GetQueryObject() {
+        return this._purchaseRequestCollection.AsQueryable();
+    }
+    
+    public async Task<List<QuotesDto>> GetQuotes() {
+        return await this._purchaseRequestCollection.AsQueryable()
+            .Where(e=>e.Quotes.Any())
+            .SelectMany(pr => pr.Quotes, (pr, q) => new QuotesDto() {
+                PrTitle  = pr.Title,
+                PrDescription = pr.Description,
+                FileId = q,
+                Username = pr.Requester.Username,
+            }).ToListAsync();
     }
     
     /*public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {

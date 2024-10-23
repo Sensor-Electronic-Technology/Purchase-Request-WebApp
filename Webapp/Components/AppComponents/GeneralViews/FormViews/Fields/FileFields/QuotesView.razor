@@ -10,31 +10,32 @@
 @if(this.Quotes==null || !this.Quotes.Any()) {
     <RadzenText Text="Purchase request has no quotes"/>
 } else {
-    <RadzenStack>
-        <RadzenCard Style="background: #1861ac">
-            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6">Quotes</RadzenText>
-            <RadzenText TextAlign="TextAlign.Center">Click file icon to preview quote</RadzenText>
-        </RadzenCard>
-        <RadzenStack Orientation="Orientation.Horizontal">
-            @foreach (var fileInfo in this._fileInfos) {
+    <RadzenCard class="info-area">
+        <RadzenStack>
+            <RadzenCard class="area-header" Style="background: #1861ac">
+                <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6">Quotes</RadzenText>
+                <RadzenText TextAlign="TextAlign.Center">Click file icon to preview quote</RadzenText>
+            </RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                @foreach (var fileInfo in this._fileInfos) {
                 string fileName = fileInfo.Name;
                 string fileId = fileInfo.FileId;
                 string url = fileInfo.Url;
                 <RadzenCard>
                     <RadzenStack AlignItems="AlignItems.Center">
-                            <RadzenButton Image="/images/file-icon.svg" 
-                                          class="rz-ripple"
-                                          Style="background-color:rgb(0,0,0,0); opacity: 100%;"
-                                          Click="@(async Task () => await this.ViewFileHandler(fileName, fileId))">
-                                <ChildContent>
-                                    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0">
-                                        <RadzenImage Path="/images/file-icon.svg"
-                                                     AlternateText="Click to view"
-                                                     Style="width: 50px;height: 75px;"/>
-                                        <RadzenLabel Text="@fileName"/>
-                                    </RadzenStack>
-                                </ChildContent>
-                            </RadzenButton>
+                        <RadzenButton Image="/images/file-icon.svg"
+                                      class="rz-ripple"
+                                      Style="background-color:rgb(0,0,0,0); opacity: 100%;"
+                                      Click="@(async Task () => await this.ViewFileHandler(fileName, fileId))">
+                            <ChildContent>
+                                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0">
+                                    <RadzenImage Path="/images/file-icon.svg"
+                                                 AlternateText="Click to view"
+                                                 Style="width: 50px;height: 75px;"/>
+                                    <RadzenLabel Text="@fileName"/>
+                                </RadzenStack>
+                            </ChildContent>
+                        </RadzenButton>
 
                         <RadzenStack Orientation="Orientation.Horizontal">
                             <RadzenLink Path="@url"
@@ -44,7 +45,7 @@
                                     <RadzenLabel>Download</RadzenLabel>
                                 </RadzenStack>
                             </RadzenLink>
-                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" 
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center"
                                          Gap="0" Visible="@(this.Mode==EditMode.EDIT)">
                                 <RadzenButton Style="background-color:rgb(0,0,0,0); opacity: 100%;"
                                               Click="@(async Task ()=>await this.DeleteFileHandler(fileName,fileId))"
@@ -59,9 +60,9 @@
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenCard>
-            }
-        </RadzenStack>
-        @if (this._loading) {
+                }
+            </RadzenStack>
+            @if (this._loading) {
             <RadzenStack>
                 <RadzenProgressBarCircular ShowValue="false"
                                            Mode="ProgressBarMode.Indeterminate"
@@ -73,20 +74,22 @@
                              font-size: 20px; 
                              font-weight: bold;"/>
             </RadzenStack>
-        } else {
+            } else {
             <RadzenTabs>
                 <Tabs>
                     @foreach (var file in this._files) {
-                        <RadzenTabsItem Text="@file.Name">
-                            <ChildContent>
-                                <PdfPreview FileBytes="@file.Data"/>
-                            </ChildContent>
-                        </RadzenTabsItem>
+                    <RadzenTabsItem Text="@file.Name">
+                        <ChildContent>
+                            <PdfPreview FileBytes="@file.Data"/>
+                        </ChildContent>
+                    </RadzenTabsItem>
                     }
                 </Tabs>
             </RadzenTabs>
-        }
-    </RadzenStack>
+            }
+        </RadzenStack>
+    </RadzenCard>
+    
 }
 
 
@@ -132,27 +135,12 @@
         this._loading = false;
         //await InvokeAsync(StateHasChanged);
     }
-    
-    public async Task DownloadFileHandler(string fileId) {
-        /*var url = "http://172.20.4.15:8080";*/
-        var url = "http://localhost:5065";
-        url+=HttpConstants.FileDownloadStreamPath
-            .Replace("{appDomain}", "purchase_request")
-            .Replace("{fileId}", fileId);
-        Console.WriteLine(url);
-        await JSRuntime.InvokeAsync<object>("open", url, "_blank");
-    }
-    
-    public async Task DeleteFileHandler(string name,string fileId) {
+
+    private async Task DeleteFileHandler(string name,string fileId) {
         this._files.RemoveAll(e=>e.Name==name);
         this._fileInfos.RemoveAll(e=>e.FileId==fileId);
         await InvokeAsync(StateHasChanged);
         await this.DeleteFile.InvokeAsync(fileId);
-        /*var result = await this._fileService.DeleteFile(fileId);
-        if(result) {
-            this._fileInfos.RemoveAll(e=>e.FileId==fileId);
-        }
-        this.CurrentQuoteIds.Remove(fileId);*/
     }
 
     private string GetText(string quote) {

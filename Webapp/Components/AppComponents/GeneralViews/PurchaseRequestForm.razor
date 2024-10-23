@@ -10,11 +10,11 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 
-<RadzenCard Variant="Variant.Filled">
+<RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem; height: 900px;">
     <RadzenStack>
-        <RadzenCard class="rz-background-color-secondary">
+        @*<RadzenCard class="area-header">
             <RadzenText TextAlign="TextAlign.Center">Purchase Request Form</RadzenText>
-        </RadzenCard>
+        </RadzenCard>*@
         @if (!(this._userAccount != null && this._approvers.Count > 0)) {
             <RadzenText Text="Loading User Profile"/>
         } else {
@@ -26,61 +26,57 @@
                              Style="min-height: 600px;">
                     <Steps>
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
-                            <RequestInformationView ApproverSelectList="@this._approverSelectList"
-                                                    Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
-                                                    SelectedApprover="@this._selectedApprover"
-                                                    SelectedApproverChanged="SelectedApproverChangedHandler"
-                                                    @bind-Title="@this._purchaseReqInput.Title"
-                                                    @bind-Description="@this._purchaseReqInput.Description"
-                                                    @bind-IsUrgent="@this._purchaseReqInput.Urgent"
-                                                    Mode="@this.Mode"/>
+                            <RadzenCard class="step-card">
+                                <RequestInformationView ApproverSelectList="@this._approverSelectList"
+                                                        Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
+                                                        SelectedApprover="@this._selectedApprover"
+                                                        SelectedApproverChanged="SelectedApproverChangedHandler"
+                                                        @bind-Title="@this._purchaseReqInput.Title"
+                                                        @bind-Description="@this._purchaseReqInput.Description"
+                                                        @bind-IsUrgent="@this._purchaseReqInput.Urgent"
+                                                        Mode="@this.Mode"/>
+                            </RadzenCard>
+
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Information" PreviousText="Request Information" NextText="Purchase Items">
-                            <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department" 
-                                                     Mode="@this.Mode"
-                                                     @bind-Vendor="@this._purchaseReqInput.Vendor"
-                                                     @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
+                            <RadzenCard class="step-card">
+                                <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department"
+                                                         Mode="@this.Mode"
+                                                         @bind-Vendor="@this._purchaseReqInput.Vendor"
+                                                         @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
+                            </RadzenCard>
+
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Items" PreviousText="Request Information" NextText="Comments & Quotes">
-                            <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
-                                                Mode="@this.Mode"/>
+                            <RadzenCard class="step-card">
+                                <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
+                                                    Mode="@this.Mode"/>
+                            </RadzenCard>
+
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
-                            <ChildContent>
+                            <RadzenCard class="step-card">
                                 <CommentsQuotesView @bind-Quotes="@this._quotes"
                                                     Mode="@this.Mode"
                                                     @bind-CurrentQuoteIds="@this._purchaseReqInput.Quotes"
                                                     @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
-                            </ChildContent>
+                            </RadzenCard>
+
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
-                            @*<FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
-                                          CanSave="@this._canSave"
-                                          Mode="@this.Mode"
-                                          RequestAlerts="@this._requestAlerts"
-                                          SaveClicked="@this.SavePurchaseRequestHandler"
-                                          CancelClicked="@this.CancelPurchaseRequestHandler"
-                                          @bind-DocLoaded="@this._docLoaded"/>*@
-                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
-                                          CanSave="@this._canSave"
-                                          Mode="@this.Mode"
-                                          RequestAlerts="@this._requestAlerts"
-                                          SaveClicked="@this.SavePurchaseRequestHandler"
-                                          CancelClicked="@this.CancelPurchaseRequestHandler"/>
+                            <RadzenCard class="step-card">
+                                <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
+                                              CanSave="@this._canSave"
+                                              Mode="@this.Mode"
+                                              RequestAlerts="@this._requestAlerts"
+                                              SaveClicked="@this.SavePurchaseRequestHandler"
+                                              CancelClicked="@this.CancelPurchaseRequestHandler"/>
+                            </RadzenCard>
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
             </RadzenCard>
         }
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-            <RadzenButton Text="Previous" Image="/images/previous-arrow.svg"
-                          Click="@(async Task () => { await this._steps.PrevStep();})"
-                          Style="width: 150px; height: 50px;" 
-                          Visible="@(this._selectedStepIndex>0)"/>
-            <RadzenButton Text="Next" Image="/images/next-arrow.svg"
-                          Click="@(async Task () => { await this._steps.NextStep();})"
-                          Style="width: 150px; height: 50px;" />
-        </RadzenStack>
     </RadzenStack>
 </RadzenCard>
 

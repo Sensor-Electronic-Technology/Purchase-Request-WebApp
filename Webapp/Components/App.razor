@@ -20,29 +20,43 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="_content/Blazor.Bootstrap/blazor.bootstrap.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="/images/seti_logo.png"/>
-    <RadzenTheme Theme="software-dark" Wcag="true" @rendermode="@InteractiveServer"/>
+    <RadzenTheme Theme="dark" Wcag="true" @rendermode="@InteractiveServer"/>
+    @*<RadzenTheme Theme="humanistic-dark" Wcag="true" @rendermode="@InteractiveServer"/>*@
     @*<RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>*@
     <HeadOutlet @rendermode="InteractiveServer"/>
     <title>Purchase Request System</title>
 </head>
 
 <body>
-<Routes @rendermode="InteractiveServer"/>
-<script src="_framework/blazor.web.js"></script>
-<script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+    <Routes @rendermode="InteractiveServer"/>
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    @*<!-- Add chart.js reference if chart components are used in your application. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.umd.js" integrity="sha512-gQhCDsnnnUfaRzD8k1L5llCCV6O9HN09zClIzzeJ8OJ9MpGmIlCxm+pdCkqTwqJ4JcjbojFr79rl2F1mzcoLMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Add chartjs-plugin-datalabels.min.js reference if chart components with data label feature is used in your application. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js" integrity="sha512-JPcRR8yFa8mmCsfrw4TNte1ZvF1e3+1SdGMslZvmrzDYxS69J7J49vkFL8u6u8PlPJK+H3voElBtUCzaXj+6ig==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Add sortable.js reference if SortableList component is used in your application. -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>*@
     <script src="_content/Blazor.Bootstrap/blazor.bootstrap.js"></script>
 </body>
 </html>
 
 @code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; }
 
+    [Inject]
+    private ThemeService ThemeService { get; set; }
+    
     private string AppendVersion(string path) => FileVersionProvider.AddFileVersionToPath("/", path);
+    
+    protected override void OnInitialized() {
+        base.OnInitialized();
+        if (HttpContext != null) {
+            var theme = HttpContext.Request.Cookies["app-theme"];
+            /*var wcag = HttpContext.Request.Cookies["app-wcag"];*/
+            if (!string.IsNullOrEmpty(theme)) {
+                ThemeService.SetTheme(theme, false);
+            }
+            /*if(!string.IsNullOrEmpty(wcag)) {
+                ThemeService.SetWcag(Convert.ToBoolean(wcag));
+            }*/
+        }
+    }
 
 }

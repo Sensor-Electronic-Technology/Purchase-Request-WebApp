@@ -1,3 +1,61 @@
+
+.area-header {
+    background-color: var(--rz-secondary) !important;
+    border-radius: var(--rz-border-radius-6) !important;
+    padding: 0.5rem !important;
+}
+
+.bg-body-tertiary {
+    background-color: #303a41 !important;
+}
+
+.info-area{
+    background-color: var(--rz-info-lighter) !important;
+    border-radius: var(--rz-border-radius-5) !important;
+}
+
+.pr-view-card{
+    max-height: 900px; 
+    min-height: 700px !important;
+    overflow: scroll
+}
+
+.step-card{
+    max-height: 750px; !important;
+    overflow: scroll !important;
+    padding: 0.5rem !important;
+    border-radius: var(--rz-border-radius-4) !important;
+}
+
+.pdf-data-list {
+    background-color: var(--rz-secondary) !important;
+    border-radius: var(--rz-border-radius-5) !important;
+}
+.tab-color-1{
+    background-color: var(--rz-success-dark) !important;
+    border: var(--rz-success-darker) !important;
+}
+
+.tab-color-2{
+    background-color: var(--rz-warning-lighter) !important;
+    border: var(--rz-warning-darker) !important;
+    border-radius: var(--rz-border-radius-6);
+}
+
+.tab-color-3{
+    background-color: var(--rz-info-lighter) !important;
+    border: var(--rz-info-darker) !important;
+}
+
+.tab-color-4{
+    background-color: var(--rz-secondary) !important;
+}
+
+.tab-color-5{
+    background-color: var(--rz-success-dark) !important;
+}
+
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
