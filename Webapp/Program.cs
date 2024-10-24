@@ -7,6 +7,7 @@ using Radzen;
 using Webapp.Components;
 using Webapp.Services.Authentication;
 using Infrastructure;
+using Infrastructure.Hubs;
 using QuestPDF.Infrastructure;
 using SetiFileStore.FileClient;
 using Webapp.Services;
@@ -48,6 +49,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<MessagingClient>();
 builder.Services.AddHostedService<PrEditTrackerCleanup>();
 //builder.Services.AddHttpClient<FileService>(x=>x.BaseAddress = new Uri(builder.Configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/"));
 builder.Services.AddSetiFileClient();
@@ -62,7 +64,7 @@ if (!app.Environment.IsDevelopment()) {
 app.MapControllers();
 app.UseStaticFiles();
 app.UseAntiforgery();
-
+app.MapHub<MessagingHub>("/messagehub");
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 //app.Urls.Add("http://0.0.0.0:8080");

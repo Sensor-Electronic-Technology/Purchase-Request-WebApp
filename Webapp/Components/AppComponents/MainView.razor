@@ -1,16 +1,15 @@
-﻿@using Blazored.LocalStorage
-@using Domain.Authentication
+﻿@using Domain.Authentication
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Infrastructure.Services
-@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@using MongoDB.Bson
+@using Microsoft.AspNetCore.SignalR.Client
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
+@using Webapp.Components.AppComponents.Chat
 
 <RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
@@ -52,6 +51,149 @@
 
 </RadzenTabs>
 
+@*<style>
+    #chat2 .form-control {
+        border-color: transparent;
+    }
+
+    #chat2 .form-control:focus {
+        border-color: transparent;
+        box-shadow: inset 0px 0px 0px 1px transparent;
+    }
+
+    .divider:after,
+    .divider:before {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #eee;
+    }
+</style>*@
+<div>
+    @if (this._userAccount != null) {
+        <MessageBlock Messages="@this.messages" CurrentUser="@this._userAccount._id"/>
+    }
+    
+    @*<section>
+        <div class="container py-5">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-6">
+                    <div class="card" id="chat2">
+                        <div class="card-header d-flex justify-content-between align-items-center p-3">
+                            <h5 class="mb-0">Chat</h5>
+                        </div>
+                        <div class="card-body" style="position: relative; height: 400px; overflow: scroll">
+                            
+                            <div class="d-flex flex-row justify-content-start">
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">Hi</p>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">How are you ...???
+                                    </p>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">What are you doing tomorrow? Can we come up a bar?</p>
+                                    <p class="small ms-3 mb-3 rounded-3 text-muted">23:58</p>
+                                </div>
+                            </div>
+
+                            $1$<div class="divider d-flex align-items-center mb-4">
+                                <p class="text-center mx-3 mb-0" style="color: #a2aab7;">Today</p>
+                            </div>#1#
+
+                            <div class="d-flex flex-row justify-content-end mb-4 pt-1">
+                                <div>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">Hiii, I'm good.</p>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">How are you doing?</p>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">Long time no see! Tomorrow
+                                        office. will
+                                        be free on sunday.</p>
+                                    <p class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end">00:06</p>
+                                </div>
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-start mb-4">
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">Okay</p>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">We will go on
+                                        Sunday?</p>
+                                    <p class="small ms-3 mb-3 rounded-3 text-muted">00:07</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-end mb-4">
+                                <div>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">That's awesome!</p>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">I will meet you Sandon Square
+                                        sharp at
+                                        10 AM</p>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">Is that okay?</p>
+                                    <p class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end">00:09</p>
+                                </div>
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-start mb-4">
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">Okay i will meet
+                                        you on
+                                        Sandon Square</p>
+                                    <p class="small ms-3 mb-3 rounded-3 text-muted">00:11</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-end mb-4">
+                                <div>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">Do you have pictures of Matley
+                                        Marriage?</p>
+                                    <p class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end">00:11</p>
+                                </div>
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-start mb-4">
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                                <div>
+                                    <p class="small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary">Sorry I don't
+                                        have. i
+                                        changed my phone.</p>
+                                    <p class="small ms-3 mb-3 rounded-3 text-muted">00:13</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-end">
+                                <div>
+                                    <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">Okay then see you on sunday!!
+                                    </p>
+                                    <p class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end">00:15</p>
+                                </div>
+                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                     alt="avatar 1" style="width: 45px; height: 100%;">
+                            </div>
+
+                        </div>
+                        <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                 alt="avatar 3" style="width: 40px; height: 100%;">
+                            <input type="text" class="form-control form-control-lg" id="exampleFormControlInput1"
+                                   placeholder="Type message">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>*@
+</div>
+
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
@@ -61,6 +203,7 @@
     [Inject] private ILogger<MainView> _logger { get; set; }
     [Inject] private SessionStorageService _localStorage { get; set; }
     [Inject] private NavigationManager _navigationManager { get; set; }
+    [Inject] private MessagingClient _messagingClient { get; set; }
     
     [Parameter] public string? Id { get; set; }
     [Parameter] public int? Action { get; set; }
@@ -76,6 +219,9 @@
     private string _tabIcon="autorenew";
     private int _selectedIndex = 0;
     private PrUserAction _userAction = PrUserAction.MODIFY;
+
+
+    List<ChatMessage> messages;
     
     private Dictionary<PrUserAction, TabTemplate> _tabTemplates=new() { 
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
@@ -88,7 +234,32 @@
         await base.OnInitializedAsync();
         this.EditingTracker.OnTimeout += this.EditTrackerTimeout;
         this._logger.LogInformation("MainView Initialized");
+        var now = DateTime.Now;
+        this.messages= new() {
+            new ChatMessage(now, "aelmendo", "Hello"),
+            new ChatMessage(now.AddSeconds(5), "aelmendo", "How are you?"),
+            new ChatMessage(now.AddSeconds(10), "aelmendo", "I am fine"),
+            new ChatMessage(now.AddSeconds(15), "rjain", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(20), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(25), "aelmendo", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(30), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
+            new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
+        };
         await this.Load();
+    }
+
+    private async Task HubSetup() {
+        this._messagingClient.HubConnection.On("Connected",this.ConnectedHandler);
+        await this._messagingClient.StartAsync();
+        if (this._messagingClient.IsConnected) {
+            await this._messagingClient.Register(this._userAccount._id);
+        }
+    }
+
+    private Task ConnectedHandler() {
+        this._notificationService.Notify(NotificationSeverity.Success,"Success","Connected to server",duration:10000,closeOnClick:true);
+        return Task.CompletedTask;
     }
 
     protected override async Task OnParametersSetAsync() {
@@ -269,6 +440,7 @@
         this.Reset();
         this._userAccount = this._userService.GetSessionUserProfile();
         if(this._userAccount != null) {
+            await this.HubSetup();
             this.EditingTracker.UserTryClear(this._userAccount._id);
             this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userAccount._id,this._userService.GetUserRole());
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();

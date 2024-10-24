@@ -15,6 +15,7 @@ using Domain.PurchaseRequests.TypeConstants;
 using Microsoft.AspNetCore.Http;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
+using MongoDB.Driver.Linq;
 using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -46,7 +47,93 @@ foreach (var a in arr) {
 //await fileService.UploadMultipleFiles(["C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf","C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest-2.pdf"]);
 //await fileService.UploadFile("C:\\Users\\aelme\\Documents\\PurchaseRequestData\\PurchaseRequest.pdf");
 
-Console.WriteLine(TimeProvider.Now());
+/*Console.WriteLine(TimeProvider.Now());*/
+
+await TestMessageOrderV2();
+
+async Task TestMessageOrderV2() {
+    var now = DateTime.Now;
+    List<ChatMessage> messages = new() {
+        new ChatMessage(now, "aelmendo", "Hello"),
+        new ChatMessage(now.AddSeconds(5), "aelmendo", "How are you?"),
+        new ChatMessage(now.AddSeconds(10), "aelmendo", "I am fine"),
+        new ChatMessage(now.AddSeconds(15), "rjain", "What are you doing?"),
+        new ChatMessage(now.AddSeconds(20), "rjain", "I am working on a project"),
+        new ChatMessage(now.AddSeconds(25), "aelmendo", "What are you doing?"),
+        new ChatMessage(now.AddSeconds(30), "rjain", "I am working on a project"),
+        new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
+        new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
+    };
+
+    var sortedMessages = messages.OrderBy(m => m.Timestamp).ToList();
+    var groupedMessages = new List<List<ChatMessage>>();
+    var currentGroup = new List<ChatMessage>();
+
+    for (int i = 0; i < sortedMessages.Count; i++) {
+        if (currentGroup.Count == 0 ||
+            (sortedMessages[i].Username == currentGroup.Last().Username &&
+             sortedMessages[i].Timestamp - currentGroup.Last().Timestamp <= TimeSpan.FromSeconds(20))) {
+            currentGroup.Add(sortedMessages[i]);
+        } else {
+            groupedMessages.Add(new List<ChatMessage>(currentGroup));
+            currentGroup.Clear();
+            currentGroup.Add(sortedMessages[i]);
+        }
+    }
+
+    if (currentGroup.Count > 0) {
+        groupedMessages.Add(currentGroup);
+    }
+
+    foreach (var group in groupedMessages) {
+        Console.WriteLine($"Messages from {group.First().Username}:");
+        foreach (var message in group) {
+            Console.WriteLine($"{message.Timestamp}: {message.Message}");
+        }
+        Console.WriteLine();
+    }
+}
+
+async Task TestMessageOrdering() {
+    var now=DateTime.Now;
+    List<ChatMessage> messages = [
+    new ChatMessage(now,"aelmendo","Hello"),
+    new ChatMessage(now.AddSeconds(5),"aelmendo","How are you?"),
+    new ChatMessage(now.AddSeconds(10),"aelmendo","I am fine"),
+    new ChatMessage(now.AddSeconds(15),"rjain","What are you doing?"),
+    new ChatMessage(now.AddSeconds(20),"rjain","I am working on a project"),
+    new ChatMessage(now.AddSeconds(25),"aelmendo","What are you doing?"),
+    new ChatMessage(now.AddSeconds(30),"rjain","I am working on a project")
+    ];
+    
+    var sortedMessages = messages.OrderBy(m => m.Timestamp).ToList();
+    var groupedMessages = new List<List<ChatMessage>>();
+    var currentGroup = new List<ChatMessage>();
+
+    for (int i = 0; i < sortedMessages.Count; i++) {
+        if (currentGroup.Count == 0 || 
+            (sortedMessages[i].Username == currentGroup.Last().Username && 
+             sortedMessages[i].Timestamp - currentGroup.Last().Timestamp <= TimeSpan.FromMinutes(1))) {
+            currentGroup.Add(sortedMessages[i]);
+        } else {
+            groupedMessages.Add(new List<ChatMessage>(currentGroup));
+            currentGroup.Clear();
+            currentGroup.Add(sortedMessages[i]);
+        }
+    }
+
+    if (currentGroup.Count > 0) {
+        groupedMessages.Add(currentGroup);
+    }
+
+    foreach (var group in groupedMessages) {
+        Console.WriteLine($"Messages from {group.First().Username}:");
+        foreach (var message in group) {
+            Console.WriteLine($"{message.Timestamp}: {message.Message}");
+        }
+        Console.WriteLine();
+    }
+}
 
 async Task TestReadContentJson() {
     var jsonString = 
@@ -326,3 +413,5 @@ async Task TestMongoQueryIdString() {
     collection.Find(e=>e._id=="aelmendo").ToList().ForEach(e=>Console.WriteLine(e._id));
 }
 
+
+public record ChatMessage(DateTime Timestamp,string Username,string Message);
