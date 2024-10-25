@@ -2,6 +2,9 @@
 @using Infrastructure.Services
 @using Webapp.Services
 @using Webapp.Services.Authentication
+@using Webapp.Components.AppComponents.Chat
+@using TimeProvider = Infrastructure.Services.TimeProvider
+@using Webapp.Data
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider authStateProvider
@@ -31,6 +34,11 @@
                              JustifyContent="JustifyContent.End"
                              Style="padding: 0.5rem">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                        <RadzenSidebarToggle Icon="chat"
+                                             Click="@(() => chatSidebarExpanded = !chatSidebarExpanded)"
+                                             class="rz-m-0"/>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
                         <RadzenSidebarToggle Icon="settings"
                                              Click="@(() => configSidebarExpanded = !configSidebarExpanded)"
                                              class="rz-m-0"/>
@@ -38,12 +46,19 @@
                     <RadzenProfileMenu Click="@this.MenuClickHandler">
                         <Template>
                             <AuthorizeView>
-                                <Authorized>
-                                    <RadzenGravatar Email="@context.User.Identity?.Name"/>
-                                </Authorized>
                                 <NotAuthorized>
-                                    <RadzenGravatar Email="guest"/>
+                                    <RadzenGravatar Email="guest@email.com"/>
                                 </NotAuthorized>
+                                <Authorized>
+                                    @{
+                                        var path = this._userService.GetProfileAvatar();
+                                        if (string.IsNullOrEmpty(path)) {
+                                            path = this._avatarDataService.GetRandomAvatar();
+                                        }
+
+                                        <RadzenImage Path="@path" Style="height: 38px;width: 38px;"/>
+                                    }
+                                </Authorized>
                             </AuthorizeView>
                         </Template>
                         <ChildContent>
@@ -66,7 +81,7 @@
         @Body
     </RadzenBody>
     <RadzenSidebar @bind-Expanded="@this.sidebarExpanded" 
-                   Responsive="true"
+                   Responsive="false"
                    Style="--rz-sidebar-width: fit-content; display: flex; flex-direction: column">
         <RadzenPanelMenu DisplayStyle="@MenuItemDisplayStyle.IconAndText" ShowArrow="false">
             <AuthorizeView Roles="@this.GetRoles()">
@@ -78,10 +93,21 @@
             </AuthorizeView>
         </RadzenPanelMenu>
     </RadzenSidebar>
+    <RadzenSidebar @bind-Expanded="@chatSidebarExpanded" 
+                   Responsive="false"
+                   Style="--rz-sidebar-width: 500px; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);">
+        <RadzenStack class="rz-p-4" Gap="0">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Chat Window</RadzenText>
+                <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => chatSidebarExpanded = false)"/>
+            </RadzenStack>
+            <ChatWindow Messages="@this.messages"/>
+        </RadzenStack>
+    </RadzenSidebar>
     <RadzenSidebar Responsive="false" 
                    @bind-Expanded="@configSidebarExpanded"
                    Style="--rz-sidebar-width: 370px; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);">
-        <RadzenStack class="rz-p-4" Gap="0">
+        <RadzenStack Gap="0">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Theme Configuration</RadzenText>
                 <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => configSidebarExpanded = false)"/>
@@ -105,13 +131,29 @@
 
 @code {
     [Inject] private ThemeService _themeService { get; set; }
+    [Inject] private UserService _userService { get; set; }
+    [Inject] private AvatarDataService _avatarDataService { get; set; }
     bool sidebarExpanded = false;
     bool configSidebarExpanded = false;
+    bool chatSidebarExpanded = false;
     bool rendered;
-    RadzenButton premiumThemesInfo;
-    RadzenButton wcagColorsInfo;
-    RadzenButton rtlInfo;
-    RadzenButton freeThemesInfo;
+    List<ChatMessage> messages;
+
+    protected override Task OnInitializedAsync() {
+        var now = TimeProvider.Now();
+        this.messages= new() {
+            new ChatMessage(now, "aelmendo", "Hello"),
+            new ChatMessage(now.AddSeconds(5), "aelmendo", "How are you?"),
+            new ChatMessage(now.AddSeconds(10), "aelmendo", "I am fine"),
+            new ChatMessage(now.AddSeconds(15), "rjain", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(20), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(25), "aelmendo", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(30), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
+            new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
+        };
+        return base.OnInitializedAsync();
+    }
 
     void SidebarToggleClick() {
         sidebarExpanded = !sidebarExpanded;

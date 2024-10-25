@@ -25,8 +25,8 @@
                             <AvatarSelector ImagePath="@this.UserProfile.AvatarPath" 
                                             ImagePathChanged="@this.ImagePathChangedHandler"/>
                         } else {
-                            <RadzenImage Path="avatars/alien-avatar-space-svgrepo-com.svg" 
-                                         />
+                            <RadzenImage Path="@this.UserProfile.AvatarPath"
+                                         Style="width: 48px; height: 48px; border-radius: 50%;"/>
                         }
                         <RadzenFormField Text="Username">
                             <RadzenTextBox Value="@this.UserProfile._id"

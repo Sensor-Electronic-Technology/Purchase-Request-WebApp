@@ -42,6 +42,7 @@
 
     <ItemGroup>
       <Folder Include="Temp\" />
+      <Folder Include="wwwroot\avatars\" />
       <Folder Include="wwwroot\images\avatars\" />
       <Folder Include="wwwroot\temp\" />
     </ItemGroup>

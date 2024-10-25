@@ -44,6 +44,10 @@ public class UserService {
         return await this._profileService.UpdateProfile(profile);
     }
     
+    public string? GetProfileAvatar() {
+        return this._profile?.AvatarPath;
+    }
+    
     internal async Task SetUser(ClaimsPrincipal user,UserSessionDto? session=null) {
         if (currentUser != user) {
             this._session = session ?? new UserSessionDto() {

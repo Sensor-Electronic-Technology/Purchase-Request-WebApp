@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using SETiAuth.Domain.Shared.Authentication;
@@ -8,6 +9,7 @@ namespace Webapp.Services.Authentication;
 public class SetiAuthStateProvider : AuthenticationStateProvider {
     private readonly ProtectedLocalStorage _localStorage;
     private readonly UserService _userService;
+    private readonly AvatarDataService _avatarDataService;
 
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
     
@@ -28,7 +30,7 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
                 new List<Claim> {
                     new Claim(ClaimTypes.Name, userSession.UserAccount.Username), 
                     new Claim(ClaimTypes.Role, userSession.UserAccount.Role),
-                    new Claim("Token", userSession.Token),
+                    new Claim("Token", userSession.Token)
                 },"CustomAuth"));
             await this._userService.SetUser(claimsPrincipal,userSession);
             return await Task.FromResult(new AuthenticationState(claimsPrincipal));
@@ -45,7 +47,7 @@ public class SetiAuthStateProvider : AuthenticationStateProvider {
                 new List<Claim> {
                     new Claim(ClaimTypes.Name, userSession.UserAccount.Username), 
                     new Claim(ClaimTypes.Role, userSession.UserAccount.Role),
-                    new Claim("Token", userSession.Token),
+                    new Claim("Token", userSession.Token)
                 },"CustomAuth"));
             await this._userService.SetUser(claimsPrincipal);
         } else {

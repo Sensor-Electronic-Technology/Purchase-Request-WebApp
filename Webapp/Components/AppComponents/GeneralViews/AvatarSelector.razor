@@ -1,15 +1,13 @@
 ﻿@using Infrastructure.Services
 
 <RadzenFormField Text="Avatar">
-    <RadzenDropDown TValue="string" 
+    <RadzenDropDown TValue="string"
                     Data="@this._avatarDataService.GetAvatars()"
+                    Style="width:100px; height: fit-content; display: block;"
                     Value="@this.ImagePath" ValueChanged="ImageChangedHandler">
         <Template>
             <RadzenImage Path="@context" Style="height: 48px;width: 48px;"/>
         </Template>
-        <ValueTemplate>
-            <RadzenImage Path="@context" Style="height: 48px;width: 48px;"></RadzenImage>
-        </ValueTemplate>
     </RadzenDropDown>
 </RadzenFormField>
 
