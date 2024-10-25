@@ -1,0 +1,26 @@
+﻿@using Infrastructure.Services
+
+<RadzenFormField Text="Avatar">
+    <RadzenDropDown TValue="string" 
+                    Data="@this._avatarDataService.GetAvatars()"
+                    Value="@this.ImagePath" ValueChanged="ImageChangedHandler">
+        <Template>
+            <RadzenImage Path="@context" Style="height: 48px;width: 48px;"/>
+        </Template>
+        <ValueTemplate>
+            <RadzenImage Path="@context" Style="height: 48px;width: 48px;"></RadzenImage>
+        </ValueTemplate>
+    </RadzenDropDown>
+</RadzenFormField>
+
+@code {
+    [Inject] private AvatarDataService _avatarDataService { get; set; }
+    [Parameter] public string? ImagePath { get; set; }
+    [Parameter] public EventCallback<string> ImagePathChanged { get; set; }
+
+    private async Task ImageChangedHandler(string obj) {
+        this.ImagePath = obj;
+        await this.ImagePathChanged.InvokeAsync(obj);
+    }
+
+}

@@ -1,5 +1,6 @@
 ﻿@page "/user_profile"
 @using Domain.Users
+@using Infrastructure.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.AuthViews
 @inject UserService UserService
@@ -32,14 +33,21 @@
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationState { get; set; }
-
+    [Inject] private AvatarDataService _avatarDataService { get; set; }
+    
     private UserProfile? _userProfile;
     private bool _switchValue=false;
     private string _label="Enable";
     
-    protected override Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
         this._userProfile = this.UserService.GetSessionUserProfile();
-        return base.OnInitializedAsync();
+        if (this._userProfile != null) {
+            if (string.IsNullOrEmpty(this._userProfile.AvatarPath)) {
+                this._userProfile.AvatarPath=this._avatarDataService.GetRandomAvatar();
+                await this.UserService.UpdateProfile(this._userProfile);
+            }   
+        }
     }
     
     private async Task Submit() {

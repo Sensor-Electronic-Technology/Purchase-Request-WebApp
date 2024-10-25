@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Domain.PurchaseRequests.Model;
 using Domain.Users;
 using MongoDB.Driver;
@@ -9,6 +10,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infrastructure.Services;
 using ClosedXML.Excel;
+using Domain;
+using Domain.Assets;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
@@ -20,6 +23,9 @@ using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Companion;
+using SetiFileStore.Domain.Contracts;
+using SetiFileStore.Domain.Contracts.Responses;
+using SetiFileStore.FileClient;
 using TimeProvider = Infrastructure.Services.TimeProvider;
 
 //Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
@@ -49,7 +55,116 @@ foreach (var a in arr) {
 
 /*Console.WriteLine(TimeProvider.Now());*/
 
-await TestMessageOrderV2();
+//await TestMessageOrderV2();
+
+await CreateAvatarFiles();
+
+async Task CreateAvatarFiles() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("website_shared_db");
+    var collection = database.GetCollection<Avatar>("website_avatars");
+    string basePath = "C:\\Users\\aelmendo\\RiderProjects\\Purchase-Request-WebApp\\Webapp\\wwwroot\\images\\avatars";
+    var avatars = new List<Avatar>();
+    var files = Directory.GetFiles(basePath)
+        .Select(Path.GetFileName)
+        .ToList();
+    List<FileData> fileData = [];
+    foreach (var file in files) {
+        if (!string.IsNullOrEmpty(file)) {
+            var tmp = Path.GetFileNameWithoutExtension(file);
+            if (!string.IsNullOrEmpty(tmp)) {
+                var split = tmp.Split('-');
+                Console.WriteLine(file);
+                Console.Write($"Count:{split.Length} Array: ");
+                for (int i = 0; i < split.Length; i++) {
+                    Console.Write($"[{i}]: {split[i]}");
+                }
+
+                Console.WriteLine();
+                var fileBytes = File.ReadAllBytes(Path.Combine(basePath, file));
+                fileData.Add(new FileData(file, fileBytes));
+            }
+        }
+    }
+
+    Console.WriteLine("Upload files, please wait....");
+    /*List<string> results = [];*/
+    foreach (var data in fileData) {
+        var result = await UploadFile(data);
+        if (result != null) {
+            /*results.Add(result);*/
+            await collection.InsertOneAsync(new Avatar() {
+                _id = ObjectId.GenerateNewId(),
+                Name = data.Name,
+                FileId = result,
+            });
+            Console.WriteLine($"File uploaded. FileId: {result}");
+        } else {
+            Console.WriteLine("File upload failed");
+        }
+    }
+
+    /*Console.WriteLine("Files uploaded, creating avatar records....");
+    if (results.Count == fileData.Count) {
+        for (int i = 0; i < results.Count; i++) {
+            avatars.Add(new Avatar() { Name = fileData[i].Name, FileName = results[i] });
+        }
+
+        await collection.InsertManyAsync(avatars);
+        Console.WriteLine("Avatar database created, check database");
+    } else {
+        Console.WriteLine("Some files failed to upload, delete the database and try again");
+    }*/
+}
+
+
+async Task<string?> UploadFile(FileData data) {
+    using var client = new HttpClient();
+    client.BaseAddress = new Uri("http://localhost:5065/");
+    using var form = new MultipartFormDataContent();
+    using var fileContent = new ByteArrayContent(data.Data);
+    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+    form.Add(fileContent, "file",data.Name);
+    var domain="avatar";
+    if (string.IsNullOrEmpty(domain)) {
+        throw new Exception(message: "Missing required configuration: AppDomain. " +
+                                     "Please check your appsettings.json file.");
+    }
+    form.Add(new StringContent(domain), "appDomain");
+    //form.Add(new StringContent("purchase_request"), "appDomain");
+    HttpResponseMessage response = await client.PostAsync(HttpConstants.FileUploadPath, form);
+    Console.WriteLine(response.ToString());
+    if (response.IsSuccessStatusCode) {
+        var content =await response.Content.ReadFromJsonAsync<FileUploadResponse>();
+        return content?.FileId;
+    } else {
+        return default;
+    }
+}
+
+async Task<List<string>> UploadMultipleFiles(List<FileData> input) {
+    using var client = new HttpClient();
+    client.BaseAddress = new Uri("http://localhost:5065/");
+    using var form = new MultipartFormDataContent();
+    foreach (var fileInput in input) {
+        var fileContent = new ByteArrayContent(fileInput.Data);
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+        form.Add(fileContent, "files", fileInput.Name);
+    }
+    var domain="avatar";
+    if (string.IsNullOrEmpty(domain)) {
+        throw new Exception(message: "Missing required configuration: AppDomain. " +
+                                     "Please check your appsettings.json file.");
+    }
+    form.Add(new StringContent(domain), "appDomain");
+    HttpResponseMessage response = await client.PostAsync(HttpConstants.MultiFileUploadPath, form);
+    if (response.IsSuccessStatusCode) {
+        var content =await response.Content.ReadFromJsonAsync<MultipleFileUploadResponse>();
+        return content?.FileIds ?? new List<string>();
+    } else {
+        return [];
+    }
+}
 
 async Task TestMessageOrderV2() {
     var now = DateTime.Now;
@@ -148,11 +263,7 @@ async Task TestReadContentJson() {
 }
 
 /*async Task TestPdfUpload() {
-    QuestPDF.Settings.License = LicenseType.Community;
-    var model = await GetPurchaseRequest();
-    var document = new PurchaseRequestDocument(model,"C:\\Users\\aelmendo\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");
-    document.GeneratePdf(@"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest-2.pdf");
-    string url = "http://localhost:5021/FileStorage/UploadFile";
+    string url = "http://172.20.4.15:8080/FileStorage/UploadFile";
     string filePath = @"C:\Users\aelme\Documents\PurchaseRequestData\PurchaseRequest-2.pdf";
     using var httpClient = new HttpClient();
     using var form = new MultipartFormDataContent();

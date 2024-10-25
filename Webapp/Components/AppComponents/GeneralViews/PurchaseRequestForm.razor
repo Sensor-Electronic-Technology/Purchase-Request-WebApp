@@ -135,7 +135,7 @@
                 "No files selected for upload");
             return;
         }
-        var result=await this._fileService.UploadMultipleFiles(this._quotes);
+        var result=await this._fileService.UploadMultipleFiles(this._quotes, "purchase_request");
         if (result.Any()) {
             if(this.Mode==EditMode.EDIT) {
                 if(this._purchaseReqInput.Quotes.Any()) {
@@ -171,7 +171,7 @@
                 }
                 foreach (var quote in oldPr.Quotes) {
                     if (!this._purchaseReqInput.Quotes.Contains(quote)) {
-                        await this._fileService.DeleteFile(quote);
+                        await this._fileService.DeleteFile(quote, "purchase_request");
                     }
                 }
             }

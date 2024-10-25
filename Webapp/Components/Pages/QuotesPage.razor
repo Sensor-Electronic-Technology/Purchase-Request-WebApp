@@ -137,7 +137,7 @@
         this._selectedQuotes = selectedQuotes;
         this._quoteLoading = true;
         await InvokeAsync(StateHasChanged);
-        this._selectedFileData=await this._fileService.DownloadFileStream(selectedQuotes[0].FileId);
+        this._selectedFileData=await this._fileService.DownloadFileStream(selectedQuotes[0].FileId, "purchase_request");
         this._quoteLoading = false;
         await InvokeAsync(StateHasChanged);
     }

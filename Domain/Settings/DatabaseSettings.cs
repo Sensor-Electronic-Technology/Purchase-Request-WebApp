@@ -6,4 +6,7 @@ public class DatabaseSettings {
     public string? PurchaseRequestCollection { get; set; }
     public string? ContactCollection { get; set; }
     public string? DepartmentCollection { get; set; }
+    public string? AvatarDatabase { get; set; }
+    public string? AvatarCollection { get; set; }
+    
 }

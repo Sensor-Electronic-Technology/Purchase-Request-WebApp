@@ -8,6 +8,7 @@ using Webapp.Components;
 using Webapp.Services.Authentication;
 using Infrastructure;
 using Infrastructure.Hubs;
+using Infrastructure.Services;
 using QuestPDF.Infrastructure;
 using SetiFileStore.FileClient;
 using Webapp.Services;
@@ -51,11 +52,27 @@ builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>()
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MessagingClient>();
 builder.Services.AddHostedService<PrEditTrackerCleanup>();
-//builder.Services.AddHttpClient<FileService>(x=>x.BaseAddress = new Uri(builder.Configuration["FileServiceUrl"] ?? "http://localhost:8080/FileStorage/"));
 builder.Services.AddSetiFileClient();
 builder.Services.AddInfrastructure();
-/*builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<CircuitHandler, UserCircuitHandler>());*/
 var app = builder.Build();
+var logger = app.Services.GetService<ILogger<Program>>();
+var scopeFactory = app.Services.GetService<IServiceScopeFactory>();
+if(scopeFactory==null) {
+    throw new Exception("Error: could not resolve IServiceScopeFactory");
+}
+using (IServiceScope scope = scopeFactory.CreateScope()) {
+    var avatarDataService=scope.ServiceProvider.GetRequiredService<AvatarDataService>();
+    if (avatarDataService!=null && logger!=null) {
+        logger.LogInformation("Loading avatars");
+        await avatarDataService.LoadAvatars();
+        logger.LogInformation("Avatars loaded");
+    } else {
+        throw new Exception("Error: could not resolve AvatarDataService");
+    }
+}
+
+
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);

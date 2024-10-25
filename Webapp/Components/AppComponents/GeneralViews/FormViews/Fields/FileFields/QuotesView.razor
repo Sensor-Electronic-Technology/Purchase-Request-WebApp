@@ -96,6 +96,7 @@
 @code {
     [Inject] private FileService _fileService { get; set; }
     [Inject] private NavigationManager _navigationManager { get; set; }
+    [Inject] private IConfiguration _configuration { get; set; }
     [Parameter] public IEnumerable<string>? Quotes { get; set; } = [];
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public EventCallback<string> DeleteFile { get; set; } 
@@ -108,8 +109,8 @@
         await base.OnInitializedAsync();
         if(this.Quotes!=null && this.Quotes.Any()) {
             foreach(var fileId in this.Quotes) {
-                var fileInfo = await this._fileService.GetFileInfo(fileId);
-                var url = "http://172.20.4.15:8080";
+                var fileInfo = await this._fileService.GetFileInfo(fileId,"purchase_request");
+                var url = this._configuration["FileServiceUrl"];
                 url+=HttpConstants.FileDownloadInlinePath
                 .Replace("{appDomain}", "purchase_request")
                 .Replace("{fileId}", fileId);
@@ -128,7 +129,7 @@
         this._loading = true;
         //await InvokeAsync(StateHasChanged);
         
-        var fileData = await this._fileService.DownloadFileStream(fileId);
+        var fileData = await this._fileService.DownloadFileStream(fileId,"purchase_request");
         if(fileData!=null) {
             this._files.Add(fileData);
         }

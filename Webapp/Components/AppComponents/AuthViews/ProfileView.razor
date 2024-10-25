@@ -8,7 +8,6 @@
         font-size: 16px;
     }
 </style>
-
 <RadzenCard>
     <RadzenStack>
         <RadzenCard class="rz-background-color-primary">
@@ -18,19 +17,30 @@
             </RadzenStack>
         </RadzenCard>
         <RadzenCard class="rz-background-color-info-lighter">
-            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" Gap="10">
+            <RadzenStack Orientation="Orientation.Vertical" 
+                         JustifyContent="JustifyContent.Center" Gap="10">
                 <RadzenStack Orientation="Orientation.Vertical">
-                    <RadzenFormField Text="Username">
-                        <RadzenTextBox Value="@this.UserProfile._id" 
-                                       ReadOnly="true"/>
-                    </RadzenFormField>
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceEvenly" >
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        @if (this.IsEditMode) {
+                            <AvatarSelector ImagePath="@this.UserProfile.AvatarPath" 
+                                            ImagePathChanged="@this.ImagePathChangedHandler"/>
+                        } else {
+                            <RadzenImage Path="avatars/alien-avatar-space-svgrepo-com.svg" 
+                                         />
+                        }
+                        <RadzenFormField Text="Username">
+                            <RadzenTextBox Value="@this.UserProfile._id"
+                                           ReadOnly="true"/>
+                        </RadzenFormField>
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceEvenly">
                         <RadzenFormField Text="Email">
                             <RadzenTextBox Value="@this.UserProfile.Email"
                                            ValueChanged="@this.EmailChangedHandler"
                                            ReadOnly="@(!IsEditMode)" Style="font-size: 18px;"/>
                         </RadzenFormField>
-                        <RadzenButton Text="Test Email" 
+                        <RadzenButton Text="Test Email"
                                       Click="@this.SendTestEmailHandler"
                                       ButtonStyle="ButtonStyle.Info"/>
                     </RadzenStack>
@@ -84,6 +94,11 @@
 
     private Task SendTestEmailHandler() {
         return Task.CompletedTask;
+    }
+
+    private async Task ImagePathChangedHandler(string imagePath) {
+        this.UserProfile.AvatarPath = imagePath;
+        await this.UserProfileChanged.InvokeAsync(this.UserProfile);
     }
 
 }

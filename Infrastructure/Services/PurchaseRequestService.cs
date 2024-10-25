@@ -113,7 +113,7 @@ public class PurchaseRequestService {
         if(!success) return false;
         
         foreach(var quote in input.Quotes) {
-            var fileData=await this._fileService.DownloadFile(quote);
+            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
             if (fileData != null) {
                 input.Attachments.Add(new FileInput(fileData.Name,fileData.Data));
             }
@@ -130,7 +130,7 @@ public class PurchaseRequestService {
         var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
         if (!deleted) return false;
         foreach (var quote in input.FileIds) {
-            await this._fileService.DeleteFile(quote);
+            await this._fileService.DeleteFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
         }
         await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [], input.Title ?? "Unknown",
             ["aelmendorf@s-et.com" ?? ""],
@@ -158,7 +158,7 @@ public class PurchaseRequestService {
         var success=await this._requestDataService.UpdateOne(request);
         List<FileData> files = [];
         foreach (var quote in request.Quotes) {
-            var fileData=await this._fileService.DownloadFile(quote);
+            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
             if (fileData != null) {
                 files.Add(fileData);
             }
@@ -177,7 +177,7 @@ public class PurchaseRequestService {
     public async Task<List<QuotesDto>> GetQuotes() {
         var quotes=await this._requestDataService.GetQuotes();
         foreach(var quote in quotes) {
-            var fileData=await this._fileService.GetFileInfo(quote.FileId);
+            var fileData=await this._fileService.GetFileInfo(quote.FileId,this._configuration["AppDomain"] ?? "purchase_request");
             if (fileData != null) {
                 quote.Filename = fileData.Filename;
             }

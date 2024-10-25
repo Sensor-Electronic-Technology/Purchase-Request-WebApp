@@ -1,4 +1,5 @@
-﻿@using TimeProvider = Infrastructure.Services.TimeProvider
+﻿@using SetiFileStore.Domain.Contracts
+@using TimeProvider = Infrastructure.Services.TimeProvider
 @using Webapp.Data
 <style>
     #chat2 .form-control {
@@ -71,6 +72,7 @@
 
 @code {
     [Inject] private IJSRuntime _jsRuntime { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
     [Parameter] public List<ChatMessage>? Messages { get; set; }
     [Parameter] public string CurrentUser { get; set; } = null!;
 
@@ -121,8 +123,13 @@
     }
     
     private string GetUserAvatar(string username) {
+        var path="http://172.20.4.15:8080"+HttpConstants.FileDownloadInlinePath
+            .Replace("{appDomain}", "avatar")
+            .Replace("{fileId}", "671b9e3f087c25e256042b02");
+        this._notificationService.Notify(NotificationSeverity.Info, "Avatar", path,duration:20000);
         if(username==this.CurrentUser) {
-            return "/images/avatars/alien-avatar-space-svgrepo-com.svg";
+            //return "/images/avatars/alien-avatar-space-svgrepo-com.svg";
+            return path;
         } else {
             return "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp";
         }
