@@ -3,7 +3,7 @@
 @using Infrastructure.Services
 @using Webapp.Data
 
-<RadzenFieldset Text="Department" Style="text-align: center">
+<RadzenFormField Text="Department" Style="text-align: center">
     <RadzenDropDown TValue="Department"
                     Data="@this._departments"
                     Value="@this.Department"
@@ -11,30 +11,7 @@
                     Placeholder="Select a department"
                     TextProperty="Name"
                     AllowClear="true"/>
-</RadzenFieldset>
-
-@if (Mode == EditMode.VIEW) {
-    @*<AuthorizeView>
-        <AuthorizeView Roles="@PurchaseRequestRole.Approver">
-
-        </AuthorizeView>
-    </AuthorizeView>
-    <AuthorizeView>
-        <AuthorizeView Roles="@PurchaseRequestRole.Approver,@PurchaseRequestRole.Requester">
-            <RadzenFieldset Text="Department" Style="text-align: center">
-                <RadzenDropDown TValue="Department"
-                                Data="@this._departments"
-                                Value="@this.Department"
-                                ValueChanged="@this.DepartmentChanged"
-                                Placeholder="Select a department"
-                                TextProperty="Name"
-                                AllowClear="true"/>
-            </RadzenFieldset>
-        </AuthorizeView>
-    </AuthorizeView>*@
-} else {
-    
-}
+</RadzenFormField>
 
 
 

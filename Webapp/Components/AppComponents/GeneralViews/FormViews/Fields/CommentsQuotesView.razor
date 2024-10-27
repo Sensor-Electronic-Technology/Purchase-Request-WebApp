@@ -2,24 +2,44 @@
 @using SetiFileStore.FileClient
 @using Webapp.Data
 
-<RadzenStack Orientation="Orientation.Vertical">
-    <RadzenTabs>
-        <Tabs>
-            <RadzenTabsItem Text="Additional Comments">
-                <RadzenTextArea Placeholder="Enter any additional message you would like appended to the email"
-                                Value="@this.AdditionalComments"
-                                ValueChanged="@this.AdditionalCommentsChanged"
-                                Style="width: 100%; height:100px;"/>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Quotes">
-                <QuotesControl Quotes="@this.Quotes" Mode="@this.Mode"
-                               CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
-                               QuotesChanged="@this.QuotesChanged"
-                               CurrentQuoteIds="@CurrentQuoteIds"/>
-            </RadzenTabsItem>
-        </Tabs>
-    </RadzenTabs>
-</RadzenStack>
+<RadzenCard class="step-card">
+        <RadzenStack>
+            <RadzenCard class="area-header">
+                @if(this.Mode!=EditMode.VIEW){
+                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="request_quote"/><b>Comments and Quotes</b>
+                    </RadzenText>
+                    <RadzenText Text="Enter any additional comments and upload quotes"
+                                TextAlign="TextAlign.Center"
+                                TextStyle="TextStyle.Subtitle1"/>
+                } else {
+                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="request_quote"/><b>Comments and Quotes</b>
+                    </RadzenText>
+                }
+            </RadzenCard>
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenTabs>
+                    <Tabs>
+                        <RadzenTabsItem Text="Additional Comments" class="tab-color-4">
+                            <RadzenTextArea Placeholder="Additional message appended to the request"
+                                            Value="@this.AdditionalComments"
+                                            ValueChanged="@this.AdditionalCommentsChanged"
+                                            Style="width: 100%; height:100px;"/>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Upload Quotes" class="tab-color-2">
+                            <QuotesControl Quotes="@this.Quotes" Mode="@this.Mode"
+                                           CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
+                                           QuotesChanged="@this.QuotesChanged"
+                                           CurrentQuoteIds="@CurrentQuoteIds"/>
+                        </RadzenTabsItem>
+                    </Tabs>
+                </RadzenTabs>
+            </RadzenStack>
+        </RadzenStack>
+</RadzenCard>
+
+
 
 @code {
     [Inject] public NotificationService _notifyService { get; set; }

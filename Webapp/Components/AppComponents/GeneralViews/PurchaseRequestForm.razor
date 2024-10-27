@@ -26,52 +26,40 @@
                              Style="min-height: 600px;">
                     <Steps>
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
-                            <RadzenCard class="step-card">
-                                <RequestInformationView ApproverSelectList="@this._approverSelectList"
-                                                        Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
-                                                        SelectedApprover="@this._selectedApprover"
-                                                        SelectedApproverChanged="SelectedApproverChangedHandler"
-                                                        @bind-Title="@this._purchaseReqInput.Title"
-                                                        @bind-Description="@this._purchaseReqInput.Description"
-                                                        @bind-IsUrgent="@this._purchaseReqInput.Urgent"
-                                                        Mode="@this.Mode"/>
-                            </RadzenCard>
-
+                            <RequestInformationView ApproverSelectList="@this._approverSelectList"
+                                                    Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
+                                                    SelectedApprover="@this._selectedApprover"
+                                                    SelectedApproverChanged="SelectedApproverChangedHandler"
+                                                    @bind-Title="@this._purchaseReqInput.Title"
+                                                    @bind-Description="@this._purchaseReqInput.Description"
+                                                    @bind-IsUrgent="@this._purchaseReqInput.Urgent"
+                                                    Mode="@this.Mode"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Information" PreviousText="Request Information" NextText="Purchase Items">
-                            <RadzenCard class="step-card">
-                                <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department"
-                                                         Mode="@this.Mode"
-                                                         @bind-Vendor="@this._purchaseReqInput.Vendor"
-                                                         @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
-                            </RadzenCard>
-
+                            <PurchaseInformationView @bind-Department="@this._purchaseReqInput.Department"
+                                                     Mode="@this.Mode"
+                                                     @bind-Vendor="@this._purchaseReqInput.Vendor"
+                                                     @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
+                            
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Purchase Items" PreviousText="Request Information" NextText="Comments & Quotes">
-                            <RadzenCard class="step-card">
-                                <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
-                                                    Mode="@this.Mode"/>
-                            </RadzenCard>
-
+                            <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
+                                                Mode="@this.Mode"/>
+                            
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
-                            <RadzenCard class="step-card">
-                                <CommentsQuotesView @bind-Quotes="@this._quotes"
-                                                    Mode="@this.Mode"
-                                                    @bind-CurrentQuoteIds="@this._purchaseReqInput.Quotes"
-                                                    @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
-                            </RadzenCard>
-
+                            <CommentsQuotesView @bind-Quotes="@this._quotes"
+                                                Mode="@this.Mode"
+                                                @bind-CurrentQuoteIds="@this._purchaseReqInput.Quotes"
+                                                @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
-                            <RadzenCard class="step-card">
-                                <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
-                                              CanSave="@this._canSave"
-                                              Mode="@this.Mode"
-                                              RequestAlerts="@this._requestAlerts"
-                                              SaveClicked="@this.SavePurchaseRequestHandler"
-                                              CancelClicked="@this.CancelPurchaseRequestHandler"/>
-                            </RadzenCard>
+                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
+                                          CanSave="@this._canSave"
+                                          Mode="@this.Mode"
+                                          RequestAlerts="@this._requestAlerts"
+                                          SaveClicked="@this.SavePurchaseRequestHandler"
+                                          CancelClicked="@this.CancelPurchaseRequestHandler"/>
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>

@@ -3,103 +3,45 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
 @using Webapp.Data
-<RadzenRow>
-    <RadzenColumn Size="6" SizeMD="6">
-        <RadzenStack Orientation="Orientation.Vertical">
-            <DepartmentSelector Department="@this.Department" DepartmentChanged="@DepartmentChanged"/>
-            <RadzenFormField Text="Shipping">
-                <RadzenDropDown TValue="string"
-                                Data="@ShippingTypes.List"
-                                Value="@this.ShippingType"
-                                ValueChanged="@this.ShippingTypeChanged"
-                                Placeholder="Select an Shipping Method"
-                                ValueProperty="Value"
-                                TextProperty="Name"
-                                Style="width: 300px; height: fit-content; font-size: 18px !important;"
-                                AllowClear="true"/>
-            </RadzenFormField>
-        </RadzenStack>
-    </RadzenColumn>
-    <RadzenColumn Size="6" SizeMD="6">
-        <RadzenFieldset Style="text-align: center;">
-            <HeaderTemplate>
-                <RadzenText TextStyle="TextStyle.H5"
-                            TextAlign="TextAlign.Center">Vendor</RadzenText>
-            </HeaderTemplate>
-            <ChildContent>
-                <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged" Mode="EditMode.EDIT"/>
-            </ChildContent>
-        </RadzenFieldset>
-    </RadzenColumn>
-</RadzenRow>
 
-@*<AuthorizeView Roles="@PurchaseRequestRole.Approver">
-    <Authorized>
-        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-            <DepartmentSelector @bind-Department="@this.Department"/>
-            $1$<RadzenFieldset Text="Department" Style="text-align: center">
-                <RadzenDropDown TValue="Department"
-                                Data="@this.Departments"
-                                Value="@this.Department"
-                                ValueChanged="@this.DepartmentChanged"
-                                Placeholder="Select a department"
-                                TextProperty="Name"
-                                AllowClear="true"/>
-            </RadzenFieldset>#1#
-            <RadzenFieldset Text="Shipping">
-                <RadzenText TextAlign="TextAlign.Center" Text="@this.ShippingType"
-                            TextStyle="TextStyle.H6"
-                            Style="width: 300px; height: fit-content;"/>
-            </RadzenFieldset>
-            <RadzenFieldset Text="Vendor">
-                <VendorView Vendor="@this.Vendor" Mode="@EditMode.VIEW"/>
-            </RadzenFieldset>
-        </RadzenStack>
-    </Authorized>
-</AuthorizeView>
-
-<AuthorizeView Roles="@PurchaseRequestRole.Requester">
-    <Authorized>
+<RadzenCard class="step-card">
+    <RadzenStack>
+        <RadzenCard class="area-header">
+            <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                <RadzenIcon Icon="add_business"/><b>Purchase Information</b>
+            </RadzenText>
+            <RadzenText Text="Select Department, Shipping, and Vendor"
+                        TextAlign="TextAlign.Center"
+                        TextStyle="TextStyle.Subtitle1"/>
+        </RadzenCard>
         <RadzenRow>
             <RadzenColumn Size="6" SizeMD="6">
-                <RadzenStack Orientation="Orientation.Vertical">
-                    <DepartmentSelector @bind-Department="@this.Department"/>
-                    $1$<RadzenFieldset Text="Department" Style="text-align: center">
-                        <RadzenDropDown TValue="Department"
-                                        Data="@this.Departments"
-                                        Value="@this.Department"
-                                        ValueChanged="@this.DepartmentChanged"
-                                        Placeholder="Select a department"
-                                        TextProperty="Name"
-                                        AllowClear="true"/>
-                    </RadzenFieldset>#1#
-                    <RadzenFormField Text="Shipping">
-                        <RadzenDropDown TValue="string"
-                                        Data="@ShippingTypes.List"
-                                        Value="@this.ShippingType"
-                                        ValueChanged="@this.ShippingTypeChanged"
-                                        Placeholder="Select an Shipping Method"
-                                        ValueProperty="Value"
-                                        TextProperty="Name"
-                                        Style="width: 300px; height: fit-content; font-size: 18px !important;"
-                                        AllowClear="true"/>
-                    </RadzenFormField>
-                </RadzenStack>
+                <RadzenFieldset Text="Department and Shipping">
+                    <RadzenStack Orientation="Orientation.Vertical">
+                        <DepartmentSelector Department="@this.Department"
+                                            DepartmentChanged="@DepartmentChanged"/>
+                        <ShippingSelector ShippingType="@this.ShippingType"
+                                          ShippingTypeChanged="@this.ShippingTypeChanged"/>
+                    </RadzenStack>
+                </RadzenFieldset>
+
             </RadzenColumn>
             <RadzenColumn Size="6" SizeMD="6">
                 <RadzenFieldset Style="text-align: center;">
                     <HeaderTemplate>
-                        <RadzenText TextStyle="TextStyle.H5"
+                        <RadzenText TextStyle="TextStyle.H6"
                                     TextAlign="TextAlign.Center">Vendor</RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
-                        <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged" Mode="@this.Mode"/>
+                        <VendorSelector Vendor="@this.Vendor" VendorChanged="@this.VendorChanged" Mode="EditMode.EDIT"/>
                     </ChildContent>
                 </RadzenFieldset>
             </RadzenColumn>
         </RadzenRow>
-    </Authorized>
-</AuthorizeView>*@
+    </RadzenStack>
+</RadzenCard>
+
+
 
 
 @code {

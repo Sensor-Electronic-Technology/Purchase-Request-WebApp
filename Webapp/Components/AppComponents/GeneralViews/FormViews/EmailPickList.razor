@@ -1,56 +1,21 @@
-﻿@using Infrastructure.Services
+﻿@using DevExpress.CodeParser
+@using Infrastructure.Services
 @using SETiAuth.Domain.Shared.Authentication
 
-<RadzenAccordion Style="background: #0a53be">
-    <Items>
-        <RadzenAccordionItem>
-            <Template>
-                <RadzenText TextStyle="@this.TextStyle" class="rz-display-flex rz-align-items-center rz-m-0">
-                    <RadzenIcon Icon="account_box" class="rz-me-1" /><b>Additional Emails(CC)</b>
-                </RadzenText>
-                @*<RadzenStack Orientation="Orientation.Horizontal" Gap="0" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center">
-                    <RadzenIcon Icon="account_box"></RadzenIcon>
-                    <RadzenText Text="Additional Emails(CC)" TextStyle="@this.TextStyle"/>
-                </RadzenStack>*@
-            </Template>
-            <ChildContent>
-                <RadzenPickList @bind-Source="@Source"
-                                Target="@Target"
-                                TargetChanged="TargetChangedHandler"
-                                Style="height:300px; width:100%;"
-                                TItem="UserAccountDto"
-                                TextProperty="@nameof(UserAccountDto.Username)"
-                                AllowFiltering="true"
-                                Multiple="true"
-                                ShowHeader="true"
-                                Disabled="false"
-                                ButtonGap="10"
-                                ButtonJustifyContent="JustifyContent.Center"
-                                ButtonStyle="ButtonStyle.Info"
-                                ButtonSize="ButtonSize.Medium"
-                                ButtonVariant="Variant.Filled">
-                    <SourceHeader>
-                        <RadzenText Text="Users" TextStyle="@this.TextStyle"/>
-                    </SourceHeader>
-                    <TargetHeader>
-                        <RadzenText Text="Selected" TextStyle="@this.TextStyle"/>
-                    </TargetHeader>
-                    <Template>
-                        @($"{context.FirstName} {context.LastName} : {context.Email}")
-                    </Template>
-                </RadzenPickList>
-            </ChildContent>
-        </RadzenAccordionItem>
-    </Items>
-</RadzenAccordion>
+<style>
+    .rz-panel-titlebar {
+        flex-direction: row-reverse;
+        justify-content:left;
+    }
+</style>
 
-@*<RadzenFieldset Collapsed="@this.IsCollapsed"
-                CollapseTitle="Additional CC Emails"
-                AllowCollapse="true" >
+<RadzenPanel AllowCollapse="true" Collapsed="@this.IsCollapsed">
     <HeaderTemplate>
-        <RadzenText Text="Additional CC Emails" TextStyle="TextStyle.H5"/>
+        <RadzenText TextStyle="@this.TextStyle" class="rz-display-flex rz-align-items-center rz-m-0">
+            <RadzenIcon Icon="account_box" class="rz-me-1" /><b>Additional Emails(CC)</b>
+        </RadzenText>
     </HeaderTemplate>
-    <SummaryTemplate>
+    <ChildContent>
         <RadzenPickList @bind-Source="@Source"
                         Target="@Target"
                         TargetChanged="TargetChangedHandler"
@@ -67,18 +32,17 @@
                         ButtonSize="ButtonSize.Medium"
                         ButtonVariant="Variant.Filled">
             <SourceHeader>
-                <RadzenText Text="Users" TextStyle="TextStyle.H6"/>
+                <RadzenText Text="Users" TextStyle="@this.TextStyle"/>
             </SourceHeader>
             <TargetHeader>
-                <RadzenText Text="Selected" TextStyle="TextStyle.H6"/>
+                <RadzenText Text="Selected" TextStyle="@this.TextStyle"/>
             </TargetHeader>
             <Template>
                 @($"{context.FirstName} {context.LastName} : {context.Email}")
             </Template>
         </RadzenPickList>
-    </SummaryTemplate>
-
-</RadzenFieldset>*@
+    </ChildContent>
+</RadzenPanel>
 
 @code {
     [Inject] private AuthApiService _authApiService { get; set; }
@@ -121,11 +85,18 @@
         return $"{user.FirstName} {user.LastName} : {user.Email}";
     }
 
-    private void TargetChangedHandler(IEnumerable<UserAccountDto> obj) {
-        var userAccountDtos = obj.ToList();
-        this.Target=userAccountDtos;
-        this.CcList = userAccountDtos.Select(e => e.Email).ToList();
-        this.CcListChanged.InvokeAsync(this.CcList);
+    private void TargetChangedHandler(IEnumerable<UserAccountDto>? obj) {
+        if(obj==null) {
+            this.Target = [];
+            this.CcList.Clear();
+            this.CcListChanged.InvokeAsync(this.CcList);
+        } else {
+            var userAccountDtos = obj.ToList();
+            this.Target=userAccountDtos;
+            this.CcList = userAccountDtos.Select(e => e.Email).ToList();
+            this.CcListChanged.InvokeAsync(this.CcList);
+        }
+
     }
 
 }

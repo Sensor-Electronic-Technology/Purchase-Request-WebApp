@@ -1,12 +1,25 @@
 
 .area-header {
-    background-color: var(--rz-secondary) !important;
+    background-color: var(--rz-primary-light) !important;
     border-radius: var(--rz-border-radius-6) !important;
     padding: 0.5rem !important;
 }
 
+.item-selector{
+    width: 300px;
+    height: fit-content;
+    font-size: 18px !important;
+}
+
+.group-header{
+    background-color: #0dcaf0; 
+    padding:0.1rem;
+}
+
 .bg-body-tertiary {
-    background-color: #303a41 !important;
+    background-color: var(--rz-primary-light) !important;
+    border-radius: var(--rz-border-radius-3) !important;
+    padding: 0.2rem !important;
 }
 
 .info-area{

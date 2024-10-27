@@ -4,67 +4,89 @@
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
 
-@if (this.PurchaseRequestInput == null) {
+<RadzenCard class="step-card">
+    @if (this.PurchaseRequestInput == null) {
     <p>Loading....</p>
-} else {
-    <RadzenCard Variant="Variant.Outlined">
-        <RadzenStack Orientation="Orientation.Vertical" Gap="20">
-            <RadzenStack Orientation="Orientation.Horizontal"
-                         JustifyContent="JustifyContent.Center" Gap="20">
-                <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
-                              ButtonStyle="ButtonStyle.Success"
-                              Icon="save"
-                              Click="@this.SaveClicked"
-                              Disabled="@(!this.CanSave || !this.DocLoaded)"
-                              Style="width: 180px; height: 50px;"/>
-                <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
-                              ButtonStyle="ButtonStyle.Danger"
-                              Click="@this.CancelClicked"
-                              Icon="cancel"
-                              Style="width: 180px; height: 50px;"/>
-            </RadzenStack>
-            <AlertListView RequestAlerts="@this.RequestAlerts"/>
-            <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
-                           CcListChanged="@EmailListChangedHandler"
-                           IsCollapsed="false"/>
-            <RadzenRow RowGap="5">
-                <RadzenColumn Size="6" SizeMD="6">
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenCard Variant="Variant.Outlined">
-                            <RadzenText Text="Request Preview"
-                                        TextStyle="TextStyle.H5"
-                                        TextAlign="TextAlign.Center"/>
-                        </RadzenCard>
-                        <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequestInput"/>
-                    </RadzenStack>
-                </RadzenColumn>
-                <RadzenColumn Size="6" SizeMD="6">
-                    <RadzenStack>
-                        <RadzenCard Variant="Variant.Outlined">
-                            <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
-                        </RadzenCard>
-                        <DxRichEdit @ref="@this._richEdit"
-                                    @bind-DocumentContent="@this.DocumentContent"
-                                    DocumentLoaded="@this.DocumentLoadedHandler"
-                                    DocumentFormat="DocumentFormat.OpenXml"
-                                    BarMode="BarMode.None"
-                                    ViewType="ViewType.Simple"
-                                    ReadOnly="false"
-                                    style="width: 100%">
-                            <MailMergeSettings>
-                                <DxMailMergeSettings Data="@this.MailMerge"
-                                                     ViewMergedData="true"
-                                                     ActiveRecord="1"/>
-                            </MailMergeSettings>
-                        </DxRichEdit>
-                    </RadzenStack>
-                </RadzenColumn>
-            </RadzenRow>
-        </RadzenStack>
-    </RadzenCard>
-    
-    
-}
+    } else {
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="20">
+                    <RadzenCard class="area-header">
+                        <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                            <RadzenIcon Icon="attach_email"/><b>Finalize</b>
+                        </RadzenText>
+                        <RadzenText Text="Check the preview(s) before submitting"
+                                    TextAlign="TextAlign.Center"
+                                    TextStyle="TextStyle.Subtitle1"/>
+                    </RadzenCard>
+                    <RadzenRow JustifyContent="JustifyContent.Center">
+                        <RadzenFieldset Text="Submit/Cancel" Style="width: fit-content;">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
+                                <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
+                                              ButtonStyle="ButtonStyle.Success"
+                                              Icon="save"
+                                              Click="@this.SaveClicked"
+                                              Disabled="@(!this.CanSave || !this.DocLoaded)"
+                                              Style="width: 180px; height: 50px;"/>
+                                <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
+                                              ButtonStyle="ButtonStyle.Danger"
+                                              Click="@this.CancelClicked"
+                                              Icon="cancel"
+                                              Style="width: 180px; height: 50px;"/>
+                            </RadzenStack>
+                        </RadzenFieldset>
+                    </RadzenRow>
+                    <AlertListView RequestAlerts="@this.RequestAlerts"/>
+                    <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
+                                   CcListChanged="@EmailListChangedHandler"
+                                   IsCollapsed="false"/>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="6">
+                <RadzenTabs>
+                    <Tabs>
+                        <RadzenTabsItem Text="Email Preview" class="tab-color-4">
+                            <RadzenStack>
+                                <RadzenCard class="area-header">
+                                    <RadzenText Text="Email Preview"
+                                                TextStyle="TextStyle.H6"
+                                                TextAlign="TextAlign.Center"/>
+                                </RadzenCard>
+                                <DxRichEdit @ref="@this._richEdit"
+                                            @bind-DocumentContent="@this.DocumentContent"
+                                            DocumentLoaded="@this.DocumentLoadedHandler"
+                                            DocumentFormat="DocumentFormat.OpenXml"
+                                            BarMode="BarMode.None"
+                                            ViewType="ViewType.Simple"
+                                            ReadOnly="false"
+                                            style="width: 100%">
+                                    <MailMergeSettings>
+                                        <DxMailMergeSettings Data="@this.MailMerge"
+                                                             ViewMergedData="true"
+                                                             ActiveRecord="1"/>
+                                    </MailMergeSettings>
+                                </DxRichEdit>
+                            </RadzenStack>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Purchase Request Pdf">
+                            <RadzenStack Orientation="Orientation.Vertical">
+                                <RadzenCard class="area-header">
+                                    <RadzenText Text="Request Preview"
+                                                TextStyle="TextStyle.H5"
+                                                TextAlign="TextAlign.Center"/>
+                                </RadzenCard>
+                                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequestInput"/>
+                            </RadzenStack>
+                        </RadzenTabsItem>
+                    </Tabs>
+                </RadzenTabs>
+            </RadzenColumn>
+        </RadzenRow>
+
+    }
+</RadzenCard>
+
+
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }

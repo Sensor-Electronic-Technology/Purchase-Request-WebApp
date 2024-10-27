@@ -1,108 +1,132 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using System.Globalization
+@using Domain.PurchaseRequests.Model
 @using Webapp.Data
-<RadzenStack Style="min-height: 700px;">
-    <RadzenDataGrid @ref="ordersGrid"
-                    TItem="PurchaseItem"
-                    AllowAlternatingRows="false" AllowFiltering="false"
-                    AllowPaging="false"  AllowSorting="false"
-                    GridLines="DataGridGridLines.Both"
-                    AllowColumnResize="true"
-                    Density="Density.Compact"
-                    EditMode="@editMode"
-                    Data="@PurchaseItems"  RowUpdate="@OnUpdateRow"
-                    RowCreate="@OnCreateRow" Sort="@Reset"
-                    Page="@Reset" Filter="@Reset">
-        <HeaderTemplate>
-            @if (this.Mode == EditMode.VIEW) {
-                <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" class="rz-display-flex rz-align-items-center rz-m-0">
-                    <RadzenIcon Icon="shopping_cart" class="rz-me-1" /><b>Purchase Items</b>
+
+<RadzenCard class="step-card">
+
+    <RadzenStack Orientation="Orientation.Vertical" Gap="10">
+        @if (this.Mode != EditMode.VIEW) {
+            <RadzenCard class="area-header">
+                <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
+                    <RadzenIcon Icon="shopping_cart" class="rz-me-1"/><b>Purchase Items</b>
                 </RadzenText>
-            } else {
-                <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle"
-                              Text="Add New Purchase Item"
-                              Click="@InsertRow"
-                              Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())"/>
-            }
-        </HeaderTemplate>
-        <Columns>
-            <RadzenDataGridColumn Property="Quantity" Title="Quantity">
-                <EditTemplate Context="purchaseItem">
-                    <RadzenNumeric Value="@purchaseItem.Quantity"
-                                   Min="1"
-                                   ValueChanged="@((int value) => { purchaseItem.Quantity = value; purchaseItem.TotalCost = purchaseItem.Quantity * purchaseItem.UnitCost; })"
-                                   Style="width:100%" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Quantity" }})" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="ProductName" Title="ProductDescription/PartNumber" Width="400px">
-                <EditTemplate Context="purchaseItem">
-                    <RadzenTextBox @bind-Value="purchaseItem.ProductName" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="Hyperlink" Title="Hyperlink(Optional)">
-                <EditTemplate Context="purchaseItem">
-                    <RadzenTextBox @bind-Value="purchaseItem.Hyperlink"  Style="width:100%;font-size: 16px;" />
-                </EditTemplate>
-                <Template Context="purchaseItem">
-                    @if (!string.IsNullOrWhiteSpace(purchaseItem.Hyperlink)) {
-                        <a href="@purchaseItem.Hyperlink" target="_blank" style="font-size: 16px;">Link to Item</a>
+                <RadzenText Text="Enter items to be purchases"
+                            TextAlign="TextAlign.Center"
+                            TextStyle="TextStyle.Subtitle1"/>
+            </RadzenCard>
+        } else {
+            <RadzenStack>
+                <RadzenCard class="area-header">
+                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="shopping_cart"/><b>Purchase Items</b>
+                    </RadzenText>
+                </RadzenCard>
+            </RadzenStack>
+        }
+        <RadzenStack>
+            <RadzenDataGrid @ref="ordersGrid"
+                            TItem="PurchaseItem"
+                            AllowAlternatingRows="false" AllowFiltering="false"
+                            AllowPaging="false" AllowSorting="false"
+                            GridLines="DataGridGridLines.Both"
+                            AllowColumnResize="true"
+                            Density="Density.Compact"
+                            EditMode="@editMode"
+                            Data="@PurchaseItems" RowUpdate="@OnUpdateRow"
+                            RowCreate="@OnCreateRow" Sort="@Reset"
+                            Page="@Reset" Filter="@Reset">
+                <HeaderTemplate>
+                    @if (this.Mode != EditMode.VIEW) {
+                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle"
+                                      Text="Add New Purchase Item"
+                                      Click="@InsertRow"
+                                      Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())"/>
                     }
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="UnitCost" Title="Unit Cost" >
-                <Template Context="purchaseItem">
-                    @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", purchaseItem.UnitCost)
-                </Template>
-                <EditTemplate Context="purchaseItem">
-                    <RadzenNumeric Value="purchaseItem.UnitCost"
-                                   Format="C"
-                                   ValueChanged="@((decimal value) => { purchaseItem.UnitCost = value; purchaseItem.TotalCost = purchaseItem.Quantity * purchaseItem.UnitCost; })"
-                                   Style="width:100%" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Unit Cost" }})" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="TotalCost" Title="Total" Width="100px">
-                <Template Context="purchaseItem">
-                    @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", purchaseItem.TotalCost)
-                </Template>
-            </RadzenDataGridColumn>
-            @if (this.Mode != EditMode.VIEW) {
-                <RadzenDataGridColumn Filterable="false" Sortable="false"
-                                  TextAlign="TextAlign.Right" Frozen="true"
-                                  Width="150px"
-                                  FrozenPosition="FrozenColumnPosition.Right">
-                <Template Context="purchaseItem">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
-                                  Variant="Variant.Flat" Size="ButtonSize.Medium"
-                                  Click="@(args => EditRow(purchaseItem))" @onclick:stopPropagation="true"/>
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
-                                  Variant="Variant.Flat" Shade="Shade.Lighter"
-                                  Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                  Click="@(args => DeleteRow(purchaseItem))" @onclick:stopPropagation="true"/>
-                </Template>
-                <EditTemplate Context="purchaseItem">
-                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
-                                  Variant="Variant.Flat" Size="ButtonSize.Medium"
-                                  Click="@((args) => SaveRow(purchaseItem))" aria-label="Save">
-                    </RadzenButton>
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
-                                  Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                  Click="@((args) => CancelEdit(purchaseItem))" aria-label="Cancel"/>
+                </HeaderTemplate>
+                <Columns>
+                    <RadzenDataGridColumn Property="Quantity" Title="Quantity" Width="100px">
+                        <EditTemplate Context="purchaseItem">
+                            <RadzenNumeric Value="@purchaseItem.Quantity"
+                                           Min="1"
+                                           ValueChanged="@((int value) => { purchaseItem.Quantity = value; purchaseItem.TotalCost = purchaseItem.Quantity * purchaseItem.UnitCost; })"
+                                           Style="width:100%" InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "Quantity" } })"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="ProductName" Title="ProductDescription/PartNumber" Width="50%">
+                        <EditTemplate Context="purchaseItem">
+                            <RadzenTextBox @bind-Value="purchaseItem.ProductName" Style="width:100%"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="Hyperlink" Title="Hyperlink(Optional)" Width="10%">
+                        <EditTemplate Context="purchaseItem">
+                            <RadzenTextBox @bind-Value="purchaseItem.Hyperlink" Style="width:100%;font-size: 16px;"/>
+                        </EditTemplate>
+                        <Template Context="purchaseItem">
+                            @if (!string.IsNullOrWhiteSpace(purchaseItem.Hyperlink)) {
+                                <a href="@purchaseItem.Hyperlink" target="_blank" style="font-size: 16px;">Link to Item</a>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="UnitCost" Title="Unit Cost" Width="10%">
+                        <Template Context="purchaseItem">
+                            @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", purchaseItem.UnitCost)
+                        </Template>
+                        <EditTemplate Context="purchaseItem">
+                            <RadzenNumeric Value="purchaseItem.UnitCost"
+                                           Format="C"
+                                           Culture="CultureInfo.InvariantCulture"
+                                           ValueChanged="@((decimal value) => { purchaseItem.UnitCost = value; purchaseItem.TotalCost = purchaseItem.Quantity * purchaseItem.UnitCost; })"
+                                           Style="width:100%" InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "Unit Cost" } })"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="TotalCost" Title="Total" Width="10%">
+                        <Template Context="purchaseItem">
+                            @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", purchaseItem.TotalCost)
+                        </Template>
+                    </RadzenDataGridColumn>
+                    @if (this.Mode != EditMode.VIEW) {
+                        <RadzenDataGridColumn Filterable="false" Sortable="false"
+                                              TextAlign="TextAlign.Right" Frozen="true"
+                                              Width="150px"
+                                              FrozenPosition="FrozenColumnPosition.Right">
+                            <Template Context="purchaseItem">
+                                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
+                                              Variant="Variant.Flat" Size="ButtonSize.Medium"
+                                              Click="@(args => EditRow(purchaseItem))" @onclick:stopPropagation="true"/>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                              Variant="Variant.Flat" Shade="Shade.Lighter"
+                                              Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                              Click="@(args => DeleteRow(purchaseItem))" @onclick:stopPropagation="true"/>
+                            </Template>
+                            <EditTemplate Context="purchaseItem">
+                                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
+                                              Variant="Variant.Flat" Size="ButtonSize.Medium"
+                                              Click="@((args) => SaveRow(purchaseItem))" aria-label="Save">
+                                </RadzenButton>
+                                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
+                                              Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                              Click="@((args) => CancelEdit(purchaseItem))" aria-label="Cancel"/>
 
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
-                                  Variant="Variant.Flat" Shade="Shade.Lighter"
-                                  Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                  Click="@(args => DeleteRow(purchaseItem))" aria-label="Delete"/>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                              Variant="Variant.Flat" Shade="Shade.Lighter"
+                                              Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                              Click="@(args => DeleteRow(purchaseItem))" aria-label="Delete"/>
 
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            }
-            
-        </Columns>
-    </RadzenDataGrid>
-    <RadzenStack AlignItems="AlignItems.End">
-        <RadzenText TextStyle="TextStyle.H6"><strong>Total: @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", this.PurchaseItems.Sum(e => e.TotalCost))</strong></RadzenText>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                    }
+
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenStack AlignItems="AlignItems.End">
+                <RadzenText TextStyle="TextStyle.H6"><strong>Total: @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", this.PurchaseItems.Sum(e => e.TotalCost))</strong></RadzenText>
+            </RadzenStack>
+
+        </RadzenStack>
     </RadzenStack>
-    
-</RadzenStack>
+
+</RadzenCard>
+
 
 
 @code {

@@ -12,15 +12,13 @@
                     @bind-SelectedIndex="@this._tabIndex">
             <Tabs>
                 <RadzenTabsItem Text="Request Information" class="tab-color-1 rz-border-radius-3">
-                    <RadzenCard Style="min-height: 700px;" class="info-area">
+                    <RadzenCard class="info-area">
                         <RadzenStack Gap="1" >
-
                             <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
                                 <RadzenText Text="@(this.PurchaseRequest.Title)"
                                             TextStyle="TextStyle.H6"
                                             TextAlign="TextAlign.Center"/>
                             </RadzenCard>
-
                             <RadzenAlert Title="@this.GetAlertText()"
                                          AlertStyle="@this.GetAlertStyle()"
                                          Size="AlertSize.Small"
@@ -46,7 +44,7 @@
 
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Purchase Information" class="tab-color-2 rz-border-radius-3">
-                    <RadzenCard Style="min-height: 700px;" class="info-area">
+                    <RadzenCard class="info-area">
                         <RadzenStack Orientation="Orientation.Vertical"
                                      AlignItems="AlignItems.Center">
                             <RadzenStack Orientation="Orientation.Horizontal">
@@ -67,18 +65,13 @@
 
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Purchase Items" class="tab-color-3 rz-border-radius-6">
-                    <RadzenCard Style="min-height: 700px;" class="info-area">
-                        <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
-                                            Mode="EditMode.VIEW"/>
-                    </RadzenCard>
-
+                    <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
+                                        Mode="EditMode.VIEW"/>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Comments/Quotes" class="tab-color-4 rz-border-radius-6">
-                    <RadzenCard Variant="Variant.Flat" Style="min-height: 700px;" class="info-area">
                         <CommentsQuotesView CurrentQuoteIds="@this.PurchaseRequest.Quotes"
                                             AdditionalComments="@this.PurchaseRequest.AdditionalComments"
                                             Mode="EditMode.VIEW"/>
-                    </RadzenCard>
 
                 </RadzenTabsItem>
             </Tabs>

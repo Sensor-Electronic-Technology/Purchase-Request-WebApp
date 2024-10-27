@@ -3,28 +3,34 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Infrastructure.Services
 
-@if (this.ApproveRequestInput == null) {
+@if (this.ApproveRequestInput == null || this.PurchaseRequest == null) {
     <p>Loading...</p>
 } else {
     <RadzenSteps>
         <Steps>
             <RadzenStepsItem Text="Approve/Reject Form" NextText="Finalize">
-                <RadzenCard>
+                <RadzenCard class="info-area">
                     <RadzenStack Gap="10">
-                        <RadzenRow JustifyContent="JustifyContent.Center">
-                            <RadzenFieldset Text="Select Action" Style="width: 30%">
-                                <RadzenDropDown TValue="PurchaseRequestAction"
-                                                Data="@this._needsApproveActions"
-                                                TextProperty="Name"
-                                                AllowClear="true"
-                                                Value="@this._selectedAction"
-                                                ValueChanged="@this.ApproveActionChangedHandler"
-                                                Style="width: 100%"/>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                            <RadzenFieldset Text="Select Action">
+                                <RadzenFormField Text="Action">
+                                    <RadzenDropDown TValue="PurchaseRequestAction"
+                                                    Data="@this._needsApproveActions"
+                                                    TextProperty="Name"
+                                                    AllowClear="true"
+                                                    Value="@this._selectedAction"
+                                                    ValueChanged="@this.ApproveActionChangedHandler"
+                                                    Style="width: 100%"/>
+                                </RadzenFormField>
                             </RadzenFieldset>
-                        </RadzenRow>
-                        <RadzenFieldset Text="Required Emails">
+                            <RadzenFieldset Text="Select Department">
+                                <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
+                            </RadzenFieldset>
+                        </RadzenStack>
+
+                        <RadzenFieldset Text="Email Recipients">
                             <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
-                            <RadzenText Text="@String.Join(",", this._emailList)" TextStyle="TextStyle.Body1"/>
+                            <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
                         </RadzenFieldset>
                         <EmailPickList CcList="@this._ccList"
                                        CcListChanged="EmailListChangedHandler"
@@ -39,39 +45,42 @@
                 </RadzenCard>
             </RadzenStepsItem>
             <RadzenStepsItem Text="Finalize" PreviousText="Form">
-                <RadzenStack>
-                    <RadzenCard Variant="Variant.Outlined">
-                        <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
-                    </RadzenCard>
-                    <DxRichEdit @ref="@this._richEdit"
-                                @bind-DocumentContent="@this._documentContent"
-                                DocumentLoaded="@this.DocumentLoadedHandler"
-                                DocumentFormat="DocumentFormat.OpenXml"
-                                BarMode="BarMode.None"
-                                ViewType="ViewType.Simple"
-                                ReadOnly="false" CssClass="w-100">
-                        <MailMergeSettings>
-                            <DxMailMergeSettings Data="@this.MailMerge"
-                                                 ViewMergedData="true"
-                                                 ActiveRecord="1"/>
-                        </MailMergeSettings>
-                    </DxRichEdit>
-                    <RadzenFieldset Text="Submit/Cancel">
-                        <RadzenStack Orientation="Orientation.Horizontal" 
-                                     AlignItems="AlignItems.Center" 
-                                     JustifyContent="JustifyContent.Center">
-                            <RadzenButton Text="Submit"
-                                          ButtonStyle="ButtonStyle.Primary"
-                                          Click="@this.SubmitHandler"
-                                          Style="width: 150px; height: 60px;"
-                                          Disabled="@(this.ApproveRequestInput.Action==null)"/>
-                            <RadzenButton Text="Cancel"
-                                          ButtonStyle="ButtonStyle.Danger"
-                                          Click="@this.Cancel"
-                                          Style="width: 150px; height: 60px;"/>
-                        </RadzenStack>
-                    </RadzenFieldset>
-                </RadzenStack>
+                <RadzenCard Variant="Variant.Outlined" Style="max-height: 600px; overflow: scroll;">
+                    <RadzenStack>
+                        <RadzenFieldset Text="Submit/Cancel">
+                            <RadzenStack Orientation="Orientation.Horizontal"
+                                         AlignItems="AlignItems.Center"
+                                         JustifyContent="JustifyContent.Center">
+                                <RadzenButton Text="Submit"
+                                              ButtonStyle="ButtonStyle.Primary"
+                                              Click="@this.SubmitHandler"
+                                              Style="width: 150px; height: 60px;"
+                                              Disabled="@(this.ApproveRequestInput.Action == null)"/>
+                                <RadzenButton Text="Cancel"
+                                              ButtonStyle="ButtonStyle.Danger"
+                                              Click="@this.Cancel"
+                                              Style="width: 150px; height: 60px;"/>
+                            </RadzenStack>
+                        </RadzenFieldset>
+                        <RadzenCard Variant="Variant.Outlined" class="area-header">
+                            <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+                        </RadzenCard>
+                        <DxRichEdit @ref="@this._richEdit"
+                                    @bind-DocumentContent="@this._documentContent"
+                                    DocumentLoaded="@this.DocumentLoadedHandler"
+                                    DocumentFormat="DocumentFormat.OpenXml"
+                                    BarMode="BarMode.None"
+                                    ViewType="ViewType.Simple"
+                                    ReadOnly="false" CssClass="w-100">
+                            <MailMergeSettings>
+                                <DxMailMergeSettings Data="@this.MailMerge"
+                                                     ViewMergedData="true"
+                                                     ActiveRecord="1"/>
+                            </MailMergeSettings>
+                        </DxRichEdit>
+
+                    </RadzenStack>
+                </RadzenCard>
             </RadzenStepsItem>
         </Steps>
     </RadzenSteps>
@@ -107,17 +116,6 @@
     private bool _docLoaded;
     private byte[] _documentContent;
     private PurchaseRequestAction? _selectedAction;
-    
-    /*private Task ApproveActionChangedHandler(string action) {
-        if (this.ApproveRequestInput != null) {
-            if(PurchaseRequestAction.TryFromName(action, out var prAction)) {
-                this._selectedAction = action;
-                this.ApproveRequestInput.Action = prAction;
-                this.ApproveRequestInputChanged.InvokeAsync(this.ApproveRequestInput);
-            }
-        }
-        return Task.CompletedTask;
-    }*/
     
     private Task ApproveActionChangedHandler(PurchaseRequestAction action) {
         this._selectedAction=action;
@@ -208,14 +206,15 @@
             this._emailList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
                 .Select(e=>e.Email)
                 .ToList();
+            this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
             if (this.PurchaseRequest.EmailCopyList.Any()) {
                 this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
                 if (!string.IsNullOrEmpty(this.PurchaseRequest.Approver.Email)) {
                     this._ccList.Add(this.PurchaseRequest.Approver.Email);
                 }
-                if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester.Email)) {
+                /*if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester?.Email)) {
                     this._ccList.Add(this.PurchaseRequest.Requester.Email);
-                }
+                }*/
             }
         }
     }

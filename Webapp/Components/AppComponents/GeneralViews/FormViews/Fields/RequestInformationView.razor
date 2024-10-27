@@ -1,62 +1,95 @@
 ﻿@using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
-<RadzenStack Orientation="Orientation.Vertical"
+<RadzenCard class="step-card">
+    <RadzenStack Gap="20">
+        @if (this.Mode != EditMode.VIEW) {
+            <RadzenCard class="area-header">
+                <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                    <RadzenIcon Icon="hub"/><b>Request Information</b>
+                </RadzenText>
+                <RadzenText Text="Enter Approver, Title, Reason, and Priority"
+                            TextAlign="TextAlign.Center"
+                            TextStyle="TextStyle.Subtitle1"/>
+            </RadzenCard>
+        }
+
+        <RadzenRow>
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Orientation.Vertical"
+                             AlignItems="AlignItems.Center">
+                    @if (this.Mode == EditMode.VIEW) {
+                        <RadzenFormField Text="Approver">
+                            <RadzenText Text="@this.SelectedApprover"
+                                        TextAlign="TextAlign.Center"
+                                        Style="width: 300px; height: fit-content;"
+                                        TextStyle="TextStyle.H6"/>
+                        </RadzenFormField>
+                    } else {
+                        <RadzenFieldset Text="Select Approver">
+                            <RadzenDropDown TValue="string"
+                                            Data="@this.ApproverSelectList"
+                                            Value="@this.SelectedApprover"
+                                            ValueChanged="@SelectedApproverChanged"
+                                            Placeholder="Select an approver"
+                                            AllowClear="true"
+                                            class="item-selector"/>
+                        </RadzenFieldset>
+                        <RadzenText TextStyle="TextStyle.Subtitle1"
+                                    Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
+                    }
+
+                    <RadzenFormField Text="Priority(Click)">
+                        <RadzenToggleButton Text="@(this.IsUrgent ? "Urgent" : "Normal")"
+                                            Icon="alarm_off"
+                                            Value="@this.IsUrgent"
+                                            ValueChanged="@this.IsUrgentChanged"
+                                            ToggleIcon="alarm"
+                                            ButtonStyle="ButtonStyle.Info"
+                                            Shade="Shade.Light"
+                                            ToggleShade="Shade.Dark"
+                                            ToggleButtonStyle="ButtonStyle.Danger"
+                                            Disabled="@(this.Mode == EditMode.VIEW)"
+                                            Style="width: 300px; height:80px; font-size: 22px !important;"/>
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenFieldset Text="Title & Reason" Style="width: 100%">
+                    <RadzenStack>
+                        <RadzenFormField Text="Requester">
+                            <RadzenTextBox Value="@this.Name"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Purchase Request Title">
+                            <RadzenTextBox Placeholder="Enter the title of the purchase request"
+                                           Value="@this.Title"
+                                           ValueChanged="@this.TitleChanged"
+                                           ReadOnly="@(this.Mode == EditMode.VIEW)"
+                                           Style="width: 100%"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Purchase Request Reason">
+                            <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
+                                            Value="@this.Description"
+                                            ValueChanged="@this.DescriptionChanged"
+                                            ReadOnly="@(this.Mode == EditMode.VIEW)"
+                                            Style="width: 100%;height: 150px;"/>
+                        </RadzenFormField>
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenCard>
+
+
+
+
+
+
+@*<RadzenStack Orientation="Orientation.Vertical"
              AlignItems="AlignItems.Center" Gap="5">
-    @if (this.Mode == EditMode.VIEW) {
-        <RadzenFormField Text="Approver">
-            <RadzenText Text="@this.SelectedApprover" 
-                        TextAlign="TextAlign.Center"
-                        Style="width: 300px; height: fit-content;"
-                        TextStyle="TextStyle.H6"/>
-        </RadzenFormField>
-    } else {
-        <RadzenFormField Text="Approver">
-            <RadzenDropDown TValue="string"
-                            Data="@this.ApproverSelectList"
-                            Value="@this.SelectedApprover"
-                            ValueChanged="@SelectedApproverChanged"
-                            Placeholder="Select an approver"
-                            Style="width: 300px; height: fit-content; font-size: 22px !important;"
-                            AllowClear="true"/>
-        </RadzenFormField>
-    }
-    <RadzenText TextStyle="TextStyle.Subtitle1"
-                Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
-    <RadzenFormField Text="Priority(Click)">
-        <RadzenToggleButton Text="@(this.IsUrgent ? "Urgent" : "Normal")"
-                            Icon="alarm_off"
-                            Value="@this.IsUrgent"
-                            ValueChanged="@this.IsUrgentChanged"
-                            ToggleIcon="alarm"
-                            ButtonStyle="ButtonStyle.Info"
-                            Shade="Shade.Light"
-                            ToggleShade="Shade.Dark"
-                            ToggleButtonStyle="ButtonStyle.Danger"
-                            Disabled="@(this.Mode==EditMode.VIEW)"
-                            Style="width: 300px; height:80px; font-size: 22px !important;"/>
-    </RadzenFormField>
-    <RadzenFieldset Text="Title & Reason" Style="width: 100%">
-        <RadzenStack>
-            <RadzenFormField Text="Requester">
-                <RadzenTextBox Value="@this.Name"/>
-            </RadzenFormField>
-            <RadzenFormField Text="Purchase Request Title">
-                <RadzenTextBox Placeholder="Enter the title of the purchase request"
-                               Value="@this.Title"
-                               ValueChanged="@this.TitleChanged"
-                               ReadOnly="@(this.Mode==EditMode.VIEW)"
-                               Style="width: 100%"/>
-            </RadzenFormField>
-            <RadzenFormField Text="Purchase Request Reason">
-                <RadzenTextArea Placeholder="Enter a brief description of the purchase request"
-                                Value="@this.Description"
-                                ValueChanged="@this.DescriptionChanged"
-                                ReadOnly="@(this.Mode==EditMode.VIEW)"
-                                Style="width: 100%; height:100px;"/>
-            </RadzenFormField>
-        </RadzenStack>
-    </RadzenFieldset>
-</RadzenStack>
+
+
+</RadzenStack>*@
 @code {
     [Parameter] public string? Name { get; set; }
     [Parameter] public string? Title { get; set; }

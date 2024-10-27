@@ -46,9 +46,19 @@
                                             Value="@this._selectedPurchaseRequests"
                                             CellRender="@this.CellRender"
                                             Render="@this.OnRender"
+                                            Density="Density.Compact"
+                                            AllowFiltering="true"
+                                            FilterMode="FilterMode.Advanced"
+                                            LogicalFilterOperator="LogicalFilterOperator.Or"
                                             ValueChanged="@this.SelectedChangedHandler">
+                                <GroupHeaderTemplate>
+                                    <RadzenAlert Text="@(context.GroupDescriptor.GetTitle()+":"+context.Data.Key)" 
+                                                 AlertStyle="@this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus),context.Data.Key.ToString()))"
+                                                 AllowClose="false"
+                                                 Size="AlertSize.ExtraSmall"/>
+                                </GroupHeaderTemplate>
                                 <Columns>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title" TItem="string"/>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created At">
                                         <Template Context="request">
                                             @request.Created.ToString("MM/dd/yy")
@@ -134,6 +144,23 @@
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
             this._viewPainCollapsed = false;
             this._queueCollapsed = true;
+        }
+    }
+    
+    AlertStyle GetAlertStyle(PrStatus status) {
+        switch (status) {
+            case PrStatus.NeedsApproval:
+                return AlertStyle.Primary;
+            case PrStatus.Approved:
+                return AlertStyle.Secondary;
+            case PrStatus.Ordered:
+                return AlertStyle.Info;
+            case PrStatus.Delivered:
+                return AlertStyle.Success;
+            case PrStatus.Rejected:
+                return AlertStyle.Danger;
+            default:
+                return AlertStyle.Info;
         }
     }
     
