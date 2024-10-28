@@ -10,81 +10,89 @@
         justify-content:left;
     }
 </style>
-<RadzenPanel Icon="dashboard" 
-             Collapsed="@this.Collapsed"
-             Text="Queue" 
-             AllowCollapse="true" 
+<RadzenPanel Collapsed="@this.Collapsed"
+             AllowCollapse="true"
              CollapseTitle="Press to expand">
-    <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
-                             Data="@this.PurchaseReqStatuses"
-                             CanDrop="args => false"
-                             ItemRender="@this.OnItemRender"
-                             ItemSelector="@this.ItemSelector">
+    <HeaderTemplate>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+            <RadzenIcon Icon="filter_list" class="rz-me-1" /><b>Queue</b>
+        </RadzenText>
+    </HeaderTemplate>
+    <ChildContent>
+        <RadzenDropZoneContainer TItem="PurchaseRequestStatus"
+                                 Data="@this.PurchaseReqStatuses"
+                                 CanDrop="args => false"
+                                 ItemRender="@this.OnItemRender"
+                                 ItemSelector="@this.ItemSelector">
 
-        <ChildContent>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-12">
-                <RadzenDropZone Value="PrStatus.NeedsApproval" class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                    <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
-                </RadzenDropZone>
+            <ChildContent>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-1">
+                    <RadzenDropZone Value="PrStatus.NeedsApproval" class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                        <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    </RadzenDropZone>
 
-                <RadzenDropZone Value="PrStatus.Approved"
-                                class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="padding-bottom: 0; padding-right: 0; flex: 1; gap: 1rem;">
-                    <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
-                </RadzenDropZone>
+                    <RadzenDropZone Value="PrStatus.Approved"
+                                    class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="padding-bottom: 0; padding-right: 0; flex: 1; gap: 1rem;">
+                        <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    </RadzenDropZone>
 
-                <RadzenDropZone Value="PrStatus.Ordered"
-                                class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                    <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
-                </RadzenDropZone>
+                    <RadzenDropZone Value="PrStatus.Ordered"
+                                    class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                        <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    </RadzenDropZone>
 
-                <RadzenDropZone Value="PrStatus.Delivered"
-                                class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                    <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
-                </RadzenDropZone>
+                    <RadzenDropZone Value="PrStatus.Delivered"
+                                    class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                        <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    </RadzenDropZone>
 
-                <RadzenDropZone Value="PrStatus.Rejected" 
-                                class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                    <RadzenText Text="Rejected" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
-                </RadzenDropZone>
-            </RadzenStack>
-        </ChildContent>
-        <Template Context="status">
-            <RadzenSplitButton Click="@((item) =>this.StatusClickedHandler(item, status.Id))" 
-                               Text="@status.Name"
-                               ButtonStyle="ButtonStyle.Secondary"
-                               Shade="Shade.Darker"
-                               class="rz-radius-6"
-                               Style="width: 100%">
-                <ChildContent>
-                    @switch (this._role) {
+                    <RadzenDropZone Value="PrStatus.Rejected"
+                                    class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+                        <RadzenText Text="Rejected" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    </RadzenDropZone>
+                </RadzenStack>
+            </ChildContent>
+            <Template Context="status">
+                <RadzenSplitButton Click="@((item) => this.StatusClickedHandler(item, status.Id))"
+                                   Text="@status.Name"
+                                   ButtonStyle="ButtonStyle.Secondary"
+                                   Shade="Shade.Darker"
+                                   class="rz-radius-6"
+                                   Style="width: 100%">
+                    <ChildContent>
+                        @switch (this._role) {
                         case nameof(PurchaseRequestRole.Requester): {
-                            @if(status.Status==PrStatus.NeedsApproval || status.Status==PrStatus.Approved) {
-                                <RadzenSplitButtonItem Text="Modify" Icon="autorenew" IconColor="blue" Value="@nameof(PrUserAction.MODIFY)"/>
-                                <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
-                            }
+                        @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
+                        <RadzenSplitButtonItem Text="Modify" Icon="autorenew" IconColor="blue" Value="@nameof(PrUserAction.MODIFY)"/>
+                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
+                        }
 
-                            break;
+                        break;
                         }
                         case nameof(PurchaseRequestRole.Approver): {
-                            @if(status.Status==PrStatus.NeedsApproval || status.Status==PrStatus.Approved) {
-                                <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
-                            }
-                            break;
+                        @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
+                        <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
+                        }
+
+                        break;
                         }
                         case nameof(PurchaseRequestRole.Purchaser): {
-                            @if (status.Status == PrStatus.Approved) {
-                                <RadzenSplitButtonItem Icon="input" Text="Order Request" Value="@nameof(PrUserAction.ORDER)"/>
-                                <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
-                            }else if (status.Status == PrStatus.Ordered) {
-                                <RadzenSplitButtonItem Text="Receive Order" Icon="open_in_new"  Value="@nameof(PrUserAction.RECEIVE)"/>
-                            }
-                            break;
+                        @if (status.Status == PrStatus.Approved) {
+                        <RadzenSplitButtonItem Icon="input" Text="Order Request" Value="@nameof(PrUserAction.ORDER)"/>
+                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
+                        } else if (status.Status == PrStatus.Ordered) {
+                        <RadzenSplitButtonItem Text="Receive Order" Icon="open_in_new" Value="@nameof(PrUserAction.RECEIVE)"/>
                         }
-                    }
-                </ChildContent>
-            </RadzenSplitButton>
-        </Template>
-    </RadzenDropZoneContainer>
+
+                        break;
+                        }
+                        }
+                    </ChildContent>
+                </RadzenSplitButton>
+            </Template>
+        </RadzenDropZoneContainer>
+    </ChildContent>
+    
 </RadzenPanel>
 
 

@@ -28,6 +28,9 @@
 </RadzenStack>
 
 @code {
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public int? Action { get; set; } = 0;
+    
     private async Task OnLogin(LoginArgs args) {
         var session =await this.AuthApiService.Login(args.Username, args.Password, args.RememberMe);
         if(session==null) {
@@ -37,10 +40,19 @@
         var customAuthStateProvider = (SetiAuthStateProvider)authStateProvider;
         await customAuthStateProvider.UpdateAuthenticationState(session);
         if (exists) {
-            navManager.NavigateTo("/", true);
+            if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+                this.navManager.NavigateTo($"/action/{this.Id}/{this.Action}", true);
+            } else {
+                navManager.NavigateTo("/", true);
+            }
+            
         }else {
             await this.DialogService.OpenAsync<RegisterView>("Register", new Dictionary<string, object> { { "UserSession", session } });
-            navManager.NavigateTo("/");
+            if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+                this.navManager.NavigateTo($"/action/{this.Id}/{this.Action}", true);
+            } else {
+                navManager.NavigateTo("/", true);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.Dto.ActionInputs;
 using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
@@ -126,7 +127,7 @@ public class PurchaseRequestService {
         return true;
     }
 
-    public async Task<bool> CancelPurchaseRequest(CancelPurchaseRequestInput input) {
+    public async Task<bool> CancelPurchaseRequest(CancelRequestInput input) {
         var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
         if (!deleted) return false;
         foreach (var quote in input.FileIds) {

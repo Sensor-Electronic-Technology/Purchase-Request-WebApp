@@ -5,6 +5,7 @@
 @using Domain.Users
 @using Infrastructure.Services
 @using Microsoft.AspNetCore.SignalR.Client
+@using MongoDB.Bson
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
@@ -20,7 +21,7 @@
                                    PurchaseReqStatuses="@this._purchaseReqStatuses"/>
         </RadzenTabsItem>
         <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
-            <PurchaseRequestForm ActionCompleted="@this.CompletedHandler" Mode="EditMode.NEW"/>
+            <PurchaseRequestForm ActionCompleted="@this.CompletedHandler" Mode="EditMode.NEW" RepeatEdit="false"/>
         </RadzenTabsItem>
         <RadzenTabsItem Text="@this._templateTabText" Visible="@this._templateTabVisible" Icon="@this._tabIcon"
                         Style="background: #cc7119">
@@ -28,6 +29,7 @@
                 case PrUserAction.MODIFY:
                     <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
                                          Mode="@EditMode.EDIT"
+                                         RepeatEdit="false"
                                          ActionCompleted="@this.CompletedHandler"/>
                     break;
                 case PrUserAction.CANCEL:
@@ -42,20 +44,19 @@
                     <ApproveActionView PurchaseRequest="@this._actionRequest" 
                                        ActionCompleted="@this.CompletedHandler"/>
                     break;
+                case PrUserAction.REPEAT:
+                    <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
+                                         ActionCompleted="@this.CompletedHandler"
+                                         RepeatEdit="true"
+                                         Mode="EditMode.EDIT"/>
+                    break;
                 default:
                     <p>Invalid action</p>
                     break;
             }
         </RadzenTabsItem>
     </Tabs>
-
 </RadzenTabs>
-
-@*<div>
-    @if (this._userAccount != null) {
-        <MessageBlock Messages="@this.messages"/>
-    }
-</div>*@
 
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
@@ -90,7 +91,8 @@
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
         { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") },
         { PrUserAction.APPROVE, new TabTemplate("Approve/Reject Request", "assignment_turned_in") }, 
-        { PrUserAction.ORDER, new TabTemplate("Order Request", "add_shopping_cart") }
+        { PrUserAction.ORDER, new TabTemplate("Order Request", "add_shopping_cart") },
+        { PrUserAction.REPEAT, new TabTemplate("Repeat Request", "content_copy") }
     };
     
     protected override async Task OnInitializedAsync() {
@@ -154,6 +156,12 @@
                             this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
                         }
                         break;
+                    case PrUserAction.REPEAT: {
+                        if (PurchaseRequestRole.List.FirstOrDefault(e => e.Name == role) != null) {
+                            await this.RepeatHandler();
+                        }
+                        break;
+                    }
                     default:
                         this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
                         break;
@@ -177,6 +185,8 @@
             case PrUserAction.ORDER:
                 await this.OrderRequestHandler();
                 break;
+            case PrUserAction.REPEAT:
+                break;
             default:
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
                 break;
@@ -197,6 +207,31 @@
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
                                                                                     "Please try again later.");
+            }
+        }
+    }
+    
+    private async Task RepeatHandler() {
+        if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+            if (ObjectId.TryParse(this.Id, out var id)) {
+                this._actionRequest = await this._purchaseRequestService.GetPurchaseRequest(id);
+                if (this._actionRequest != null) {
+                    this._actionRequest._id = ObjectId.GenerateNewId(); 
+                    this.TransitionTab(PrUserAction.REPEAT);
+                    await InvokeAsync(StateHasChanged);
+                } else {
+                    this._notificationService.Notify(NotificationSeverity.Error,"Error","Request not found");
+                }
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid request id");
+            }
+        } else {
+            if (this._selectedRequest != null) {
+                this._actionRequest = this._selectedRequest;
+                this.TransitionTab(PrUserAction.REPEAT);
+                await InvokeAsync(StateHasChanged);
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");
             }
         }
     }
@@ -253,7 +288,6 @@
         this.EditingTracker.FinishEditing(id);
         if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
             this._notificationService.Notify(NotificationSeverity.Info,"Info","Action completed successfully, Navigating");
-            await Task.Delay(2000);
             this._navigationManager.NavigateTo("/");
         } else {
             await this.Load();
@@ -273,7 +307,11 @@
     private void TabIndexChangedHandler(int tabIndex) {
         this._selectedIndex = tabIndex;
         if(tabIndex == 0 || tabIndex == 1) {
-            this.Reset();
+            if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+                this._navigationManager.NavigateTo("/",true);
+            } else {
+                this.Reset();
+            }
         }
     }
     

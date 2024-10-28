@@ -1,8 +1,8 @@
 ﻿using MongoDB.Bson;
 
-namespace Domain.PurchaseRequests.Dto;
+namespace Domain.PurchaseRequests.Dto.ActionInputs;
 
-public class CancelPurchaseRequestInput {
+public class CancelRequestInput {
     public ObjectId Id { get; set; }
     public string? Title { get; set; }
     public string? Reason { get; set; }

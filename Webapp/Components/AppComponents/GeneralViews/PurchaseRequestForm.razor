@@ -12,9 +12,6 @@
 
 <RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem; height: 900px;">
     <RadzenStack>
-        @*<RadzenCard class="area-header">
-            <RadzenText TextAlign="TextAlign.Center">Purchase Request Form</RadzenText>
-        </RadzenCard>*@
         @if (!(this._userAccount != null && this._approvers.Count > 0)) {
             <RadzenText Text="Loading User Profile"/>
         } else {
@@ -80,6 +77,7 @@
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }
+    [Parameter] public bool RepeatEdit { get; set; }
     
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
@@ -109,9 +107,19 @@
                 this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
                 this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
             } else {
-                this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
-                var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
-                this._selectedApprover = approverAccount?.FirstName;
+                if (!this.RepeatEdit) {
+                    this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
+                    var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
+                    this._selectedApprover = approverAccount?.FirstName;
+                } else {
+                    this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
+                    this._purchaseReqInput.RequesterUsername=this._userAccount._id;
+                    this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
+                    this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
+                    this._purchaseReqInput.ApproverName = string.Empty;
+                    this._purchaseReqInput.ApproverEmail = string.Empty;
+                    this._purchaseReqInput.ApproverId = string.Empty;
+                }
             }
         }
     }
@@ -146,9 +154,6 @@
     }
 
     private async Task DeleteFiles() {
-        if (this._purchaseReqInput == null) {
-            return;
-        }
         var oldPr=await this._purchaseRequestService.GetPurchaseRequest(this._purchaseReqInput?.Id ?? ObjectId.Empty);
         if (oldPr != null) {
             if(oldPr.Quotes.Count > this._purchaseReqInput?.Quotes.Count) {
@@ -195,15 +200,26 @@
             } else {
                 this._spinnerService.UpdateMessage("Submitting Purchase Request....");
             }
-            success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
+
+            if (this.RepeatEdit) {
+                success=await this._purchaseRequestService.CreatePurchaseRequest(this._purchaseReqInput);
+            } else {
+                success=await this._purchaseRequestService.UpdatePurchaseRequest(this._purchaseReqInput);
+            }
         }
         
         this._spinnerService.Hide();
         await InvokeAsync(StateHasChanged);
         if(success) {
+            string message = string.Empty;
+            if(this.Mode==EditMode.NEW) {
+                message = "submitted";
+            } else {
+                message=this.RepeatEdit ? "submitted" : "updated";
+            }
             this._notificationService.Notify(NotificationSeverity.Success, 
                 "Success",
-                $"Purchase Request has been {(this.Mode==EditMode.NEW ? "submitted":"updated")} successfully");
+                $"Purchase Request has been {message} successfully");
         } else {
             this._notificationService.Notify(NotificationSeverity.Error, 
                 "Error",

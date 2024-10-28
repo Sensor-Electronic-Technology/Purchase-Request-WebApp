@@ -1,0 +1,264 @@
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+@using Infrastructure.Services
+
+@if (this.OrderRequestInput == null || this.PurchaseRequest == null) {
+    <p>Loading...</p>
+} else {
+    <RadzenSteps>
+        <Steps>
+            <RadzenStepsItem Text="Order Form" NextText="Finalize">
+                <RadzenCard class="info-area">
+                    <RadzenStack Gap="10">
+                        <RadzenStack Orientation="Orientation.Horizontal" 
+                                     JustifyContent="JustifyContent.Center">
+                            <RadzenFieldset Text="Select Action">
+                                <RadzenFormField Text="Action">
+                                    <RadzenDropDown TValue="PurchaseRequestAction"
+                                                    Data="@this._needsOrderAction"
+                                                    TextProperty="Name"
+                                                    AllowClear="true"
+                                                    Value="@this._selectedAction"
+                                                    ValueChanged="@this.ApproveActionChangedHandler"
+                                                    Style="width: 100%"/>
+                                </RadzenFormField>
+                            </RadzenFieldset>
+                        </RadzenStack>
+                        <RadzenFieldset Text="Email Recipients">
+                            <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
+                            <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset>
+                            <RadzenStack Orientation="Orientation.Vertical">
+                                <div class="rz-p-1 rz-text-align-center">
+                                    <RadzenCheckBox TValue="bool" Value="@this.OrderRequestInput.SendExternalEmail" 
+                                                    ValueChanged="SendEmailChangedHandler"
+                                                    Name="SendExternal"/>
+                                    <RadzenLabel Text="Send Vendor Email?"
+                                                 Component="SendExternal" class="rz-ms-2" />
+                                </div>
+                                @if (this.OrderRequestInput.SendExternalEmail) {
+                                    <RadzenFieldset Text="Email Setup">
+                                        <RadzenStack>
+                                            <RadzenLabel Text="Enter emails with comma separation" Component="ToEmails"/>
+                                            <RadzenTextBox @bind-Value="@this._toEmails" Placeholder="one@email.com,two@email.com" Name="ToEmails" Style="width: 100%"/>
+                                            <RadzenLabel Text="Enter CC emails with coma separation" Component="CCEmails"></RadzenLabel>
+                                            <RadzenTextBox @bind-Value="@this._ccEmails" Placeholder="one@email.com,two@email.com" Name="CCEmails" Style="width: 100%"/>
+                                            <RadzenLabel Text="Enter Subject" Component="EmailSubject"></RadzenLabel>
+                                            <RadzenTextBox @bind-Value="@this._subject" Placeholder="Purchase Order" Name="EmailSubject" Style="width: 100%"/>
+                                            <a href="@($"mailto:{this._toEmails}?cc={this._ccEmails}&subject={Uri.EscapeDataString(this._subject)}")"><strong>Send Email</strong></a>
+                                        </RadzenStack>
+                                    </RadzenFieldset>
+                                }
+                            </RadzenStack>
+                        </RadzenFieldset>
+                        <EmailPickList CcList="@this._ccList"
+                                       CcListChanged="EmailListChangedHandler"
+                                       TextStyle="TextStyle.Body1"
+                                       IsCollapsed="false"/>
+                        <RadzenFormField Text="Comments">
+                            <RadzenTextArea Value="@this.OrderRequestInput.Comment"
+                                            ValueChanged="@CommentsChangedHandler"
+                                            Rows="5"/>
+                        </RadzenFormField>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStepsItem>
+            <RadzenStepsItem Text="Finalize" PreviousText="Form">
+                <RadzenCard Variant="Variant.Outlined" Style="max-height: 600px; overflow: scroll;">
+                    <RadzenStack>
+                        <RadzenFieldset Text="Submit/Cancel">
+                            <RadzenStack Orientation="Orientation.Horizontal"
+                                         AlignItems="AlignItems.Center"
+                                         JustifyContent="JustifyContent.Center">
+                                <RadzenButton Text="Submit"
+                                              ButtonStyle="ButtonStyle.Primary"
+                                              Click="@this.SubmitHandler"
+                                              Style="width: 150px; height: 60px;"
+                                              Disabled="@(this.OrderRequestInput.Action == null)"/>
+                                <RadzenButton Text="Cancel"
+                                              ButtonStyle="ButtonStyle.Danger"
+                                              Click="@this.Cancel"
+                                              Style="width: 150px; height: 60px;"/>
+                            </RadzenStack>
+                        </RadzenFieldset>
+                        <RadzenCard Variant="Variant.Outlined" class="area-header">
+                            <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+                        </RadzenCard>
+                        <DxRichEdit @ref="@this._richEdit"
+                                    @bind-DocumentContent="@this._documentContent"
+                                    DocumentLoaded="@this.DocumentLoadedHandler"
+                                    DocumentFormat="DocumentFormat.OpenXml"
+                                    BarMode="BarMode.None"
+                                    ViewType="ViewType.Simple"
+                                    ReadOnly="false" CssClass="w-100">
+                            <MailMergeSettings>
+                                <DxMailMergeSettings Data="@this.MailMerge"
+                                                     ViewMergedData="true"
+                                                     ActiveRecord="1"/>
+                            </MailMergeSettings>
+                        </DxRichEdit>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStepsItem>
+        </Steps>
+    </RadzenSteps>
+}
+
+@code {
+    [Inject] private AuthApiService _authApiService { get; set; }
+    [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public EventCallback<PurchaseRequest?> PurchaseRequestChanged { get; set; }
+    [Parameter] public OrderRequestInput OrderRequestInput { get; set; } = new();
+    [Parameter] public EventCallback<OrderRequestInput?> OrderRequestInputChanged { get; set; }
+    
+    [Parameter] public EventCallback Submit { get; set; }
+    [Parameter] public EventCallback Cancel { get; set; }
+
+    private string _toEmails="";
+    private string _ccEmails="";
+    private string _subject="";
+    private string _body="";
+    
+    private DxRichEdit _richEdit;
+    
+    private List<ApproveMailMerge> MailMerge { get; set; } = [];
+    
+    private List<PurchaseRequestAction> _needsOrderAction = [
+        PurchaseRequestAction.Order, 
+        PurchaseRequestAction.Cancel
+    ];
+    
+    private List<string> _ccList = [];
+    private List<string> _emailList = [];
+    private bool _docLoaded;
+    private byte[] _documentContent;
+    private PurchaseRequestAction? _selectedAction;
+    
+    private Task ApproveActionChangedHandler(PurchaseRequestAction action) {
+        this._selectedAction=action;
+        if (this.OrderRequestInput != null) {
+            this.OrderRequestInput.Action = action;
+            this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
+        }
+        return Task.CompletedTask;
+    }
+    
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._docLoaded = false;
+        await this.Load();
+    }
+    
+    private async Task SubmitHandler() {
+        this.UpdateMailMerge();
+        this.OrderRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
+        await this.Submit.InvokeAsync();
+    }
+
+    private void UpdateMailMerge() {
+        if(this.PurchaseRequest == null || this.OrderRequestInput==null) {
+            return;
+        }
+        string header = "";
+        if (this.OrderRequestInput.Action != null) {
+            if (this.OrderRequestInput.Action == PurchaseRequestAction.Approve) {
+                header="Request Ordered";
+            } else {
+                header="Request Cancelled";
+            }
+        } else {
+            header="Select Action";
+        }
+
+        this.MailMerge = [new ApproveMailMerge() {
+            PrAction = header,
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            ApprovalComments = this.OrderRequestInput.Comment ?? "",
+            CommentsTitle = $"{this.OrderRequestInput.Action?.Name ?? "Select Action"} Comments",
+        }];
+    }
+    
+    private async Task DocumentLoadedHandler(Document obj) {
+        if(this.PurchaseRequest == null || this.OrderRequestInput==null) {
+            return;
+        }
+        this.UpdateMailMerge();
+        this.OrderRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
+        this._docLoaded = true;
+    }
+    
+    private async Task EmailListChangedHandler(List<string> ccList) {
+        this._ccList = ccList;
+        if(this.PurchaseRequest == null) {
+            return;
+        }
+        this.PurchaseRequest.EmailCopyList = ccList;
+        await this.PurchaseRequestChanged.InvokeAsync(this.PurchaseRequest);
+    }
+
+    private async Task CommentsChangedHandler(string obj) {
+        if(this.OrderRequestInput == null) {
+            return;
+        }
+        this.OrderRequestInput.Comment=obj;
+        await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
+    }
+
+    private string GetMailTo() {
+        return $"mailto:{this._toEmails}?cc={this._ccEmails}&subject={Uri.EscapeDataString(this._subject)}";
+    }
+    
+    private async Task Load() {
+        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/ApproveRejectTemplate.docx");
+        this.MailMerge = [new ApproveMailMerge() {
+            PrAction = $"Select Action",
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            ApprovalComments = "",
+            CommentsTitle = "{Selected Action} Comments",
+        }];
+        if (this.PurchaseRequest != null) {
+            var purchasers = await this._authApiService.GetPurchasers();
+            this._emailList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
+                .Select(e=>e.Email)
+                .ToList();
+            this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
+            if (this.PurchaseRequest.EmailCopyList.Any()) {
+                this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
+                if (!string.IsNullOrEmpty(this.PurchaseRequest.Approver.Email)) {
+                    this._ccList.Add(this.PurchaseRequest.Approver.Email);
+                }
+                /*if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester?.Email)) {
+                    this._ccList.Add(this.PurchaseRequest.Requester.Email);
+                }*/
+            }
+        }
+    }
+
+    private Task ToEmailChanged(string toEmails) {
+        
+        return Task.CompletedTask;
+    }
+
+    private void SendEmailChangedHandler(bool value) {
+        if (this.PurchaseRequest != null) {
+            if (this.OrderRequestInput?.SendExternalEmail == false) {
+                this._toEmails+=this.PurchaseRequest?.Vendor?.Email ?? "";
+                this._ccEmails+=this.PurchaseRequest?.Requester?.Email ?? "";
+                this._ccEmails += ",";
+                this._ccEmails+=this.PurchaseRequest?.Approver?.Email ?? "";
+                this._ccEmails+=this.PurchaseRequest?.EmailCopyList.Aggregate("", (current, next) => current + "," + next);
+            }
+        }
+        this.OrderRequestInput.SendExternalEmail=value;
+    }
+
+}

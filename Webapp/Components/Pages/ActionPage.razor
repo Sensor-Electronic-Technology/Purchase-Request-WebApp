@@ -1,18 +1,20 @@
 ﻿@page "/action/{Id}/{Action:int}"
 @using Domain.Authentication
-
+@rendermode InteractiveAuto
 <PageTitle>Home</PageTitle>
-
 <AuthorizeView Roles="@this.GetRoles()">
     <Authorized>
         <MainView Id="@Id" Action="@Action"/>
     </Authorized>
     <NotAuthorized>
-        <RadzenText Text="You are not authorized to view this page" TextStyle="TextStyle.H4"/>
+        <Login Id="@Id" Action="@Action"/>
     </NotAuthorized>
 </AuthorizeView>
 
+
 @code {
+    [Inject] private NavigationManager _navigationManager { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
     [Parameter] public string Id { get; set; } = "";
     [Parameter] public int Action { get; set; } = 0;
     
@@ -25,4 +27,9 @@
                $"{PurchaseRequestRole.Requester.Name}," +
                $"{PurchaseRequestRole.Admin.Name}";
     }
+
+    private async Task LoginCallback() {
+        await this._dialogService.OpenAsync<Login>("Login", new Dictionary<string, object> {{"Id", Id}, {"Action", Action}});
+    }
+
 }

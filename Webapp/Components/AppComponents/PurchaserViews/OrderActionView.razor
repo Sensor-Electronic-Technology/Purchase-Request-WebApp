@@ -1,4 +1,5 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using Webapp.Data
 @using Webapp.Services
@@ -27,6 +28,14 @@
                                        @bind-ApproveRequestInput="@this._approveRequestInput"
                                        Submit="@this.SubmitHandler"
                                        Cancel="@this.CancelHandler"/>*@
+                    <NeedsOrderView @bind-PurchaseRequest="@this.PurchaseRequest"
+                                    @bind-OrderRequestInput="@this._orderRequestInput"
+                                    Submit="@this.SubmitHandler"
+                                    Cancel="@this.CancelHandler"/>
+                    @*<a href="mailto:user@example.com?
+                        subject=MessageTitle&amp;
+                        body=Message Content">
+                        Contact Us</a>*@
                 </RadzenCard>
             </RadzenStack>
         </RadzenCard>
@@ -46,6 +55,8 @@
     [Inject] private SpinnerService _spinnerService { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
+
+    private OrderRequestInput _orderRequestInput = new OrderRequestInput();
     
     
     private async Task SubmitHandler() {

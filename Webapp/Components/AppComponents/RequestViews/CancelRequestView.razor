@@ -1,4 +1,5 @@
 ﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Dto.ActionInputs
 @using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using Webapp.Services
@@ -91,7 +92,7 @@
             AdditionalComments = this._comments ?? "",
         }];
         this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        var input = new CancelPurchaseRequestInput() { 
+        var input = new CancelRequestInput() { 
             Id = this.PurchaseRequest._id, 
             Title = this.PurchaseRequest.Title ?? "",
             FileIds = this.PurchaseRequest.Quotes,

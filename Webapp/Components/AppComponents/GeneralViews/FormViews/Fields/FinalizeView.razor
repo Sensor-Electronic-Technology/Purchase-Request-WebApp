@@ -22,7 +22,7 @@
                     <RadzenRow JustifyContent="JustifyContent.Center">
                         <RadzenFieldset Text="Submit/Cancel" Style="width: fit-content;">
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
-                                <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Update" : "Submit")"
+                                <RadzenButton Text="@this.GetSubmitButtonText()"
                                               ButtonStyle="ButtonStyle.Success"
                                               Icon="save"
                                               Click="@this.SaveClicked"
@@ -99,6 +99,7 @@
     [Parameter] public byte[] DocumentContent { get; set; }
     [Parameter] public byte[] MailDocument { get; set; }
     [Parameter] public EditMode Mode { get; set; }
+    [Parameter] public bool RepeatEdit { get; set; }
  
     [Parameter] public EventCallback<bool> DocLoadedChanged { get; set; }
     [Parameter] public EventCallback<byte[]> MailDocumentChanged { get; set; }
@@ -127,6 +128,22 @@
             AdditionalComments = this.PurchaseRequestInput?.AdditionalComments ?? "",
         }];
         return base.OnParametersSetAsync();
+    }
+
+    private string GetSubmitButtonText() {
+        if (this.Mode == EditMode.NEW) {
+            return "Submit";
+        } else {
+            return this.RepeatEdit ? "Submit New" : "Update";
+        }
+    }
+    
+    private string GetCancelButtonText() {
+        if (this.Mode == EditMode.NEW) {
+            return "Cancel Create";
+        } else {
+            return this.RepeatEdit ? "Cancel Repeat" : "Cancel Update";
+        }
     }
 
     private async Task DocumentLoadedHandler(Document obj) {
