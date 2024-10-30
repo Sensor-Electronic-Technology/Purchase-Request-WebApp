@@ -170,8 +170,10 @@ public class PurchaseOrderDocument : IDocument {
             foreach (var item in _model.Items) {
                 table.Cell().Element(CellStyle).AlignCenter().Text($"{item.Quantity}");
                 table.Cell().Element(CellStyle).AlignLeft().PaddingLeft(5).Text(item.ProductName);
-                table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost:C}");
-                table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost * item.Quantity:C}");
+                /*table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost:C}");*/
+                table.Cell().Element(CellStyle).AlignCenter().Text(string.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", item.UnitCost));
+                table.Cell().Element(CellStyle).AlignCenter().Text(string.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", item.TotalCost));
+                /*table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost * item.Quantity:C}");*/
                 static IContainer CellStyle(IContainer container) =>
                     container.BorderBottom(1).BorderTop(1).BorderRight(1).BorderLeft(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
             }
@@ -179,7 +181,7 @@ public class PurchaseOrderDocument : IDocument {
             table.Cell().AlignCenter().Text($"");
             table.Cell().AlignLeft().PaddingLeft(5).Text("");
             table.Cell().Element(TotalCellStyle).AlignCenter().Text($"Total");
-            table.Cell().Element(TotalCellStyle).AlignCenter().Text($"{totalPrice:C}");
+            table.Cell().Element(TotalCellStyle).AlignCenter().Text(string.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", this._model.TotalCost));
             
             static IContainer TotalCellStyle(IContainer container) =>
                 container.BorderBottom(1).BorderTop(1).BorderRight(1).BorderLeft(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
