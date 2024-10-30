@@ -15,6 +15,30 @@
                     <RadzenTextBox @bind-Value="@this.Vendor.Attention" ReadOnly="@this.IsReadOnly()"/>
                 </RadzenFormField>
             </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                <RadzenFormField Text="Phone" Component="Phone" AllowFloatingLabel="false">
+                    <Start>
+                        <RadzenIcon Icon="call" />
+                    </Start>
+                    <ChildContent>
+                        <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
+                                    Placeholder="(000) 000-0000 x0000" Name="Phone"
+                                    @bind-Value="@this.Vendor.Phone"
+                                    Style="width: 100%;" aria-label="Phone"/>
+                    </ChildContent>
+                </RadzenFormField>
+                <RadzenFormField Text="Fax" Component="Fax" AllowFloatingLabel="false">
+                    <Start>
+                        <RadzenIcon Icon="fax" />
+                    </Start>
+                    <ChildContent>
+                        <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
+                                    Placeholder="(000) 000-0000" Name="Fax"
+                                    @bind-Value="@this.Vendor.Fax"
+                                    Style="width: 100%;" aria-label="Fax"/>
+                    </ChildContent>
+                </RadzenFormField>
+            </RadzenStack>
             <RadzenFormField Text="Street">
                 <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress" ReadOnly="@this.IsReadOnly()"/>
             </RadzenFormField>

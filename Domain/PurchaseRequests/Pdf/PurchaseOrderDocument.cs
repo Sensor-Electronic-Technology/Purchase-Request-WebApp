@@ -6,7 +6,6 @@ using QuestPDF.Infrastructure;
 namespace Domain.PurchaseRequests.Pdf;
 
 public class PurchaseOrderDocument : IDocument {
-    /*public static Image LogoImage { get; } = Image.FromFile("C:\\Users\\aelme\\RiderProjects\\Purchase-Request-WebApp\\ConsoleTesting\\seti_logo.png");*/
     private Image _logoImage;
     private PurchaseOrderDto _model;
     private string _logoPath;

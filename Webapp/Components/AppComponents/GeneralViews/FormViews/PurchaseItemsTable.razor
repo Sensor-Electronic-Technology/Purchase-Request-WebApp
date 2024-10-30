@@ -5,23 +5,25 @@
 <RadzenCard class="step-card">
 
     <RadzenStack Orientation="Orientation.Vertical" Gap="10">
-        @if (this.Mode != EditMode.VIEW) {
-            <RadzenCard class="area-header">
-                <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
-                    <RadzenIcon Icon="shopping_cart" class="rz-me-1"/><b>Purchase Items</b>
-                </RadzenText>
-                <RadzenText Text="Enter items to be purchases"
-                            TextAlign="TextAlign.Center"
-                            TextStyle="TextStyle.Subtitle1"/>
-            </RadzenCard>
-        } else {
-            <RadzenStack>
+        @if (this.ShowHeader) {
+            @if (this.Mode != EditMode.VIEW) {
                 <RadzenCard class="area-header">
-                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
-                        <RadzenIcon Icon="shopping_cart"/><b>Purchase Items</b>
+                    <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
+                        <RadzenIcon Icon="shopping_cart" class="rz-me-1"/><b>Purchase Items</b>
                     </RadzenText>
+                    <RadzenText Text="Enter items to be purchases"
+                                TextAlign="TextAlign.Center"
+                                TextStyle="TextStyle.Subtitle1"/>
                 </RadzenCard>
-            </RadzenStack>
+            } else {
+                <RadzenStack>
+                    <RadzenCard class="area-header">
+                        <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                            <RadzenIcon Icon="shopping_cart"/><b>Purchase Items</b>
+                        </RadzenText>
+                    </RadzenCard>
+                </RadzenStack>
+            }
         }
         <RadzenStack>
             <RadzenDataGrid @ref="ordersGrid"
@@ -133,6 +135,7 @@
     [Parameter] public List<PurchaseItem> PurchaseItems { get; set; } = [];
     [Parameter] public EventCallback<List<PurchaseItem>> PurchaseItemsChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
+    [Parameter] public bool ShowHeader { get; set; } = true;
     RadzenDataGrid<PurchaseItem> ordersGrid;
     List<PurchaseItem> itemsToInsert = new List<PurchaseItem>();
     List<PurchaseItem> itemsToUpdate = new List<PurchaseItem>();

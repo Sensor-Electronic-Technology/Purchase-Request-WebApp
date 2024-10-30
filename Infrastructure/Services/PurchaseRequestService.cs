@@ -50,11 +50,12 @@ public class PurchaseRequestService {
         return await this._requestDataService.GetPurchaseRequest(id);
     }
 
-    public PurchaseRequestInput CreatePrInput(string name,string email,string username) {
+    public PurchaseRequestInput CreatePrInput(string name,string email,string username,string initials) {
         var input= new PurchaseRequestInput() {
             RequesterName = name,
             RequesterEmail = email,
             RequesterUsername = username,
+            RequesterInitials = initials,
             Id=ObjectId.GenerateNewId(),
             PurchaseItems = new List<PurchaseItem>(),
             Quotes = new List<string>(),
@@ -78,6 +79,7 @@ public class PurchaseRequestService {
                 Email = input.RequesterEmail,
                 Name = input.RequesterName,
                 Username = input.RequesterUsername,
+                Initials = input.RequesterInitials
             },
             Department = input.Department,
             Vendor = input.Vendor,
@@ -174,6 +176,17 @@ public class PurchaseRequestService {
             [request.Requester.Email ?? ""]);
         return false;
     }
+
+    public async Task<PurchaseOrderDto> GetPurchaseOrderDto(ObjectId requestId) {
+        var request = await this._requestDataService.GetPurchaseRequest(requestId);
+        var po=request.ToPurchaseOrderDto();
+
+        return po;   
+    }
+
+    /*public async Task<string> GetNextPoNumber() {
+        
+    }*/
     
     public async Task<List<QuotesDto>> GetQuotes() {
         var quotes=await this._requestDataService.GetQuotes();

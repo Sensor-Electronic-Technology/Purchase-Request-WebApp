@@ -14,6 +14,7 @@ public class PurchaseRequestInput {
     public string? RequesterName { get; set; }
     public string? RequesterUsername { get; set; }
     public string? RequesterEmail { get; set; }
+    public string? RequesterInitials { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }

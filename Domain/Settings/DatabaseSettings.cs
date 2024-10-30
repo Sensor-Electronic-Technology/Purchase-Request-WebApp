@@ -8,5 +8,6 @@ public class DatabaseSettings {
     public string? DepartmentCollection { get; set; }
     public string? AvatarDatabase { get; set; }
     public string? AvatarCollection { get; set; }
+    public string? PoNumberCollection { get; set; }
     
 }

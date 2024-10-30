@@ -1,4 +1,9 @@
 
+.button-transparent{
+    background-color:rgb(0,0,0,0) !important;
+    opacity: 100% !important;
+}
+
 .area-header {
     background-color: var(--rz-primary-light) !important;
     border-radius: var(--rz-border-radius-6) !important;
@@ -42,30 +47,36 @@
 
 .pdf-data-list {
     background-color: var(--rz-secondary) !important;
-    border-radius: var(--rz-border-radius-5) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 .tab-color-1{
-    background-color: var(--rz-success-dark) !important;
-    border: var(--rz-success-darker) !important;
+    background-color: var(--rz-success) !important;
+    border: var(--rz-success-dark) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 
 .tab-color-2{
-    background-color: var(--rz-warning-lighter) !important;
-    border: var(--rz-warning-darker) !important;
-    border-radius: var(--rz-border-radius-6);
+    background-color: var(--rz-primary) !important;
+    border: var(--rz-primary-darker) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 
 .tab-color-3{
-    background-color: var(--rz-info-lighter) !important;
+    background-color: var(--rz-info) !important;
     border: var(--rz-info-darker) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 
 .tab-color-4{
     background-color: var(--rz-secondary) !important;
+    border: var(--rz-secondary-darker) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 
 .tab-color-5{
-    background-color: var(--rz-success-dark) !important;
+    background-color: var(--rz-series-4) !important;
+    border: var(--rz-info-darker) !important;
+    border-radius: var(--rz-border-radius-3) !important;
 }
 
 

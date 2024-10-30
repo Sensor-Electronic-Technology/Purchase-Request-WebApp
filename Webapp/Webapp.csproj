@@ -5,7 +5,6 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        
         <ContainerRegistry>docker.io</ContainerRegistry>
         <ContainerRepository>aelmendorf234/purchase-request</ContainerRepository>
         <ContainerImageTag>dev</ContainerImageTag>
@@ -33,6 +32,7 @@
         <PackageReference Include="SETiAuth.Domain.Shared" Version="1.3.6" />
         <PackageReference Include="SETiFileClient" Version="1.3.18" />
         <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.6" />
+        <PackageReference Include="BlazorDownloadFile" Version="2.4.0.2" />
     </ItemGroup>
 
     <ItemGroup>
@@ -44,10 +44,6 @@
       <Folder Include="Temp\" />
       <Folder Include="wwwroot\images\avatars\" />
       <Folder Include="wwwroot\temp\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="wwwroot\scripts\callDotNetFromJs.js" />
     </ItemGroup>
 
 </Project>

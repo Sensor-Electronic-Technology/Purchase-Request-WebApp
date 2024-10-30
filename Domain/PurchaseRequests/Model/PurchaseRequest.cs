@@ -89,4 +89,23 @@ public class PurchaseRequest {
         this.Status = input.Status;
         return this;
     }
+    
+    public PurchaseOrderDto ToPurchaseOrderDto() {
+        return new PurchaseOrderDto {
+            PoNumber = this.PurchaseOrder?.PoNumber ?? "",
+            ShipTo = this.PurchaseOrder?.ShipTo ?? "",
+            PaymentTerms = this.PurchaseOrder?.PaymentTerms ?? "",
+            Date = this.Created,
+            Department = this.Department?.Name,
+            Description = this.Description,
+            Vendor = this.Vendor,
+            Requester = this.Requester?.Name,
+            ShippingMethod = this.ShippingType,
+            Items = this.PurchaseItems,
+            FOB = this.PurchaseOrder?.PaymentTerms,
+            TotalCost = this.TotalCost,
+            Comments = this.AdditionalComments
+            
+        };
+    }
 }

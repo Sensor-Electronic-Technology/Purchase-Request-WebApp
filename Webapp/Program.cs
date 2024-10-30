@@ -1,3 +1,4 @@
+using BlazorDownloadFile;
 using Blazored.LocalStorage;
 using Domain;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -42,6 +43,7 @@ builder.Services.AddAuthenticationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
                                                             ?? "mongodb://172.20.3.41:27017"));
+builder.Services.AddBlazorDownloadFile(ServiceLifetime.Scoped);
 builder.Services.AddInfrastructure();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<PrEditingTracker>();
@@ -70,8 +72,6 @@ using (IServiceScope scope = scopeFactory.CreateScope()) {
         throw new Exception("Error: could not resolve AvatarDataService");
     }
 }
-
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {

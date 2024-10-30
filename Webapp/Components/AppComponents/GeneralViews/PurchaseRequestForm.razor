@@ -105,6 +105,7 @@
                 await this.GeneratePurchaseRequest();
                 this._purchaseReqInput.RequesterUsername=this._userAccount._id;
                 this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
+                this._purchaseReqInput.RequesterInitials = $"{this._userAccount.FirstName?[0]},{this._userAccount.LastName?[0]}";
                 this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
             } else {
                 if (!this.RepeatEdit) {
@@ -115,6 +116,7 @@
                     this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
                     this._purchaseReqInput.RequesterUsername=this._userAccount._id;
                     this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
+                    this._purchaseReqInput.RequesterInitials = $"{this._userAccount.FirstName?[0]},{this._userAccount.LastName?[0]}";
                     this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
                     this._purchaseReqInput.ApproverName = string.Empty;
                     this._purchaseReqInput.ApproverEmail = string.Empty;
@@ -344,7 +346,7 @@
     Task GeneratePurchaseRequest() {
         this._purchaseReqInput=this._purchaseRequestService.CreatePrInput(
             this._userAccount?.FirstName + " " + this._userAccount?.LastName,
-            this._userAccount?.Email,this._userAccount?._id);
+            this._userAccount?.Email,this._userAccount?._id,$"{this._userAccount.FirstName?[0]},{this._userAccount.LastName?[0]}");
 
         List<PurchaseItem> items = new();
         items.Add(new PurchaseItem() {

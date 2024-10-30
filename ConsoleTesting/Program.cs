@@ -57,7 +57,112 @@ foreach (var a in arr) {
 
 //await TestMessageOrderV2();
 
-await CreateAvatarFiles();
+//await CreateAvatarFiles();
+
+//await TestPoCollection();
+await TestGeneratePoNumber();
+
+async Task TestGeneratePoNumber() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<PoNumber>("po_numbers");
+    var builder = Builders<PoNumber>.Sort;
+    var sort = builder.Descending(f => f.Seq);
+
+    var result=await collection.Find(_ => true)
+        .Project(e=>e.Seq)
+        .Sort(Builders<PoNumber>.Sort.Descending(f=>f.Seq)).Limit(1)
+        .FirstOrDefaultAsync();
+    
+    if (result>0) {
+        Console.WriteLine($"PoNumber: {result}");
+        PoNumber poNumber = new() { Initials = "AE",Year = 2024 };
+        poNumber.Seq = result + 1;
+        if(poNumber.Seq/1000>0) {
+            poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-{poNumber.Seq}";
+        } else {
+            if(poNumber.Seq/100>0) {
+                poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-0{poNumber.Seq}";
+
+            } else {
+                if(poNumber.Seq/10>0) {
+                    poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-00{poNumber.Seq}";
+                } else {
+                    poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-000{poNumber.Seq}";
+                }
+            }
+        }
+        Console.WriteLine($"New PoNumber: {poNumber._id}");
+        await collection.InsertOneAsync(poNumber);
+    } else {
+        Console.WriteLine("No PoNumber found");
+    }
+    
+    
+}
+
+async Task TestPoCollection() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<PoNumber>("po_numbers");
+    //await collection.Indexes.CreateOneAsync(Builders<PoNumber>.IndexKeys.Ascending(e => e.Seq),new CreateIndexOptions() { Unique = true });
+    var indexModel= new CreateIndexModel<PoNumber>(Builders<PoNumber>.IndexKeys.Ascending(e => e.Seq),new CreateIndexOptions() { Unique = true });
+    await collection.Indexes.CreateOneAsync(indexModel);
+    
+    /*var filter = Builders<PoNumber>.Filter.Eq(e => e._id, "2024-AE-1621");
+    var update = Builders<PoNumber>.Update.Inc(e => e.Seq, 1);
+    var options = new FindOneAndUpdateOptions<PoNumber> {
+        ReturnDocument = ReturnDocument.After
+    };
+    var result = await collection.FindOneAndUpdateAsync(filter, update, options);*/
+
+    for (int i = 0; i < 1000; i++) {
+         PoNumber poNumber = new() { Seq = i,Initials = "AE",Year = 2024 };
+         if(poNumber.Seq/1000>0) {
+              poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-{poNumber.Seq}";
+         } else {
+             if(poNumber.Seq/100>0) {
+                 poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-0{poNumber.Seq}";
+
+             } else {
+                 if(poNumber.Seq/10>0) {
+                     poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-00{poNumber.Seq}";
+                 } else {
+                     poNumber._id=$"{poNumber.Year}-{poNumber.Initials}-000{poNumber.Seq}";
+                 }
+             }
+         }
+         Console.WriteLine($"Inserting: {poNumber._id}");
+         await collection.InsertOneAsync(poNumber);
+    }
+    Console.WriteLine("Check database");
+}
+
+void TestNumberFormat() {
+    int value = 1;
+
+    for(int i=0;i<4;i++) {
+    
+    
+    
+        if(value/1000>0) {
+            Console.WriteLine($"Value: {value} Modified: {value}");
+        } else {
+            if(value/100>0) {
+
+                Console.WriteLine($"Value: {value} Modified: 0{value}");
+            } else {
+                if(value/10>0) {
+
+                    Console.WriteLine($"Value: {value} Modified: 00{value}");
+                } else {
+                    Console.WriteLine($"Value: {value} Modified: 000{value}");
+                }
+            }
+        }
+        value*=10;
+    }
+}
 
 async Task CreateAvatarFiles() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

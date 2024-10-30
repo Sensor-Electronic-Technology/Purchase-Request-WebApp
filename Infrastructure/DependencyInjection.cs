@@ -13,6 +13,7 @@ public static class DependencyInjection {
         services.AddScoped<DepartmentDataService>();
         services.AddScoped<PurchaseRequestDataService>();
         services.AddScoped<AvatarDataService>();
+        services.AddScoped<PoNumberService>();
         return services;
     }
 }

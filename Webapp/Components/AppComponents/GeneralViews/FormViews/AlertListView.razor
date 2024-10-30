@@ -1,0 +1,38 @@
+﻿@using Webapp.Data
+
+<style>
+    .rz-alert-title{
+        font-size: var(--rz-body-font-size) !important;
+        font-weight: bold !important;
+    }
+</style>
+
+@if (this.RequestAlerts != null) {
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1" Style="margin: 0.5rem" Visible="true">
+        <RadzenText TextStyle="TextStyle.H5"
+                    Text="Purchase Request Alerts"
+                    TextAlign="TextAlign.Center"
+                    Style="font-weight: bold;"/>
+        <RadzenStack Orientation="Orientation.Horizontal" 
+                     Gap="10" 
+                     JustifyContent="JustifyContent.Center"
+                     AlignItems="AlignItems.Center"
+                     Wrap="FlexWrap.Wrap">
+            @foreach (var alert in this.RequestAlerts) {
+                <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
+                             Text="@alert.Message"
+                             Title="@alert.Item"
+                             Shade="Shade.Default"
+                             Size="AlertSize.Small"
+                             AllowClose="false" 
+                             Style="min-width: 1rem !important; width: 20%;"/>
+            
+            }
+        </RadzenStack>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<RequestAlert>? RequestAlerts { get; set; } = new();
+    
+}

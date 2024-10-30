@@ -8,72 +8,92 @@
     <p class="text-center">No purchase request selected</p>
 } else {
     <RadzenCard class="pr-view-card">
-        <RadzenTabs RenderMode="TabRenderMode.Server"
-                    @bind-SelectedIndex="@this._tabIndex">
+        <RadzenTabs>
             <Tabs>
-                <RadzenTabsItem Text="Request Information" class="tab-color-1 rz-border-radius-3">
-                    <RadzenCard class="info-area">
-                        <RadzenStack Gap="1" >
-                            <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
-                                <RadzenText Text="@(this.PurchaseRequest.Title)"
-                                            TextStyle="TextStyle.H6"
-                                            TextAlign="TextAlign.Center"/>
-                            </RadzenCard>
-                            <RadzenAlert Title="@this.GetAlertText()"
-                                         AlertStyle="@this.GetAlertStyle()"
-                                         Size="AlertSize.Small"
-                                         AllowClose="false" Style="font-size: 14px !important;"/>
-                            @if (this.PurchaseRequest.Status == PrStatus.Rejected) {
-                                @if (this.PurchaseRequest.ApprovalResult != null) {
-                                    <RadzenFieldset Text="Rejection Comments">
-                                        <RadzenText TextAlign="TextAlign.Center"
-                                                    Text="@this.PurchaseRequest.ApprovalResult.Comments"
-                                                    TextStyle="TextStyle.H6"
-                                                    Style="width: 300px; height: fit-content;"/>
-                                    </RadzenFieldset>
-                                }
-                            }
-                            <RequestInformationView Description="@this.PurchaseRequest.Description"
-                                                    Name="@this.PurchaseRequest.Requester?.Name"
-                                                    Title="@this.PurchaseRequest.Title"
-                                                    IsUrgent="@this.PurchaseRequest.Urgent"
-                                                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                <RadzenTabsItem Text="Info" class="tab-color-4 rz-ripple">
+                    <RadzenTabs RenderMode="TabRenderMode.Server"
+                                @bind-SelectedIndex="@this._tabIndex">
+                        <Tabs>
+                            <RadzenTabsItem Text="Request Information" class="tab-color-1 rz-ripple">
+                                <RadzenCard class="info-area">
+                                    <RadzenStack Gap="1">
+                                        <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
+                                            <RadzenText Text="@(this.PurchaseRequest.Title)"
+                                                        TextStyle="TextStyle.H6"
+                                                        TextAlign="TextAlign.Center"/>
+                                        </RadzenCard>
+                                        <RadzenAlert Title="@this.GetAlertText()"
+                                                     AlertStyle="@this.GetAlertStyle()"
+                                                     Size="AlertSize.Small"
+                                                     AllowClose="false" Style="font-size: 14px !important;"/>
+                                        @if (this.PurchaseRequest.Status == PrStatus.Rejected) {
+                                        @if (this.PurchaseRequest.ApprovalResult != null) {
+                                        <RadzenFieldset Text="Rejection Comments">
+                                            <RadzenText TextAlign="TextAlign.Center"
+                                                        Text="@this.PurchaseRequest.ApprovalResult.Comments"
+                                                        TextStyle="TextStyle.H6"
+                                                        Style="width: 300px; height: fit-content;"/>
+                                        </RadzenFieldset>
+                                        }
+                                        }
+                                        <RequestInformationView Description="@this.PurchaseRequest.Description"
+                                                                Name="@this.PurchaseRequest.Requester?.Name"
+                                                                Title="@this.PurchaseRequest.Title"
+                                                                IsUrgent="@this.PurchaseRequest.Urgent"
+                                                                SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                                Mode="EditMode.VIEW"/>
+                                    </RadzenStack>
+                                </RadzenCard>
+
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Purchase Information" class="tab-color-2 rz-ripple">
+                                <RadzenCard class="info-area">
+                                    <RadzenStack Orientation="Orientation.Vertical"
+                                                 AlignItems="AlignItems.Center">
+                                        <RadzenStack Orientation="Orientation.Horizontal">
+                                            <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
+                                            <RadzenFieldset Text="Shipping">
+                                                <RadzenText TextAlign="TextAlign.Center"
+                                                            Text="@this.PurchaseRequest.ShippingType"
+                                                            TextStyle="TextStyle.H6"
+                                                            Style="width: 300px; height: fit-content;"/>
+                                            </RadzenFieldset>
+                                        </RadzenStack>
+                                        <RadzenFieldset Text="Vendor">
+                                            <VendorView Vendor="@this.PurchaseRequest.Vendor"
+                                                        Mode="@EditMode.VIEW"/>
+                                        </RadzenFieldset>
+                                    </RadzenStack>
+                                </RadzenCard>
+
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Purchase Items" class="tab-color-3 rz-ripple">
+                                <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
                                                     Mode="EditMode.VIEW"/>
-                        </RadzenStack>
-                    </RadzenCard>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Comments/Quotes" class="tab-color-4 rz-ripple">
+                                <CommentsQuotesView CurrentQuoteIds="@this.PurchaseRequest.Quotes"
+                                                    AdditionalComments="@this.PurchaseRequest.AdditionalComments"
+                                                    Mode="EditMode.VIEW"/>
 
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Purchase Information" class="tab-color-2 rz-border-radius-3">
-                    <RadzenCard class="info-area">
-                        <RadzenStack Orientation="Orientation.Vertical"
-                                     AlignItems="AlignItems.Center">
-                            <RadzenStack Orientation="Orientation.Horizontal">
-                                <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
-                                <RadzenFieldset Text="Shipping">
-                                    <RadzenText TextAlign="TextAlign.Center"
-                                                Text="@this.PurchaseRequest.ShippingType"
-                                                TextStyle="TextStyle.H6"
-                                                Style="width: 300px; height: fit-content;"/>
-                                </RadzenFieldset>
-                            </RadzenStack>
-                            <RadzenFieldset Text="Vendor">
-                                <VendorView Vendor="@this.PurchaseRequest.Vendor"
-                                            Mode="@EditMode.VIEW"/>
-                            </RadzenFieldset>
-                        </RadzenStack>
-                    </RadzenCard>
+                <RadzenTabsItem Text="Pdfs" class="tab-color-1 rz-ripple">
+                    <RadzenTabs>
+                        <Tabs>
+                            <RadzenTabsItem Text="Purchase Request" class="tab-color-2 rz-ripple">
+                                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequest.ToInput()"/>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Purchase Order" class="tab-color-3 rz-ripple"
+                                            Visible="@(this.PurchaseRequest.Status >= PrStatus.Ordered && this.PurchaseRequest.Status != PrStatus.Rejected)">
+                                <PoPdfPreview PurchaseRequest="@this.PurchaseRequest"/>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                </RadzenTabsItem>
 
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Purchase Items" class="tab-color-3 rz-border-radius-6">
-                    <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
-                                        Mode="EditMode.VIEW"/>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Comments/Quotes" class="tab-color-4 rz-border-radius-6">
-                        <CommentsQuotesView CurrentQuoteIds="@this.PurchaseRequest.Quotes"
-                                            AdditionalComments="@this.PurchaseRequest.AdditionalComments"
-                                            Mode="EditMode.VIEW"/>
-
-                </RadzenTabsItem>
             </Tabs>
         </RadzenTabs>
     </RadzenCard>

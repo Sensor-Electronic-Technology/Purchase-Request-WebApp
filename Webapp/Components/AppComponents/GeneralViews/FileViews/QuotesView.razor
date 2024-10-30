@@ -1,7 +1,5 @@
 ﻿@using SetiFileStore.FileClient
-@using DevExpress.Blazor.PdfViewer;
 @using SetiFileStore.Domain.Contracts
-@using SetiFileStore.Domain.Contracts.Responses
 @inject IJSRuntime JSRuntime;
 
 
@@ -24,8 +22,7 @@
                 <RadzenCard>
                     <RadzenStack AlignItems="AlignItems.Center">
                         <RadzenButton Image="/images/file-icon.svg"
-                                      class="rz-ripple"
-                                      Style="background-color:rgb(0,0,0,0); opacity: 100%;"
+                                      class="rz-ripple button-transparent"
                                       Click="@(async Task () => await this.ViewFileHandler(fileName, fileId))">
                             <ChildContent>
                                 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0">
