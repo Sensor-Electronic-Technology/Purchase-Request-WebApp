@@ -3,7 +3,7 @@
 @using Domain.PurchaseRequests.Pdf
 @using QuestPDF.Fluent
 
-@if (this._fileBytes != null) {
+@*@if (this._fileBytes != null) {
     <RadzenStack>
         <RadzenRow JustifyContent="JustifyContent.Start">
             <RadzenButton Text="Download" Click="DownloadHandler"
@@ -11,11 +11,11 @@
                           class="button-transparent"
                           Image="/images/download-icon.svg"/>
         </RadzenRow>
-        
         <PdfPreview FileBytes="@this._fileBytes"/>
     </RadzenStack>
     
-}
+}*@
+<PdfPreview FileBytes="@this._fileBytes" FileName="PurchaseOrder.pdf"/>
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
@@ -41,9 +41,9 @@
         }
     }
     
-    private async Task DownloadHandler() {
+    /*private async Task DownloadHandler() {
         await this._downloadService.DownloadFile("PurchaseOrder.pdf", this._fileBytes, "application/pdf");
         
-    }
+    }*/
 
 }

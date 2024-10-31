@@ -3,7 +3,7 @@
 @using QuestPDF.Fluent
 
 @if (this.PurchaseRequestInput?.TempFile != null) {
-    <PdfPreview FileBytes="@this.PurchaseRequestInput.TempFile"/>
+    <PdfPreview FileBytes="@this.PurchaseRequestInput.TempFile" FileName="PurchaseRequest.pdf"/>
 }
 
 

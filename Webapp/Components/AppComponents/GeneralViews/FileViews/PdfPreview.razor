@@ -1,15 +1,31 @@
-﻿@using BlazorBootstrap
+﻿@using ButtonSize = Radzen.ButtonSize
+@using BlazorBootstrap
+
 <style>
     .bg-body-tertiary {
         background-color: var(--rz-secondary) !important;
     }
 </style>
-<PdfViewer Url="@_embededSrc" Class="rz-overflow-scroll" Style="max-height: 900px;"/>
+@if (this.FileBytes != null) {
+    <RadzenStack>
+        <RadzenRow JustifyContent="JustifyContent.Start">
+            <RadzenButton Text="Download" Click="DownloadHandler"
+                          Size="ButtonSize.Small"
+                          class="button-transparent"
+                          Image="/images/download-icon.svg"/>
+        </RadzenRow>
+        <PdfViewer Url="@this._embeddedSrc"/>
+    </RadzenStack>
+}
+
 
 @code {
+    [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Parameter] public byte[]? FileBytes { get; set; }
+    [Parameter] public string FileName { get; set; } = string.Empty;
     private bool _prNull = true;
-    private string _embededSrc = string.Empty;
+    private string _embeddedSrc = string.Empty;
+    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
     }
@@ -17,13 +33,17 @@
     protected override async Task OnParametersSetAsync() {
         if (FileBytes is { Length: > 0 }) {
             if (this._prNull) {
-                this._embededSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);
+                this._embeddedSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);
                 this._prNull = false;
             }
         } else {
             this._prNull = true;
-            this._embededSrc = string.Empty;
+            this._embeddedSrc = string.Empty;
         }
         await base.OnParametersSetAsync();
+    }
+    
+    private async Task DownloadHandler() {
+        await this._downloadService.DownloadFile(this.FileName, this.FileBytes,contentType:"application/octet-stream");
     }
 }

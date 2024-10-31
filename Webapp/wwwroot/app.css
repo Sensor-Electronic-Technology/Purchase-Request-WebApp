@@ -35,12 +35,12 @@
 .pr-view-card{
     max-height: 900px; 
     min-height: 700px !important;
-    overflow: scroll
+    /*overflow: scroll*/
 }
 
 .step-card{
     max-height: 750px; !important;
-    overflow: scroll !important;
+    /*overflow: scroll !important;*/
     padding: 0.5rem !important;
     border-radius: var(--rz-border-radius-4) !important;
 }

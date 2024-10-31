@@ -16,6 +16,7 @@
 @inject TooltipService TooltipService
 @inject NotificationService NotificationService
 @inject CookieThemeService CookieThemeService
+@implements IAsyncDisposable
 
 <RadzenComponents @rendermode="@InteractiveServer"/>
 <SpinnerOverlay/>
@@ -134,13 +135,16 @@
     [Inject] private ThemeService _themeService { get; set; }
     [Inject] private UserService _userService { get; set; }
     [Inject] private AvatarDataService _avatarDataService { get; set; }
+    [Inject] private NavigationManager _navigationManager { get; set; }
     bool sidebarExpanded = false;
     bool configSidebarExpanded = false;
     bool chatSidebarExpanded = false;
     bool rendered;
     List<ChatMessage> messages;
 
-    protected override Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._navigationManager.LocationChanged += OnLocationChanged;
         var now = TimeProvider.Now();
         this.messages= new() {
             new ChatMessage(now, "aelmendo", "Hello"),
@@ -153,7 +157,7 @@
             new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
             new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
         };
-        return base.OnInitializedAsync();
+        
     }
 
     void SidebarToggleClick() {
@@ -180,6 +184,13 @@
             rendered = true;
         }
     }
+    
+    async void OnLocationChanged(object? sender, LocationChangedEventArgs args) {
+        this.sidebarExpanded = false;
+        this.configSidebarExpanded = false;
+        this.chatSidebarExpanded = false;
+        await InvokeAsync(StateHasChanged);
+    }
 
     void FilterPanelMenu(ChangeEventArgs args) {
         var term = args.Value.ToString();
@@ -192,6 +203,11 @@
 
     string GetRoles() {
         return $"{PurchaseRequestRole.Requester.Name},{PurchaseRequestRole.Approver.Name},{PurchaseRequestRole.Purchaser.Name},{PurchaseRequestRole.Admin.Name}";
+    }
+    
+    public ValueTask DisposeAsync() {
+        this._navigationManager.LocationChanged -= OnLocationChanged;
+        return ValueTask.CompletedTask;
     }
 
     internal static RenderFragment RenderTheme(Theme theme, bool showTitle = true) {
@@ -266,3 +282,6 @@
     }
 
 }
+
+
+
