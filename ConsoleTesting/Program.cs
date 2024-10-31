@@ -60,7 +60,19 @@ foreach (var a in arr) {
 //await CreateAvatarFiles();
 
 //await TestPoCollection();
-await TestGeneratePoNumber();
+//await TestGeneratePoNumber();
+await DeleteAllPoNumbers();
+
+async Task DeleteAllPoNumbers() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<PoNumber>("po_numbers");
+    await collection.DeleteManyAsync(_ => true);
+    PoNumber poNumber = new() {Seq = 0, Initials = "NA",Year = 2024,RequestId = ObjectId.GenerateNewId()};
+    poNumber._id = "2024-NA-0000";
+    await collection.InsertOneAsync(poNumber);
+    Console.WriteLine("Check database");
+}
 
 async Task TestGeneratePoNumber() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

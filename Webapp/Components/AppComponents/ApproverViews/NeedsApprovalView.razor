@@ -27,20 +27,23 @@
                                 <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
                             </RadzenFieldset>
                         </RadzenStack>
-
-                        <RadzenFieldset Text="Email Recipients">
-                            <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
-                            <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
-                        </RadzenFieldset>
-                        <EmailPickList CcList="@this._ccList"
-                                       CcListChanged="EmailListChangedHandler"
-                                       TextStyle="TextStyle.Body1"
-                                       IsCollapsed="false"/>
-                        <RadzenFormField Text="Comments">
-                            <RadzenTextArea Value="@this.ApproveRequestInput.Comment"
-                                            ValueChanged="@CommentsChangedHandler"
-                                            Rows="5"/>
-                        </RadzenFormField>
+                        @if (_emailsLoaded) {
+                            <RadzenFieldset Text="Email Recipients">
+                                <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
+                                <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
+                            </RadzenFieldset>
+                            <EmailPickList CcList="@this._ccList"
+                                           CcListChanged="EmailListChangedHandler"
+                                           TextStyle="TextStyle.Body1"
+                                           IsCollapsed="false"/>
+                            <RadzenFormField Text="Comments">
+                                <RadzenTextArea Value="@this.ApproveRequestInput.Comment"
+                                                ValueChanged="@CommentsChangedHandler"
+                                                Rows="5"/>
+                            </RadzenFormField>
+                        } else {
+                            <p class="text-center">Loading....</p>
+                        }
                     </RadzenStack>
                 </RadzenCard>
             </RadzenStepsItem>
@@ -55,7 +58,7 @@
                                               ButtonStyle="ButtonStyle.Primary"
                                               Click="@this.SubmitHandler"
                                               Style="width: 150px; height: 60px;"
-                                              Disabled="@(this.ApproveRequestInput.Action == null)"/>
+                                              Disabled="@(this.ApproveRequestInput.Action == null && !this._docLoaded)"/>
                                 <RadzenButton Text="Cancel"
                                               ButtonStyle="ButtonStyle.Danger"
                                               Click="@this.Cancel"
@@ -98,6 +101,7 @@
     [Parameter] public EventCallback Cancel { get; set; }
     
     private DxRichEdit _richEdit;
+    private bool _emailsLoaded = false;
     
     private List<ApproveMailMerge> MailMerge { get; set; } = [];
     
@@ -207,16 +211,11 @@
                 .Select(e=>e.Email)
                 .ToList();
             this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
-            if (this.PurchaseRequest.EmailCopyList.Any()) {
-                this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
-                if (!string.IsNullOrEmpty(this.PurchaseRequest.Approver.Email)) {
-                    this._ccList.Add(this.PurchaseRequest.Approver.Email);
-                }
-                /*if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester?.Email)) {
-                    this._ccList.Add(this.PurchaseRequest.Requester.Email);
-                }*/
-            }
+            this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
+            this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
         }
+        this._emailsLoaded = true;
+        await InvokeAsync(StateHasChanged);
     }
 
 }

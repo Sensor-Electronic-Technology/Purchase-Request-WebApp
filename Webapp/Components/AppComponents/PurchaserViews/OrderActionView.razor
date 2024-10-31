@@ -4,7 +4,6 @@
 @using Webapp.Data
 @using Webapp.Services
 @using Webapp.Services.Authentication
-
 <style>
     .rz-panel-titlebar {
         flex-direction: row-reverse;
@@ -12,17 +11,9 @@
     }
 </style>
 <RadzenSplitter>
-    <RadzenSplitterPane Size="45%" Collapsible="false">
-        <RadzenCard >
+    <RadzenSplitterPane Size="50%" Collapsible="false">
+        <RadzenCard>
             <RadzenStack Orientation="Orientation.Vertical">
-                <RadzenCard class="area-header">
-                    <RadzenText Text="Order/Cancel Form"
-                                TextAlign="TextAlign.Center"
-                                TextStyle="TextStyle.H6"/>
-                    <RadzenText Text="Select action then press submit"
-                                TextAlign="TextAlign.Center"
-                                TextStyle="TextStyle.Subtitle1"/>
-                </RadzenCard>
                 <RadzenCard>
                     <NeedsOrderView @bind-PurchaseRequest="@this.PurchaseRequest"
                                     @bind-OrderRequestInput="@this._orderRequestInput"
@@ -34,7 +25,7 @@
             </RadzenStack>
         </RadzenCard>
     </RadzenSplitterPane>
-    <RadzenSplitterPane Size="55%" Collapsed="@this._isCollapsed">
+    <RadzenSplitterPane Size="50%" Collapsed="@this._isCollapsed">
         <PurchaseRequestView @bind-PurchaseRequest="@this.PurchaseRequest"
                              Mode="EditMode.VIEW"/>
     </RadzenSplitterPane>

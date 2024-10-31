@@ -46,6 +46,7 @@
 
 @code {
     [Inject] private AuthApiService _authApiService { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
     [Parameter] public bool IsCollapsed { get; set; }
     [Parameter] public List<string> CcList { get; set; } = [];
     [Parameter] public EventCallback<List<string>> CcListChanged { get; set; }
@@ -59,7 +60,7 @@
             }
         }
     }
-    private IEnumerable<UserAccountDto> _target;
+    private IEnumerable<UserAccountDto> _target=[];
     [Parameter] public IEnumerable<UserAccountDto> Source {
         get => this._source;
         set {
@@ -68,7 +69,7 @@
             }
         }
     }
-    private IEnumerable<UserAccountDto> _source;
+    private IEnumerable<UserAccountDto> _source=[];
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
@@ -77,6 +78,7 @@
             this.Target=emailList.Where(e => this.CcList.Contains(e.Email)).ToList();
             emailList.RemoveAll(e => this.CcList.Contains(e.Email));
         }
+        this._notificationService.Notify(NotificationSeverity.Info, "Email List", String.Join(" , ", this.CcList));
         this.Source = emailList;
         await InvokeAsync(StateHasChanged);
     }

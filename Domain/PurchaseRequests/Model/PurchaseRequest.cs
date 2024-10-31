@@ -104,8 +104,11 @@ public class PurchaseRequest {
             Items = this.PurchaseItems,
             FOB = this.PurchaseOrder?.PaymentTerms,
             TotalCost = this.TotalCost,
-            Comments = this.AdditionalComments
-            
+            Comments = this.PurchaseOrder?.PoComments ?? ""
         };
+    }
+
+    public PurchaseRequest? Clone() {
+        return this.MemberwiseClone() as PurchaseRequest;
     }
 }

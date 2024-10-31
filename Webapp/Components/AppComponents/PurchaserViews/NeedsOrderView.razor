@@ -74,7 +74,8 @@
                                 <RadzenFieldset Text="Email Vendor">
                                     <RadzenStack Orientation="Orientation.Vertical">
                                         <div class="rz-p-1 rz-text-align-center">
-                                            <RadzenCheckBox TValue="bool" Value="@this.OrderRequestInput.SendExternalEmail"
+                                            <RadzenCheckBox TValue="bool" 
+                                                            Value="@this.OrderRequestInput.SendExternalEmail"
                                                             ValueChanged="SendEmailChangedHandler"
                                                             Name="SendExternal"/>
                                             <RadzenLabel Text="Send Vendor Email?"
@@ -83,16 +84,29 @@
                                         @if (this.OrderRequestInput.SendExternalEmail) {
                                             <RadzenFieldset Text="Email Setup">
                                                 <RadzenStack>
+                                                    <div class="rz-p-1 rz-text-align-center">
+                                                        <RadzenCheckBox TValue="bool"
+                                                                        Value="@this.OrderRequestInput.IncludeInternalEmails"
+                                                                        ValueChanged="@IncludeInternalsChangedHandler"
+                                                                        Name="IncludeInternal"/>
+                                                        <RadzenLabel Text="Include Internal Emails?"
+                                                                     Component="IncludeInternal" class="rz-ms-2"/>
+                                                    </div>
                                                     <RadzenLabel Text="Enter emails with comma separation" Component="ToEmails"/>
                                                     <RadzenTextBox @bind-Value="@this._toEmails" Placeholder="one@email.com,two@email.com" Name="ToEmails" Style="width: 100%"/>
                                                     <RadzenLabel Text="Enter CC emails with coma separation" Component="CCEmails"></RadzenLabel>
                                                     <RadzenTextBox @bind-Value="@this._ccEmails" Placeholder="one@email.com,two@email.com" Name="CCEmails" Style="width: 100%"/>
                                                     <RadzenLabel Text="Enter Subject" Component="EmailSubject"></RadzenLabel>
                                                     <RadzenTextBox @bind-Value="@this._subject" Placeholder="Purchase Order" Name="EmailSubject" Style="width: 100%"/>
-
-                                                    <a href="@($"mailto:{this._toEmails}?cc={this._ccEmails}&subject={Uri.EscapeDataString(this._subject)}")" class="text-center" style="font-size: 24px;">
-                                                        <strong>Click to open Outlook</strong>
-                                                    </a>
+                                                    
+                                                    <RadzenLink Path="@($"mailto:{this._toEmails}?cc={this._ccEmails}&subject={Uri.EscapeDataString(this._subject)}")" 
+                                                                class="align-self-center"
+                                                                Style="width: fit-content;">
+                                                        <RadzenStack Orientation="Orientation.Vertical" Gap="0" AlignItems="AlignItems.Center">
+                                                            <RadzenImage Path="images/mail-to.svg" Style="width: 48px;height: 48px;"/>
+                                                            <RadzenText>Click to open Outlook</RadzenText>
+                                                        </RadzenStack>
+                                                    </RadzenLink>
                                                 </RadzenStack>
                                             </RadzenFieldset>
                                         }
@@ -105,8 +119,8 @@
                                         <RadzenButton Text="Submit"
                                                       ButtonStyle="ButtonStyle.Primary"
                                                       Click="@this.SubmitHandler"
-                                                      Style="width: 150px; height: 60px;"
-                                                      Disabled="@(this.OrderRequestInput.Action == null)"/>
+                                                      Disabled="@(!this._docLoaded)"
+                                                      Style="width: 150px; height: 60px;"/>
                                         <RadzenButton Text="Cancel"
                                                       ButtonStyle="ButtonStyle.Danger"
                                                       Click="@this.Cancel"
@@ -205,27 +219,16 @@
     }
 
     private void UpdateMailMerge() {
-        if(this.PurchaseRequest == null || this.OrderRequestInput==null) {
+        if(this.PurchaseRequest == null) {
             return;
         }
-        string header = "";
-        if (this.OrderRequestInput.Action != null) {
-            if (this.OrderRequestInput.Action == PurchaseRequestAction.Approve) {
-                header="Request Ordered";
-            } else {
-                header="Request Cancelled";
-            }
-        } else {
-            header="Select Action";
-        }
-
         this.MailMerge = [new ApproveMailMerge() {
-            PrAction = header,
+            PrAction = "Request Ordered",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseRequest?.Requester.Name ?? "",
             ApprovalComments = this.OrderRequestInput.Comment ?? "",
-            CommentsTitle = $"{this.OrderRequestInput.Action?.Name ?? "Select Action"} Comments",
+            CommentsTitle = "Comments",
         }];
     }
     
@@ -234,9 +237,10 @@
             return;
         }
         this.UpdateMailMerge();
+        this._docLoaded = true;
         this.OrderRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
-        this._docLoaded = true;
+        
     }
     
     private async Task EmailListChangedHandler(List<string> ccList) {
@@ -248,8 +252,8 @@
         await this.PurchaseRequestChanged.InvokeAsync(this.PurchaseRequest);
     }
 
-    private async Task CommentsChangedHandler(string obj) {
-        this.OrderRequestInput.Comment=obj;
+    private async Task CommentsChangedHandler(string comment) {
+        this.OrderRequestInput.Comment=comment;
         await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
     }
 
@@ -290,17 +294,27 @@
         return Task.CompletedTask;
     }
 
-    private void SendEmailChangedHandler(bool value) {
-        if (this.PurchaseRequest != null) {
-            if (this.OrderRequestInput?.SendExternalEmail == false) {
-                this._toEmails+=this.PurchaseRequest?.Vendor?.Email ?? "";
-                this._ccEmails+=this.PurchaseRequest?.Requester?.Email ?? "";
-                this._ccEmails += ",";
-                this._ccEmails+=this.PurchaseRequest?.Approver?.Email ?? "";
-                this._ccEmails+=this.PurchaseRequest?.EmailCopyList.Aggregate("", (current, next) => current + "," + next);
-            }
-        }
+    private async Task SendEmailChangedHandler(bool value) {
+        this._toEmails=this.PurchaseRequest?.Vendor?.Email ?? "";
+        this._ccEmails = "";
         this.OrderRequestInput.SendExternalEmail=value;
+        await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
+    }
+    
+    private async Task IncludeInternalsChangedHandler(bool value) {
+        if(value==false) {
+            this._toEmails=this.PurchaseRequest?.Vendor?.Email ?? "";
+            this._ccEmails="";
+        } else {
+            this._toEmails=this.PurchaseRequest?.Vendor?.Email ?? "";
+            this._ccEmails=this.PurchaseRequest?.Requester?.Email ?? "";
+            this._ccEmails += ",";
+            this._ccEmails+=this.PurchaseRequest?.Approver?.Email ?? "";
+            this._ccEmails+=this.PurchaseRequest?.EmailCopyList.Aggregate("", (current, next) => current + "," + next);
+            this.OrderRequestInput.IncludeInternalEmails=value;
+        }
+        this.OrderRequestInput.IncludeInternalEmails=value;
+        await this.OrderRequestInputChanged.InvokeAsync(this.OrderRequestInput);
     }
 
     private async Task SelectedStepChangedHandler(int step) {
@@ -312,26 +326,25 @@
             } else {
                 this._selectedStep=step;
                 if(step==2) {
-                    /*if (!this._poNumberGenerated) {
-                        var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseRequest.Requester.Initials,TimeProvider.Now().Year);
+                    if (!this._poNumberGenerated) {
+                        var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseRequest.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
                         if (!string.IsNullOrEmpty(poNumber._id)) {
                             this.PurchaseRequest.PurchaseOrder.PoNumber = poNumber._id;
                             this._poNumberGenerated = true;
                         }
-                    }*/
+                    }
                     await this.FinalView.InvokeAsync();
                 }
             }
-
         } else {
             if (step == 2 && this._selectedStep != 2) {
-                /*if (!this._poNumberGenerated) {
-                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseRequest.Requester.Initials,TimeProvider.Now().Year);
+                if (!this._poNumberGenerated) {
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseRequest.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
                     if (!string.IsNullOrEmpty(poNumber._id)) {
                         this.PurchaseRequest.PurchaseOrder.PoNumber = poNumber._id;
                         this._poNumberGenerated = true;
                     }
-                }*/
+                }
                 await this.FinalView.InvokeAsync();
                 this._selectedStep = step;
                 return;
@@ -343,10 +356,6 @@
             }
             this._selectedStep = step;
         }
-    }
-
-    private async Task DownloadHandler() {
-        //this._downloadService.DownloadFile()
     }
 
 }

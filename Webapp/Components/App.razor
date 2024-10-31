@@ -23,13 +23,11 @@
     <RadzenTheme Theme="dark" Wcag="true" @rendermode="@InteractiveServer"/>
     @*<RadzenTheme Theme="humanistic-dark" Wcag="true" @rendermode="@InteractiveServer"/>*@
     @*<RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>*@
-    @*<HeadOutlet @rendermode="InteractiveServer"/>*@
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <title>Purchase Request System</title>
 </head>
 
 <body>
-@*<Routes @rendermode="InteractiveServer"/>*@
     <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
