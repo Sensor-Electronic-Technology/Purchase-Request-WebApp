@@ -18,7 +18,6 @@
 
     protected override async Task OnParametersSetAsync() {
         await base.OnParametersSetAsync();
-         
         if(this.PurchaseRequestInput != null) {
             if (this._prNull) {
                 var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));

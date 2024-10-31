@@ -80,7 +80,7 @@ public class PurchaseOrderDocument : IDocument {
                         Phone = _model.ToAddress?.Phone ?? "",
                         Street = _model.ToAddress?.StreetAddress ?? "",
                     };
-                    row.RelativeItem().PaddingBottom(2).Component(new AddressComponent(address,toAddress,this._model.Requester));
+                    row.RelativeItem().PaddingBottom(2).Component(new AddressComponent(address,toAddress,this._model.ShipTo));
                 } else {
                     var toAddress = new Address() {
                         CityStateZip = "Columbia, SC 29201",
@@ -89,7 +89,7 @@ public class PurchaseOrderDocument : IDocument {
                         Phone = "(803) 647-9757",
                         Street = "110 Atlas Court",
                     };
-                    row.RelativeItem().PaddingBottom(2).Component(new AddressComponent(address,toAddress,this._model.Requester));
+                    row.RelativeItem().PaddingBottom(2).Component(new AddressComponent(address,toAddress,this._model.ShipTo));
                 }
             });
             
@@ -137,7 +137,7 @@ public class PurchaseOrderDocument : IDocument {
                     .BorderColor(Colors.Black);
             });
 
-            table.Cell().Element(CellStyle).AlignCenter().Text(this._model.Requester);
+            table.Cell().Element(CellStyle).AlignCenter().Text(this._model.Requester?.Name ?? "");
             table.Cell().Element(CellStyle).AlignLeft().PaddingLeft(5).Text(this._model.ShippingMethod);
             table.Cell().Element(CellStyle).AlignCenter().Text(this._model.PaymentTerms);
             static IContainer CellStyle(IContainer container) =>

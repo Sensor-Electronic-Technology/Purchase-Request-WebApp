@@ -1,4 +1,5 @@
 ﻿using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.Dto.ActionInputs;
 using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
 using QuestPDF.Fluent;

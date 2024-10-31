@@ -1,8 +1,6 @@
-﻿using Domain.PurchaseRequests.Model;
-using Domain.PurchaseRequests.TypeConstants;
-using MongoDB.Bson;
+﻿using Domain.PurchaseRequests.TypeConstants;
 
-namespace Domain.PurchaseRequests.Dto;
+namespace Domain.PurchaseRequests.Dto.ActionInputs;
 
 public class ApproveRequestInput {
     public byte[]? EmailDocument { get; set; }

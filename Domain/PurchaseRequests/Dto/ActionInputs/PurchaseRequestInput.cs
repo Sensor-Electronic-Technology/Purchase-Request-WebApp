@@ -2,7 +2,7 @@
 using Domain.PurchaseRequests.TypeConstants;
 using MongoDB.Bson;
 
-namespace Domain.PurchaseRequests.Dto;
+namespace Domain.PurchaseRequests.Dto.ActionInputs;
 
 
 

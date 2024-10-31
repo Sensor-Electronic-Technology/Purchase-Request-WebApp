@@ -39,6 +39,7 @@
                 case PrUserAction.ORDER:
                     <OrderActionView PurchaseRequest="@this._actionRequest"
                                      ActionCompleted="@this.CompletedHandler"/>
+
                     break;
                 case PrUserAction.APPROVE:
                     <ApproveActionView PurchaseRequest="@this._actionRequest" 
@@ -273,6 +274,8 @@
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
+                var order = new PurchaseOrder { ShipTo = this._actionRequest.Requester.Name };
+                this._actionRequest.PurchaseOrder = order;
                 this.TransitionTab(PrUserAction.ORDER);
                 this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);

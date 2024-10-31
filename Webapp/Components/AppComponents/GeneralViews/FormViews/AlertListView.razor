@@ -25,8 +25,7 @@
                              Shade="Shade.Default"
                              Size="AlertSize.Small"
                              AllowClose="false" 
-                             Style="min-width: 1rem !important; width: 20%;"/>
-            
+                             Style="@this.GetStyle()"/>
             }
         </RadzenStack>
     </RadzenStack>
@@ -34,5 +33,13 @@
 
 @code {
     [Parameter] public List<RequestAlert>? RequestAlerts { get; set; } = new();
+
+    private string GetStyle() {
+        if (this.RequestAlerts != null) {
+            return this.RequestAlerts.Count > 1 ? "width: 30%; min-height:60px;" : "width: 50%; min-height:60px;";
+        } else {
+            return "";
+        }
+    }
     
 }

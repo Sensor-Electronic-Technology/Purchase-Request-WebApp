@@ -7,7 +7,7 @@
 <RadzenRow>
     <RadzenColumn Size="6" SizeMD="6">
         <RadzenStack>
-            <RadzenCard>
+            <RadzenCard class="area-header">
                 <RadzenText TextStyle="TextStyle.H4" TextAlign="TextAlign.Center"><strong>Cancellation Request</strong></RadzenText>
                 <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">Enter the reason then press submit to cancel the purchase request.</RadzenText>
                 <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">An email will be sent to the approver and any copied emails</RadzenText>
@@ -18,7 +18,10 @@
                                 ValueChanged="@this.CommentsChangedHandler"
                                 Style="width: 200px; height:100px;"/>
             </RadzenFormField>
-            <EmailPickList />
+            <EmailPickList CcList="@this._ccList"
+                           CcListChanged="EmailListChangedHandler"
+                           TextStyle="TextStyle.Body1"
+                           IsCollapsed="false"/>
             <RadzenStack Orientation="Orientation.Horizontal"
                          AlignItems="AlignItems.Center"
                          JustifyContent="JustifyContent.Center">
@@ -37,7 +40,7 @@
 
     <RadzenColumn Size="6" SizeMD="6">
         <RadzenStack>
-            <RadzenCard Variant="Variant.Outlined">
+            <RadzenCard Variant="Variant.Outlined" class="area-header">
                 <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
             </RadzenCard>
             <DxRichEdit @ref="@this._richEdit"
@@ -46,6 +49,7 @@
                         DocumentFormat="DocumentFormat.OpenXml"
                         BarMode="BarMode.None"
                         ViewType="ViewType.Simple"
+                        CssClass="rz-w-100"
                         ReadOnly="false">
                 <MailMergeSettings>
                     <DxMailMergeSettings Data="@this.MailMerge"
@@ -67,7 +71,10 @@
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     
     private DxRichEdit? _richEdit;
+    private bool _emailsLoaded = false;
     private bool _docLoaded = false;
+    private List<string> _ccList = [];
+    private List<string> _emailList = [];
     private byte[] _documentContent;
     private byte[] _mailDocument;
     public string? _comments { get; set; }
@@ -75,6 +82,19 @@
 
     protected override async Task OnInitializedAsync() { 
         await base.OnInitializedAsync();
+        if (this.PurchaseRequest != null) {
+            this.PurchaseRequest.PurchaseOrder = new PurchaseOrder();
+            this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
+            if (this.PurchaseRequest.EmailCopyList.Any()) {
+                this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
+                if (!string.IsNullOrEmpty(this.PurchaseRequest.Approver.Email)) {
+                    this._ccList.Add(this.PurchaseRequest.Approver.Email);
+                }
+                /*if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester?.Email)) {
+                    this._ccList.Add(this.PurchaseRequest.Requester.Email);
+                }*/
+            }
+        }
         this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/CancelTemplate.docx");
     }
     
@@ -117,6 +137,15 @@
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest?._id.ToString());
     }
     
+    private Task EmailListChangedHandler(List<string> ccList) {
+        this._ccList = ccList;
+        if(this.PurchaseRequest == null) {
+            return Task.CompletedTask;
+        }
+        this.PurchaseRequest.EmailCopyList = ccList;
+        return Task.CompletedTask;
+    }
+    
     private async Task CommentsChangedHandler(string value) {
         this._comments = value;
         this.MailMerge = [new RequestMailMerge() {
@@ -133,7 +162,6 @@
     }
     
     private async Task DocumentLoadedHandler(Document obj) {
-        this._docLoaded = true;
         this.MailMerge = [new RequestMailMerge() {
             PrAction = "Cancellation Notification",
             Title = this.PurchaseRequest?.Title ?? "",
@@ -144,6 +172,7 @@
             AdditionalComments = this._comments ?? "",
         }];
         this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        this._docLoaded = true;
         await InvokeAsync(StateHasChanged);
     }
 

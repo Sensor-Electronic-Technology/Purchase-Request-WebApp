@@ -176,6 +176,26 @@ public class PurchaseRequestService {
             [request.Requester.Email ?? ""]);
         return false;
     }
+    
+    public async Task<bool> OrderPurchaseRequest(PurchaseRequest request,byte[] emailDocument) {
+        request.Status = PrStatus.Ordered;
+        var success=await this._requestDataService.UpdateOne(request);
+        List<FileData> files = [];
+        foreach (var quote in request.Quotes) {
+            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
+            if (fileData != null) {
+                files.Add(fileData);
+            }
+        }
+        if(!success) return false;
+        var document = new PurchaseRequestDocument(request.ToInput(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+        await this._emailService.SendOrderEmail(emailDocument,request.Title ?? "Not Titled",
+            document.GeneratePdf(),
+            files,
+            [request.Requester.Email ?? ""],
+            [request.Requester.Email ?? ""]);
+        return false;
+    }
 
     public async Task<PurchaseOrderDto> GetPurchaseOrderDto(ObjectId requestId) {
         var request = await this._requestDataService.GetPurchaseRequest(requestId);

@@ -101,14 +101,9 @@
     [Parameter] public EventCallback Cancel { get; set; }
     
     private DxRichEdit _richEdit;
-    private bool _emailsLoaded = false;
+    
     
     private List<ApproveMailMerge> MailMerge { get; set; } = [];
-    
-    /*private List<string> _needsApproveActions = [
-        PurchaseRequestAction.Approve.Name, 
-        PurchaseRequestAction.Reject.Name
-    ];*/
     
     private List<PurchaseRequestAction> _needsApproveActions = [
         PurchaseRequestAction.Approve, 
@@ -117,7 +112,8 @@
     
     private List<string> _ccList = [];
     private List<string> _emailList = [];
-    private bool _docLoaded;
+    private bool _docLoaded=false;
+    private bool _emailsLoaded = false;
     private byte[] _documentContent;
     private PurchaseRequestAction? _selectedAction;
     

@@ -1,4 +1,5 @@
 ﻿using Domain.PurchaseRequests.Dto;
+using Domain.PurchaseRequests.Dto.ActionInputs;
 using Domain.PurchaseRequests.TypeConstants;
 using MongoDB.Bson;
 
@@ -95,17 +96,31 @@ public class PurchaseRequest {
             PoNumber = this.PurchaseOrder?.PoNumber ?? "",
             ShipTo = this.PurchaseOrder?.ShipTo ?? "",
             PaymentTerms = this.PurchaseOrder?.PaymentTerms ?? "",
-            Date = this.Created,
-            Department = this.Department?.Name,
+            Department = this.Department,
             Description = this.Description,
             Vendor = this.Vendor,
-            Requester = this.Requester?.Name,
+            Requester = this.Requester,
             ShippingMethod = this.ShippingType,
             Items = this.PurchaseItems,
-            FOB = this.PurchaseOrder?.PaymentTerms,
-            TotalCost = this.TotalCost,
-            Comments = this.PurchaseOrder?.PoComments ?? ""
+            Comments = this.PurchaseOrder?.PoComments ?? "",
+            EmailCopyList = this.EmailCopyList
         };
+    }
+
+    public void UpdateFromPo(PurchaseOrderDto order) {
+        this.PurchaseOrder = new PurchaseOrder {
+            PoNumber = order.PoNumber,
+            ShipTo = order.ShipTo,
+            PaymentTerms = order.PaymentTerms,
+            PoComments = order.Comments
+        };
+        this.PurchaseItems=order.Items;
+        this.Vendor=order.Vendor;
+        this.Department = order.Department;
+        this.Description=order.Description;
+        this.ShippingType=order.ShippingMethod;
+        this.EmailCopyList=order.EmailCopyList;
+        this.OrderedDate = order.Date;
     }
 
     public PurchaseRequest? Clone() {

@@ -3,24 +3,12 @@
 @using Domain.PurchaseRequests.Pdf
 @using QuestPDF.Fluent
 
-@*@if (this._fileBytes != null) {
-    <RadzenStack>
-        <RadzenRow JustifyContent="JustifyContent.Start">
-            <RadzenButton Text="Download" Click="DownloadHandler"
-                          Size="ButtonSize.Small"
-                          class="button-transparent"
-                          Image="/images/download-icon.svg"/>
-        </RadzenRow>
-        <PdfPreview FileBytes="@this._fileBytes"/>
-    </RadzenStack>
-    
-}*@
 <PdfPreview FileBytes="@this._fileBytes" FileName="PurchaseOrder.pdf"/>
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
-    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public PurchaseOrderDto? PurchaseOrderDto { get; set; }
     private bool _prNull = true;
     private byte[]? _fileBytes;
 
@@ -30,9 +18,9 @@
 
     protected override async Task OnParametersSetAsync() {
         await base.OnParametersSetAsync();
-        if (this.PurchaseRequest != null) {
+        if (this.PurchaseOrderDto != null) {
             if (this._prNull) {
-                var document = new PurchaseOrderDocument(this.PurchaseRequest.ToPurchaseOrderDto(), Path.Combine($"{this._environment.WebRootPath}", "images/seti_logo.png"));
+                var document = new PurchaseOrderDocument(this.PurchaseOrderDto, Path.Combine($"{this._environment.WebRootPath}", "images/seti_logo.png"));
                 this._fileBytes = document.GeneratePdf();
                 this._prNull = false;
             }
