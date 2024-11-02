@@ -51,6 +51,10 @@
                                          RepeatEdit="true"
                                          Mode="EditMode.EDIT"/>
                     break;
+                case PrUserAction.RECEIVE:
+                    <ReceiveActionView PurchaseRequest="@this._actionRequest"
+                                       ActionCompleted="@this.CompletedHandler"/>
+                    break;
                 default:
                     <p>Invalid action</p>
                     break;
@@ -92,7 +96,8 @@
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
         { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") },
         { PrUserAction.APPROVE, new TabTemplate("Approve/Reject Request", "assignment_turned_in") }, 
-        { PrUserAction.ORDER, new TabTemplate("Order Request", "add_shopping_cart") },
+        { PrUserAction.ORDER, new TabTemplate("Order Request", "paid") },
+        { PrUserAction.RECEIVE, new TabTemplate("Receive Order", "input") },
         { PrUserAction.REPEAT, new TabTemplate("Repeat Request", "content_copy") }
     };
     
@@ -163,6 +168,12 @@
                         }
                         break;
                     }
+                    case PrUserAction.RECEIVE: {
+                        if (role==nameof(PurchaseRequestRole.Purchaser) || role==nameof(PurchaseRequestRole.Requester)) {
+                            await this.ReceiveHandler();
+                        }
+                        break;
+                    }
                     default:
                         this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
                         break;
@@ -187,6 +198,10 @@
                 await this.OrderRequestHandler();
                 break;
             case PrUserAction.REPEAT:
+                await this.RepeatHandler();
+                break;
+            case PrUserAction.RECEIVE:
+                await this.ReceiveHandler();
                 break;
             default:
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
@@ -230,6 +245,31 @@
             if (this._selectedRequest != null) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.REPEAT);
+                await InvokeAsync(StateHasChanged);
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");
+            }
+        }
+    }
+    
+    private async Task ReceiveHandler() {
+        if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
+            if (ObjectId.TryParse(this.Id, out var id)) {
+                this._actionRequest = await this._purchaseRequestService.GetPurchaseRequest(id);
+                if (this._actionRequest != null) {
+                    this._actionRequest._id = ObjectId.GenerateNewId(); 
+                    this.TransitionTab(PrUserAction.RECEIVE);
+                    await InvokeAsync(StateHasChanged);
+                } else {
+                    this._notificationService.Notify(NotificationSeverity.Error,"Error","Request not found");
+                }
+            } else {
+                this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid request id");
+            }
+        } else {
+            if (this._selectedRequest != null) {
+                this._actionRequest = this._selectedRequest;
+                this.TransitionTab(PrUserAction.RECEIVE);
                 await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");

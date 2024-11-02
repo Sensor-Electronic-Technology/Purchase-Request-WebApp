@@ -9,6 +9,7 @@ public class PurchaseRequest {
     public ObjectId _id { get; set; }
     public PrRequester Requester { get; set; } = null!;
     public PrApprover Approver { get; set; } = null!;
+    public PrPurchaser? Purchaser { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }
@@ -23,6 +24,7 @@ public class PurchaseRequest {
     public List<string> Quotes { get; set; } = [];
     public PurchaseOrder? PurchaseOrder { get; set; }
     public ApprovalResult? ApprovalResult { get; set; }
+    public List<ItemDeliveryStatus> ItemDelivery { get; set; } = [];
     public PrStatus Status { get; set; }
     public DateTime Created { get; set; }
     public DateTime ApprovedDate { get; set; }
@@ -93,6 +95,7 @@ public class PurchaseRequest {
     
     public PurchaseOrderDto ToPurchaseOrderDto() {
         return new PurchaseOrderDto {
+            RequestId = this._id,
             PoNumber = this.PurchaseOrder?.PoNumber ?? "",
             ShipTo = this.PurchaseOrder?.ShipTo ?? "",
             PaymentTerms = this.PurchaseOrder?.PaymentTerms ?? "",
@@ -103,24 +106,9 @@ public class PurchaseRequest {
             ShippingMethod = this.ShippingType,
             Items = this.PurchaseItems,
             Comments = this.PurchaseOrder?.PoComments ?? "",
-            EmailCopyList = this.EmailCopyList
+            EmailCopyList = this.EmailCopyList,
+            Date = this.OrderedDate,
         };
-    }
-
-    public void UpdateFromPo(PurchaseOrderDto order) {
-        this.PurchaseOrder = new PurchaseOrder {
-            PoNumber = order.PoNumber,
-            ShipTo = order.ShipTo,
-            PaymentTerms = order.PaymentTerms,
-            PoComments = order.Comments
-        };
-        this.PurchaseItems=order.Items;
-        this.Vendor=order.Vendor;
-        this.Department = order.Department;
-        this.Description=order.Description;
-        this.ShippingType=order.ShippingMethod;
-        this.EmailCopyList=order.EmailCopyList;
-        this.OrderedDate = order.Date;
     }
 
     public PurchaseRequest? Clone() {

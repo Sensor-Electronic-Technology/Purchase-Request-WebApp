@@ -52,8 +52,7 @@
 
     private async Task SubmitHandler(byte[] emailDocument) {
         this._spinnerService.Show("Submitting Order....");
-        this.PurchaseRequest.UpdateFromPo(this._purchaseOrderDto);
-        var success = await this._purchaseRequestService.OrderPurchaseRequest(this.PurchaseRequest, emailDocument);
+        var success = await this._purchaseRequestService.OrderPurchaseRequest(this._purchaseOrderDto, emailDocument);
         if (success) {
             this._notificationService.Notify(NotificationSeverity.Success,"Ordered","Purchase request ordered successfully.");
         } else {

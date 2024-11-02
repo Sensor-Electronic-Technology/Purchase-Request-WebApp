@@ -71,7 +71,7 @@ public class EmailService {
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
+            /*html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");*/
             html = html.Replace("{prLink}",$"<a href=\"{prInput.PrUrl}\">Request Link</a>");
             var builder = new BodyBuilder { 
                 HtmlBody = html
@@ -108,7 +108,38 @@ public class EmailService {
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
+            /*html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");*/
+            var builder = new BodyBuilder { 
+                HtmlBody = html
+            };
+            message.Body = builder.ToMessageBody();
+            await client.SendAsync(message);
+        } catch (Exception ex) {
+            this._logger.LogError("Mail Failed, Exception: \\n {ExMessage}", ex.Message);
+        } finally {
+            await client.DisconnectAsync(true);
+        }
+    }
+    
+    public async Task SendReceivePurchaseOrder(byte[] htmlBody,string title,List<string> to, List<string> toCC) {
+        var client = new SmtpClient();
+        try {
+            client.CheckCertificateRevocation = false;
+            client.ServerCertificateValidationCallback = CertValidationCallback;
+            await client.ConnectAsync(this._emailSettings.ServerSettings?.Host ?? "10.92.3.215",
+                this._emailSettings.ServerSettings?.Port ?? 25, false);
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Purchase Request", FromAddress));
+            foreach (var recipient in to) {
+                message.To.Add(new MailboxAddress(recipient, recipient));
+            }
+            foreach (var recipient in toCC) {
+                message.Cc.Add(new MailboxAddress(recipient, recipient));
+            }
+            message.Subject = $"{title}-Purchase Request Received";
+            using var stream = new MemoryStream(htmlBody);
+            using var reader = new StreamReader(stream);
+            var html = await reader.ReadToEndAsync();
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };

@@ -1,4 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
+
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Domain.PurchaseRequests.Model;
@@ -61,7 +63,53 @@ foreach (var a in arr) {
 
 //await TestPoCollection();
 //await TestGeneratePoNumber();
-await DeleteAllPoNumbers();
+//await DeleteAllPoNumbers();
+
+//await ComplexQueryTest();
+await CheckMongoTime();
+
+async Task CheckMongoTime() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<PurchaseRequest>("purchase_requests");
+    
+    using var cursor = await collection.FindAsync(_=>true,new FindOptions<PurchaseRequest>() {
+        BatchSize = 10
+    });
+
+    while (await cursor.MoveNextAsync())
+    {
+        var batch = cursor.Current;
+
+        foreach (var item in batch) {
+            Console.WriteLine($"MongoTime: {item.Created:h:mm:ss tt zz} " +
+                              $" AdjustedTime: {TimeProvider.ToLocal(item.Created):h:mm:ss tt zz}" +
+                              $" CurrentTime: {TimeProvider.Now():h:mm:ss tt zz}" +
+                              $" DaysSince: {TimeProvider.DaysSince(item.Created)}");
+        }
+    }
+}
+
+async Task ComplexQueryTest() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<Contact>("contacts").OfType<Vendor>();
+    
+    using var cursor = await collection.FindAsync(_=>true,new FindOptions<Vendor>() {
+        BatchSize = 10
+    });
+    int batchCount = 0;
+    while (await cursor.MoveNextAsync())
+    {
+        var batch = cursor.Current;
+        batchCount++;
+        foreach (var item in batch) {
+           
+            Console.WriteLine($"BatchCount: {batchCount} ItemName: {item.Name}");
+            Console.WriteLine();
+        }
+    }
+}
 
 async Task DeleteAllPoNumbers() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -468,7 +516,7 @@ async Task<PurchaseRequest> GetPurchaseRequest() {
     return purchaseRequest;
 }
 
-async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
+/*async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
@@ -505,7 +553,7 @@ async Task<PurchaseOrderDto> GetPurchaseOrderDto() {
         purchaseOrder.ToAddress = contact;
     }
     return purchaseOrder;
-}
+}*/
 
 /*async Task TestExcel() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";

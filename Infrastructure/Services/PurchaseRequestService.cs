@@ -141,6 +141,17 @@ public class PurchaseRequestService {
         return true;
     }
     
+    public async Task<bool> ReceivePurchaseOrder(string? locationDescription) {
+        return true;
+        /*this._requestDataService.UpdateOne()
+        if (!deleted) return false;
+
+        await this._emailService.SendReceivePurchaseOrder(input.EmailTemplate ?? [], input.Title ?? "Unknown",
+            ["aelmendorf@s-et.com" ?? ""],
+            ["aelmendorf@s-et.com" ?? ""]);
+        return true;*/
+    }
+    
     public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
         bool approved = input.Action==PurchaseRequestAction.Approve ? true : false;
         request.ApprovalResult = new ApprovalResult() {
@@ -177,9 +188,9 @@ public class PurchaseRequestService {
         return false;
     }
     
-    public async Task<bool> OrderPurchaseRequest(PurchaseRequest request,byte[] emailDocument) {
-        request.Status = PrStatus.Ordered;
-        var success=await this._requestDataService.UpdateOne(request);
+    public async Task<bool> OrderPurchaseRequest(PurchaseOrderDto order,byte[] emailDocument) {
+        var request = await this._requestDataService.UpdateFromOrder(order);
+        if (request == null) return false;
         List<FileData> files = [];
         foreach (var quote in request.Quotes) {
             var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
@@ -187,20 +198,18 @@ public class PurchaseRequestService {
                 files.Add(fileData);
             }
         }
-        if(!success) return false;
-        var document = new PurchaseRequestDocument(request.ToInput(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+        var document = new PurchaseOrderDocument(request.ToPurchaseOrderDto(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
         await this._emailService.SendOrderEmail(emailDocument,request.Title ?? "Not Titled",
             document.GeneratePdf(),
             files,
             [request.Requester.Email ?? ""],
             [request.Requester.Email ?? ""]);
-        return false;
+        return true;
     }
 
     public async Task<PurchaseOrderDto> GetPurchaseOrderDto(ObjectId requestId) {
         var request = await this._requestDataService.GetPurchaseRequest(requestId);
         var po=request.ToPurchaseOrderDto();
-
         return po;   
     }
 
@@ -246,9 +255,9 @@ public class PurchaseRequestService {
         return await this._requestDataService.GetPurchaseRequests(username,role);
     }
     
-    public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
+    /*public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
         return await this._requestDataService.GetApproverRequests(username);
-    }
+    }*/
     
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {
         return await this._requestDataService.GetUserPurchaseRequests(filter);

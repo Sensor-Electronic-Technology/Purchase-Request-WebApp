@@ -34,7 +34,7 @@
                                         TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                         <RadzenCard>
-                            <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection" />
+                            <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>
                             <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
@@ -53,8 +53,8 @@
                                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                             ValueChanged="@this.SelectedChangedHandler">
                                 <GroupHeaderTemplate>
-                                    <RadzenAlert Text="@(context.GroupDescriptor.GetTitle()+":"+context.Data.Key)" 
-                                                 AlertStyle="@this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus),context.Data.Key.ToString()))"
+                                    <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
+                                                 AlertStyle="@this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus), context.Data.Key.ToString()))"
                                                  AllowClose="false"
                                                  Size="AlertSize.ExtraSmall"/>
                                 </GroupHeaderTemplate>
@@ -67,7 +67,7 @@
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)" Title="Approved Date" Visible="false">
                                         <Template Context="request">
-                                            @if(request.Status>=PrStatus.Approved && request.Status!=PrStatus.Rejected) {
+                                            @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
                                                 @request.Created.ToString("MM/dd/yy")
                                             } else {
                                                 <span>Not Approved</span>
@@ -76,7 +76,7 @@
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)" Title="Ordered Date" Visible="false">
                                         <Template Context="request">
-                                            @if(request.Status>=PrStatus.Ordered && request.Status!=PrStatus.Rejected) {
+                                            @if (request.Status >= PrStatus.Ordered && request.Status != PrStatus.Rejected) {
                                                 @request.OrderedDate.ToString("MM/dd/yy")
                                             } else {
                                                 <span>Not Ordered</span>
@@ -85,7 +85,7 @@
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)" Title="Received Date" Visible="false">
                                         <Template Context="request">
-                                            @if(request.Status>=PrStatus.Approved && request.Status!=PrStatus.Rejected) {
+                                            @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
                                                 @request.ReceivedDate.ToString("MM/dd/yy")
                                             } else {
                                                 <span>Not Received</span>
@@ -94,7 +94,7 @@
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.RejectedDate)" Title="Rejected Date" Visible="false">
                                         <Template Context="request">
-                                            @if(request.Status==PrStatus.Rejected) {
+                                            @if (request.Status == PrStatus.Rejected) {
                                                 @request.RejectedDate.ToString("MM/dd/yy")
                                             } else {
                                                 <span>Not Received</span>
@@ -105,7 +105,7 @@
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.AdditionalComments)" Title="Comments" Visible="false"/>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ShippingType)" Title="Freight" Visible="false"/>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Urgent)" Title="Urgent?" Visible="false"/>
-                                    <RadzenDataGridColumn Property="Requester" FilterProperty="Requester.Name" 
+                                    <RadzenDataGridColumn Property="Requester" FilterProperty="Requester.Name"
                                                           Type="@typeof(string)"
                                                           Title="Requester">
                                         <Template Context="request">
@@ -173,7 +173,6 @@
 </RadzenRow>
 
 
-    
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
     [Inject] private UserService _userService { get; set; }
@@ -183,28 +182,27 @@
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
-    
+
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private bool _viewPainCollapsed = true;
     private string _viewPaneSize = "50%";
     private bool _queueCollapsed = false;
-    
+
     private void CancelRequestHandler(PurchaseRequest request) {
         Console.WriteLine("Cancel Request");
-        
     }
 
     private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
         if (obj.Count > 0) {
             this.SelectedPurchaseRequest = obj[0];
-            this._selectedPurchaseRequests=obj;
+            this._selectedPurchaseRequests = obj;
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
             this._viewPainCollapsed = false;
             this._queueCollapsed = true;
         }
     }
-    
+
     AlertStyle GetAlertStyle(PrStatus status) {
         switch (status) {
             case PrStatus.NeedsApproval:
@@ -221,16 +219,16 @@
                 return AlertStyle.Info;
         }
     }
-    
+
     void ShowTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "Hello!", options);
-    
+
     void OnRender(DataGridRenderEventArgs<PurchaseRequest> args) {
-        if(args.FirstRender) {
-            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Status", SortOrder = SortOrder.Ascending });
+        if (args.FirstRender) {
+            args.Grid.Groups.Add(new GroupDescriptor() { Property = "Status", SortOrder = SortOrder.Ascending });
             StateHasChanged();
         }
     }
-    
+
     void CellRender(DataGridCellRenderEventArgs<PurchaseRequest> args) {
         if (args.Column.Property == nameof(PurchaseRequest.Status)) {
             switch (args.Data.Status) {
@@ -261,17 +259,16 @@
         this._queueCollapsed = false;
     }
 
-    private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args,MenuItemEventArgs e) {
+    private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args, MenuItemEventArgs e) {
         await this._dataGrid.SelectRow(args.Data);
         this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)e.Value, "")).Wait();
         this._contextMenuService.Close();
     }
-    
+
     private void ContextMenuHandle(DataGridCellMouseEventArgs<PurchaseRequest> args) {
         var role = this._userService.GetUserRole();
         Console.WriteLine($"Role: {role}");
         if (PurchaseRequestRole.TryFromName(role, out PurchaseRequestRole requestRole)) {
-            Console.WriteLine($"PrRole: {requestRole.Name}");
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
                     if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
@@ -283,35 +280,46 @@
                                 this.ContextActionHandler(args, e).Wait();
                             }
                         );
+                    }else if(args.Data.Status == PrStatus.Ordered || args.Data.Status == PrStatus.Delivered) {
+                        List<ContextMenuItem> menuList = [
+                            new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                        ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                        );
                     }
+
                     break;
-            }
+                }
                 case nameof(PurchaseRequestRole.Approver): {
                     if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
                         List<ContextMenuItem> menuList = [
-                            new ContextMenuItem(){ Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
+                            new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
                         ];
                         this._contextMenuService.Open(args, menuList, (e) => {
                                 this.ContextActionHandler(args, e).Wait();
                             }
                         );
                     }
+
                     break;
                 }
                 case nameof(PurchaseRequestRole.Purchaser): {
                     if (args.Data.Status == PrStatus.Approved || args.Data.Status == PrStatus.Ordered) {
                         if (args.Data.Status == PrStatus.Approved) {
                             List<ContextMenuItem> menuList = [
-                                new ContextMenuItem(){ Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
+                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
                                 new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();
                                 }
                             );
-                        }else if (args.Data.Status == PrStatus.Ordered) {
+                        } else if (args.Data.Status == PrStatus.Ordered) {
                             List<ContextMenuItem> menuList = [
-                                new ContextMenuItem(){ Text = "Receive Order", Value = PrUserAction.RECEIVE, Icon = "input" }
+                                new ContextMenuItem() { Text = "Receive Order", Value = PrUserAction.RECEIVE, Icon = "input" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();
@@ -319,45 +327,44 @@
                             );
                         }
                     }
+
                     break;
                 }
             }
         }
     }
-    
+
     private async Task SelectedStatusChangedHandler(string obj) {
         //this._notificationService.Notify(NotificationSeverity.Info,"Selected",obj);
-        var pr=this.PurchaseRequests.FirstOrDefault(pr=>pr._id.ToString() == obj);
+        var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == obj);
         if (pr != null) {
             await this._dataGrid.SelectRow(pr, true);
         }
+
         await InvokeAsync(StateHasChanged);
         //return Task.CompletedTask;
     }
 
     private async Task QueueUserActionHandler(UserActionEventArg arg) {
-        var pr=this.PurchaseRequests.FirstOrDefault(pr=>pr._id.ToString() == arg.PrId);
+        var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == arg.PrId);
         if (pr != null) {
             await this._dataGrid.SelectRow(pr, true);
             await this.UserAction.InvokeAsync(arg);
         }
     }
-    
-    void ShowColumnPicker(MouseEventArgs args) => this._contextMenuService.Open(args, ds =>
-        @<RadzenListBox TValue="object" Style="height:200px;background-color:#fff"
-                        SelectAllText="@this._dataGrid.AllColumnsText" AllowSelectAll="@_dataGrid.AllowPickAllColumns"
-                        MaxSelectedLabels="@this._dataGrid.ColumnsPickerMaxSelectedLabels" 
-                        SelectedItemsText="@this._dataGrid.ColumnsShowingText" FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
-                        Multiple="true" AllowFiltering="@this._dataGrid.ColumnsPickerAllowFiltering"
-                        Placeholder="@this._dataGrid.AllColumnsText"
-                        Data="@this._dataGrid.ColumnsCollection"
-                        TextProperty="ColumnPickerTitle"
-                        Value="@(this._dataGrid.ColumnsCollection.Where(c => c.GetVisible()))"
-                        Change=@(args => { 
-                                   var checkedColumns = ((IEnumerable<object>)args).Cast<RadzenDataGridColumn<PurchaseRequest>>();
-                                   this._dataGrid.ColumnsCollection.ToList().ForEach(c => c.Visible = checkedColumns.Contains(c)); 
-                               })
-         />
-    );
+
+    void ShowColumnPicker(MouseEventArgs args) =>
+        this._contextMenuService.Open(args, ds =>
+            @<RadzenListBox TValue="object" Style="height:200px;background-color:#fff"
+                            SelectAllText="@this._dataGrid.AllColumnsText" AllowSelectAll="@_dataGrid.AllowPickAllColumns"
+                            MaxSelectedLabels="@this._dataGrid.ColumnsPickerMaxSelectedLabels"
+                            SelectedItemsText="@this._dataGrid.ColumnsShowingText" FilterCaseSensitivity=FilterCaseSensitivity.CaseInsensitive
+                            Multiple="true" AllowFiltering="@this._dataGrid.ColumnsPickerAllowFiltering"
+                            Placeholder="@this._dataGrid.AllColumnsText"
+                            Data="@this._dataGrid.ColumnsCollection"
+                            TextProperty="ColumnPickerTitle"
+                            Value="@(this._dataGrid.ColumnsCollection.Where(c => c.GetVisible()))"
+                            Change=@(args => { var checkedColumns = ((IEnumerable<object>)args).Cast<RadzenDataGridColumn<PurchaseRequest>>(); this._dataGrid.ColumnsCollection.ToList().ForEach(c => c.Visible = checkedColumns.Contains(c)); })/>
+        );
 
 }

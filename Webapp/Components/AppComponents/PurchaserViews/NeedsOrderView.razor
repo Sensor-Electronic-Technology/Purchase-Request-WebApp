@@ -3,9 +3,10 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Webapp.Data
 @using TimeProvider = Infrastructure.Services.TimeProvider
+@using Webapp.Services.Authentication
 @using Infrastructure.Services
 
-@if (this.PurchaseRequest == null) {
+@if (this.PurchaseRequest == null && this._canPerformAction) {
     <p>Loading...</p>
 } else {
     <RadzenSteps SelectedIndex="@this._selectedStep"
@@ -44,11 +45,9 @@
                                 </RadzenFormField>
                             </RadzenFieldset>
                         </RadzenStack>
-
                         <PurchaseItemsTable Mode="EditMode.EDIT"
                                             ShowHeader="false"
                                             @bind-PurchaseItems="@this.PurchaseOrderDto.Items"/>
-
                     </RadzenStack>
                 </RadzenCard>
             </RadzenStepsItem>
@@ -180,6 +179,7 @@
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Inject] private PoNumberService _poNumberService { get; set; }
+    [Inject] private UserService _userService { get; set; }
 
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } = new();
     [Parameter] public PurchaseOrderDto? PurchaseOrderDto { get; set; }
@@ -207,12 +207,9 @@
     private bool _poNumberGenerated = false;
     private List<RequestAlert> _orderAlerts = [];
     private byte[]? _emailDocument;
+    private bool _canPerformAction = true;
     
-    private Task PaymentTermChangedHandler(PaymentTerm payment) {
-        this._selectedPaymentTerm=payment;
-        this.PurchaseOrderDto.PaymentTerms = payment;
-        return Task.CompletedTask;
-    }
+
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
@@ -223,6 +220,8 @@
     private async Task SubmitHandler() {
         this.UpdateMailMerge();
         this._emailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
+        /*await Task.Delay(500);*/
         await this.Submit.InvokeAsync(this._emailDocument);
     }
 
@@ -235,6 +234,12 @@
             ApprovalComments = this.PurchaseOrderDto.Comments ?? "",
             CommentsTitle = "Comments",
         }];
+    }
+    
+    private Task PaymentTermChangedHandler(PaymentTerm payment) {
+        this._selectedPaymentTerm=payment;
+        this.PurchaseOrderDto.PaymentTerms = payment;
+        return Task.CompletedTask;
     }
     
     private async Task DocumentLoadedHandler(Document obj) {
@@ -264,13 +269,24 @@
             ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
             CommentsTitle = "Order Comments",
         }];
-        var purchasers = await this._authApiService.GetPurchasers();
-        this._emailList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
-            .Select(e=>e.Email)
-            .ToList();
-        this._emailList.Add(this.PurchaseOrderDto.Requester?.Email ?? "");
-        this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
-        this._ccList.AddRange(this.PurchaseOrderDto.EmailCopyList);
+        var userAccount = this._userService.GetSessionUserProfile();
+        if (userAccount != null && this.PurchaseOrderDto != null) {
+            this._emailList.Add(userAccount.Email);
+            this.PurchaseOrderDto.Purchaser = new PrPurchaser() {
+                Username = userAccount._id,
+                Name = $"{userAccount.FirstName} {userAccount.LastName}",
+                Email = userAccount.Email
+            };
+            //this.PurchaseOrderDto.Purchaser=this._userAccount.
+            this._emailList.Add(this.PurchaseOrderDto.Requester?.Email ?? "");
+            this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
+            this._ccList.AddRange(this.PurchaseOrderDto.EmailCopyList);
+            this._canPerformAction = true;
+        } else {
+            this._canPerformAction = false;
+        }
+        
+
         /*}*/
     }
 

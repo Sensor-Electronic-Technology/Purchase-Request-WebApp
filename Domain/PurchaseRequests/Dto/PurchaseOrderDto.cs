@@ -1,9 +1,11 @@
 ﻿using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
+using MongoDB.Bson;
 
 namespace Domain.PurchaseRequests.Dto;
 
 public class PurchaseOrderDto {
+    public ObjectId RequestId { get; set; }
     public string PoNumber { get; set; }
     public DateTime Date { get; set; }
     public Department? Department { get; set; }
@@ -12,6 +14,7 @@ public class PurchaseOrderDto {
     public Contact? ToAddress { get; set; }
     public string? ShipTo { get; set; }
     public PrRequester? Requester { get; set; }
+    public PrPurchaser? Purchaser { get; set; }
     public string? ShippingMethod { get; set; }
     public List<PurchaseItem> Items { get; set; }
     public List<string> EmailCopyList { get; set; }
