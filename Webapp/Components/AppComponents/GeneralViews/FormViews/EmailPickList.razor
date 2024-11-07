@@ -78,7 +78,7 @@
             this.Target=emailList.Where(e => this.CcList.Contains(e.Email)).ToList();
             emailList.RemoveAll(e => this.CcList.Contains(e.Email));
         }
-        this._notificationService.Notify(NotificationSeverity.Info, "Email List", String.Join(" , ", this.CcList));
+        /*this._notificationService.Notify(NotificationSeverity.Info, "Email List", String.Join(" , ", this.CcList));*/
         this.Source = emailList;
         await InvokeAsync(StateHasChanged);
     }

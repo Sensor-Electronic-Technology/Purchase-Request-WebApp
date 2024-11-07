@@ -10,6 +10,7 @@ public class PurchaseRequest {
     public PrRequester Requester { get; set; } = null!;
     public PrApprover Approver { get; set; } = null!;
     public PrPurchaser? Purchaser { get; set; }
+    public PrReceiver? Receiver { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? AdditionalComments { get; set; }

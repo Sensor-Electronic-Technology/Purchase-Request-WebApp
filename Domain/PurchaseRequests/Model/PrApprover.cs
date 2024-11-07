@@ -14,3 +14,5 @@ public class PrPurchaser:PrUser { }
 public class PrRequester:PrUser {
     public string? Initials { get; set; }
 }
+
+public class PrReceiver:PrUser { }

@@ -90,9 +90,6 @@
                 if (!string.IsNullOrEmpty(this.PurchaseRequest.Approver.Email)) {
                     this._ccList.Add(this.PurchaseRequest.Approver.Email);
                 }
-                /*if (!string.IsNullOrEmpty(this.PurchaseRequest.Requester?.Email)) {
-                    this._ccList.Add(this.PurchaseRequest.Requester.Email);
-                }*/
             }
         }
         this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/CancelTemplate.docx");

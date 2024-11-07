@@ -12,7 +12,7 @@
 
 <RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem; height: 900px;">
     <RadzenStack>
-        @if (!(this._userAccount != null && this._approvers.Count > 0)) {
+        @if (!(this._approvers.Count > 0)) {
             <RadzenText Text="Loading User Profile"/>
         } else {
             <RadzenCard class="rz-background-color-info-lighter">
@@ -24,7 +24,7 @@
                     <Steps>
                         <RadzenStepsItem Text="Request Information" PreviousText="" NextText="Purchase Information">
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
-                                                    Name="@(this._userAccount.FirstName + " " + this._userAccount.LastName)"
+                                                    Name="@(this.UserProfile.FirstName + " " + this.UserProfile.LastName)"
                                                     SelectedApprover="@this._selectedApprover"
                                                     SelectedApproverChanged="SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
@@ -67,7 +67,7 @@
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
-    [Inject] private UserService _userService { get; set; }
+    //[Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IConfiguration configuration { get; set; }
@@ -78,6 +78,7 @@
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public bool RepeatEdit { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
     
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
@@ -86,7 +87,7 @@
     private bool _isUrgent = false;
     private List<UserAccountDto> _approvers = [];
     private List<string> _approverSelectList = [];
-    private UserProfile? _userAccount = new();
+    //private UserProfile? _userAccount = new();
     private List<Department> _departments = new();
     private List<FileData> _quotes = [];
     private PurchaseRequestInput? _finalizeDataInput = null;
@@ -97,16 +98,16 @@
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._approvers = await this._purchaseRequestService.GetApprovers();
-        this._userAccount = this._userService.GetSessionUserProfile();
+        /*this._userAccount = this._userService.GetSessionUserProfile();*/
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
-        if(this._userAccount!=null) {
+        /*if(this._userAccount!=null) {*/
             if (this.Mode == EditMode.NEW) {
                 await this.GeneratePurchaseRequest();
-                this._purchaseReqInput.RequesterUsername=this._userAccount._id;
-                this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
-                this._purchaseReqInput.RequesterInitials = $"{this._userAccount.FirstName?[0]}{this._userAccount.LastName?[0]}";
-                this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
+                this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
+                this._purchaseReqInput.RequesterName=this.UserProfile.FirstName+" "+this.UserProfile.LastName;
+                this._purchaseReqInput.RequesterInitials = $"{this.UserProfile.FirstName?[0]}{this.UserProfile.LastName?[0]}";
+                this._purchaseReqInput.RequesterEmail=this.UserProfile.Email;
             } else {
                 if (!this.RepeatEdit) {
                     this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
@@ -114,16 +115,16 @@
                     this._selectedApprover = approverAccount?.FirstName;
                 } else {
                     this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
-                    this._purchaseReqInput.RequesterUsername=this._userAccount._id;
-                    this._purchaseReqInput.RequesterName=this._userAccount.FirstName+" "+this._userAccount.LastName;
-                    this._purchaseReqInput.RequesterInitials = $"{this._userAccount.FirstName?[0]}{this._userAccount.LastName?[0]}";
-                    this._purchaseReqInput.RequesterEmail=this._userAccount.Email;
+                    this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
+                    this._purchaseReqInput.RequesterName=this.UserProfile.FirstName+" "+this.UserProfile.LastName;
+                    this._purchaseReqInput.RequesterInitials = $"{this.UserProfile.FirstName?[0]}{this.UserProfile.LastName?[0]}";
+                    this._purchaseReqInput.RequesterEmail=this.UserProfile.Email;
                     this._purchaseReqInput.ApproverName = string.Empty;
                     this._purchaseReqInput.ApproverEmail = string.Empty;
                     this._purchaseReqInput.ApproverId = string.Empty;
                 }
             }
-        }
+        //}
     }
     
     private async Task UploadFiles() {
@@ -239,7 +240,7 @@
     
     private async Task LoadData() {
         this._approvers = await this._purchaseRequestService.GetApprovers();
-        this._userAccount = this._userService.GetSessionUserProfile();
+        /*this._userAccount = this._userService.GetSessionUserProfile();*/
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
     }
@@ -345,8 +346,8 @@
 
     Task GeneratePurchaseRequest() {
         this._purchaseReqInput=this._purchaseRequestService.CreatePrInput(
-            this._userAccount?.FirstName + " " + this._userAccount?.LastName,
-            this._userAccount?.Email,this._userAccount?._id,$"{this._userAccount.FirstName?[0]},{this._userAccount.LastName?[0]}");
+            this.UserProfile?.FirstName + " " + this.UserProfile?.LastName,
+            this.UserProfile?.Email,this.UserProfile?._id,$"{this.UserProfile.FirstName?[0]},{this.UserProfile.LastName?[0]}");
 
         List<PurchaseItem> items = new();
         items.Add(new PurchaseItem() {

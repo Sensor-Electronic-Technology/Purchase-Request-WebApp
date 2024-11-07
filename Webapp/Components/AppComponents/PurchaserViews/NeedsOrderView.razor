@@ -1,6 +1,7 @@
 ﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
+@using Domain.Users
 @using Webapp.Data
 @using TimeProvider = Infrastructure.Services.TimeProvider
 @using Webapp.Services.Authentication
@@ -179,11 +180,12 @@
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Inject] private PoNumberService _poNumberService { get; set; }
-    [Inject] private UserService _userService { get; set; }
+    //[Inject] private UserService _userService { get; set; }
 
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } = new();
     [Parameter] public PurchaseOrderDto? PurchaseOrderDto { get; set; }
     [Parameter] public EventCallback<PurchaseOrderDto?> PurchaseOrderDtoChanged { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
     
     [Parameter] public EventCallback FinalView { get; set; }
     [Parameter] public EventCallback ResetView { get; set; }
@@ -269,13 +271,13 @@
             ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
             CommentsTitle = "Order Comments",
         }];
-        var userAccount = this._userService.GetSessionUserProfile();
-        if (userAccount != null && this.PurchaseOrderDto != null) {
-            this._emailList.Add(userAccount.Email);
+        /*var userAccount = this._userService.GetSessionUserProfile();*/
+        if (this.PurchaseOrderDto != null) {
+            this._emailList.Add(UserProfile.Email);
             this.PurchaseOrderDto.Purchaser = new PrPurchaser() {
-                Username = userAccount._id,
-                Name = $"{userAccount.FirstName} {userAccount.LastName}",
-                Email = userAccount.Email
+                Username = UserProfile._id,
+                Name = $"{UserProfile.FirstName} {UserProfile.LastName}",
+                Email = UserProfile.Email
             };
             //this.PurchaseOrderDto.Purchaser=this._userAccount.
             this._emailList.Add(this.PurchaseOrderDto.Requester?.Email ?? "");
@@ -285,9 +287,6 @@
         } else {
             this._canPerformAction = false;
         }
-        
-
-        /*}*/
     }
 
     private Task ToEmailChanged(string toEmails) {

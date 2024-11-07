@@ -21,44 +21,67 @@
                                    PurchaseReqStatuses="@this._purchaseReqStatuses"/>
         </RadzenTabsItem>
         <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
-            <PurchaseRequestForm ActionCompleted="@this.CompletedHandler" Mode="EditMode.NEW" RepeatEdit="false"/>
+            @if (this._userProfile != null) {
+                <PurchaseRequestForm ActionCompleted="@this.CompletedHandler"
+                                     UserProfile="@this._userProfile"
+                                     Mode="EditMode.NEW" RepeatEdit="false"/>
+            } else {
+                <RadzenCard class="area-header">
+                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="error"/><b>Error: UserProfile not loaded, please refresh page or re-log</b>
+                    </RadzenText>
+                </RadzenCard>
+            }
         </RadzenTabsItem>
         <RadzenTabsItem Text="@this._templateTabText" Visible="@this._templateTabVisible" Icon="@this._tabIcon"
                         Style="background: #cc7119">
-            @switch(this._userAction) {
-                case PrUserAction.MODIFY:
-                    <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
-                                         Mode="@EditMode.EDIT"
-                                         RepeatEdit="false"
+            @if (this._userProfile != null) {
+                @switch (this._userAction) {
+                    case PrUserAction.MODIFY:
+                        <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
+                                             Mode="@EditMode.EDIT"
+                                             RepeatEdit="false"
+                                             UserProfile="@this._userProfile"
+                                             ActionCompleted="@this.CompletedHandler"/>
+                        break;
+                    case PrUserAction.CANCEL:
+                        <CancelRequestView PurchaseRequest="@this._actionRequest"
+                                           ActionCompleted="@this.CompletedHandler"/>
+                        break;
+                    case PrUserAction.ORDER:
+                        <OrderActionView PurchaseRequest="@this._actionRequest"
+                                         UserProfile="@this._userProfile"
                                          ActionCompleted="@this.CompletedHandler"/>
-                    break;
-                case PrUserAction.CANCEL:
-                    <CancelRequestView PurchaseRequest="@this._actionRequest"
-                                       ActionCompleted="@this.CompletedHandler"/>
-                    break;
-                case PrUserAction.ORDER:
-                    <OrderActionView PurchaseRequest="@this._actionRequest"
-                                     ActionCompleted="@this.CompletedHandler"/>
 
-                    break;
-                case PrUserAction.APPROVE:
-                    <ApproveActionView PurchaseRequest="@this._actionRequest" 
-                                       ActionCompleted="@this.CompletedHandler"/>
-                    break;
-                case PrUserAction.REPEAT:
-                    <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
-                                         ActionCompleted="@this.CompletedHandler"
-                                         RepeatEdit="true"
-                                         Mode="EditMode.EDIT"/>
-                    break;
-                case PrUserAction.RECEIVE:
-                    <ReceiveActionView PurchaseRequest="@this._actionRequest"
-                                       ActionCompleted="@this.CompletedHandler"/>
-                    break;
-                default:
-                    <p>Invalid action</p>
-                    break;
+                        break;
+                    case PrUserAction.APPROVE:
+                        <ApproveActionView PurchaseRequest="@this._actionRequest"
+                                           ActionCompleted="@this.CompletedHandler"/>
+                        break;
+                    case PrUserAction.REPEAT:
+                        <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
+                                             ActionCompleted="@this.CompletedHandler"
+                                             UserProfile="@this._userProfile"
+                                             RepeatEdit="true"
+                                             Mode="EditMode.EDIT"/>
+                        break;
+                    case PrUserAction.RECEIVE:
+                        <ReceiveActionView PurchaseRequest="@this._actionRequest"
+                                           ActionCompleted="@this.CompletedHandler"
+                                           UserProfile="@this._userProfile"/>
+                        break;
+                    default:
+                        <p>Invalid action</p>
+                        break;
+                }
+            } else {
+                <RadzenCard class="area-header">
+                    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="error"/><b>Error: UserProfile not loaded, please refresh page or re-log</b>
+                    </RadzenText>
+                </RadzenCard>
             }
+
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -82,7 +105,7 @@
     private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
     private PurchaseRequest? _selectedRequest;
     private PurchaseRequest? _actionRequest;
-    private UserProfile? _userAccount = new();
+    private UserProfile? _userProfile = new();
     private bool _templateTabVisible = false;
     private string _templateTabText="Template";
     private string _tabIcon="autorenew";
@@ -124,7 +147,7 @@
         this._messagingClient.HubConnection.On("Connected",this.ConnectedHandler);
         await this._messagingClient.StartAsync();
         if (this._messagingClient.IsConnected) {
-            await this._messagingClient.Register(this._userAccount._id);
+            await this._messagingClient.Register(this._userProfile._id);
         }
     }
 
@@ -136,13 +159,13 @@
     protected override async Task OnParametersSetAsync() {
         await base.OnParametersSetAsync();
         var role=this._userService.GetUserRole();
-        if (!string.IsNullOrWhiteSpace(this.Id) && this.Action.HasValue && this._userAccount != null) {
+        if (!string.IsNullOrWhiteSpace(this.Id) && this.Action.HasValue && this._userProfile != null) {
             this._selectedRequest = this._purchaseRequests.FirstOrDefault(e => e._id.ToString() == this.Id);
             if (this._selectedRequest != null) {
                 this._userAction = (PrUserAction)this.Action.Value;
                 switch(this._userAction) {
                     case PrUserAction.MODIFY:
-                        if(role==nameof(PurchaseRequestRole.Requester) && this._selectedRequest.Requester.Username==this._userAccount?._id) {
+                        if(role==nameof(PurchaseRequestRole.Requester) && this._selectedRequest.Requester.Username==this._userProfile?._id) {
                             await this.ModifyHandler();
                         } else {
                             this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
@@ -216,7 +239,7 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.MODIFY);
-                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
                 //this._localStorage.SetItem(this._userAccount._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
             } else {
@@ -283,7 +306,7 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.CANCEL);
-                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
@@ -299,7 +322,7 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.APPROVE);
-                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
@@ -317,7 +340,7 @@
                 var order = new PurchaseOrder { ShipTo = this._actionRequest.Requester.Name };
                 this._actionRequest.PurchaseOrder = order;
                 this.TransitionTab(PrUserAction.ORDER);
-                this.EditingTracker.StartEditing(this._userAccount._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
                 await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
@@ -338,7 +361,7 @@
     }
     
     private void EditTrackerTimeout(string username,string id) {
-        if(this._userAccount._id == username) {
+        if(this._userProfile._id == username) {
             if(this._actionRequest != null && this._actionRequest._id.ToString() == id) {
                 this._selectedIndex = 0;
                 this.Reset();
@@ -382,14 +405,14 @@
     private async Task Load() {
         this._selectedIndex = 0;
         this.Reset();
-        this._userAccount = this._userService.GetSessionUserProfile();
-        if(this._userAccount != null) {
+        this._userProfile = this._userService.GetSessionUserProfile();
+        if(this._userProfile != null) {
             await this.HubSetup();
-            this.EditingTracker.UserTryClear(this._userAccount._id);
-            this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userAccount._id,this._userService.GetUserRole());
+            this.EditingTracker.UserTryClear(this._userProfile._id);
+            this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userProfile._id,this._userService.GetUserRole());
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
-            Console.WriteLine($"User: {this._userAccount._id} has {_purchaseRequests.Count} requests");
+            Console.WriteLine($"User: {this._userProfile._id} has {_purchaseRequests.Count} requests");
         }
         await InvokeAsync(StateHasChanged);
     }

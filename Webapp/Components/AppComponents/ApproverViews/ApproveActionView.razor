@@ -41,8 +41,6 @@
 </RadzenSplitter>
 @code {
     [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private AuthApiService _authApiService { get; set; }
-    [Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }

@@ -1,5 +1,6 @@
 ﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
+@using Domain.Users
 @using Infrastructure.Services
 @using Webapp.Data
 @using Webapp.Services
@@ -20,6 +21,7 @@
                                     @bind-PurchaseOrderDto="@this._purchaseOrderDto"
                                     ResetView="@(()=> { this._isCollapsed = false; })"
                                     FinalView="@(()=> { this._isCollapsed = true; })"
+                                    UserProfile="@this.UserProfile"
                                     Submit="@this.SubmitHandler"
                                     Cancel="@this.CancelHandler"/>
                 </RadzenCard>
@@ -35,10 +37,11 @@
 
 @code {
     [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private AuthApiService _authApiService { get; set; }
-    [Inject] private UserService _userService { get; set; }
+    //[Inject] private AuthApiService _authApiService { get; set; }
+    //[Inject] private UserService _userService { get; set; }
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private SpinnerService _spinnerService { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
     [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
     [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     private bool _isCollapsed = false;
