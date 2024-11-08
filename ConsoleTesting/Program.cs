@@ -66,7 +66,28 @@ foreach (var a in arr) {
 //await DeleteAllPoNumbers();
 
 //await ComplexQueryTest();
-await CheckMongoTime();
+//await CheckMongoTime();
+
+List<UserActionAlert> alerts = [
+    new UserActionAlert() { Okay = false, Item = "Item1" },
+    new UserActionAlert() { Okay = false, Item = "Item2" }, 
+    new UserActionAlert() { Okay = false, Item = "Item3" },
+    new UserActionAlert() { Okay = false, Item = "Item4" },
+    new UserActionAlert() { Okay = true, Item = "Item5" }, 
+    new UserActionAlert() { Okay = false, Item = "Item6" }
+];
+
+Console.WriteLine("Before Sort:");
+foreach (var alert in alerts) {
+    Console.WriteLine($"{alert.Item}: {alert.Okay}");
+}
+alerts.Sort();
+
+Console.WriteLine("After Sort:");
+foreach (var alert in alerts) {
+    Console.WriteLine($"{alert.Item}: {alert.Okay}");
+}
+
 
 async Task CheckMongoTime() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -691,3 +712,26 @@ async Task TestMongoQueryIdString() {
 
 
 public record ChatMessage(DateTime Timestamp,string Username,string Message);
+
+
+public class UserActionAlert:IEquatable<UserActionAlert> , IComparable<UserActionAlert> {
+    public string? Item { get; set; }
+    public string? Message { get; set; }
+    public bool Okay { get; set; }
+    
+    public bool Equals(UserActionAlert? other) {
+        return this.Okay == other?.Okay;
+    }
+
+    public int CompareTo(UserActionAlert? other) {
+        if(other == null) return -1;
+            
+        if(this.Okay && other.Okay) {
+            return 1;
+        } else if (this.Okay && !other.Okay) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+}

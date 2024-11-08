@@ -36,7 +36,7 @@
                             </RadzenStack>
                         </RadzenFieldset>
                     </RadzenRow>
-                    <AlertListView RequestAlerts="@this.RequestAlerts"/>
+                    <AlertListView UserActionAlerts="@this.RequestAlerts"/>
                     <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
                                    CcListChanged="@EmailListChangedHandler"
                                    IsCollapsed="false"/>
@@ -95,7 +95,7 @@
     [Parameter] public EventCallback<PurchaseRequestInput?> PurchaseRequestInputChanged { get; set; }
     [Parameter] public bool DocLoaded { get; set; }
     [Parameter] public bool CanSave { get; set; }
-    [Parameter] public List<RequestAlert> RequestAlerts { get; set; } = [];
+    [Parameter] public List<UserActionAlert> RequestAlerts { get; set; } = [];
     [Parameter] public byte[] DocumentContent { get; set; }
     [Parameter] public byte[] MailDocument { get; set; }
     [Parameter] public EditMode Mode { get; set; }

@@ -63,68 +63,68 @@ public class ReceiveMailMerge {
 
     public string this[int index] {
         get=> index switch {
-            1 => $"{Item1}, {Item1L}, {Item1R}",
-            2 => $"{Item2}, {Item2L}, {Item2R}",
-            3 => $"{Item3}, {Item3L}, {Item3R}",
-            4 => $"{Item4}, {Item4L}, {Item4R}",
-            5 => $"{Item5}, {Item5L}, {Item5R}",
-            6 => $"{Item6}, {Item6L}, {Item6R}",
-            7 => $"{Item7}, {Item7L}, {Item7R}",
-            8 => $"{Item8}, {Item8L}, {Item8R}",
-            9 => $"{Item9}, {Item9L}, {Item9R}",
-            10 => $"{Item10}, {Item10L}, {Item10R}",
+            0 => $"{Item1}, {Item1L}, {Item1R}",
+            1 => $"{Item2}, {Item2L}, {Item2R}",
+            2 => $"{Item3}, {Item3L}, {Item3R}",
+            3 => $"{Item4}, {Item4L}, {Item4R}",
+            4 => $"{Item5}, {Item5L}, {Item5R}",
+            5 => $"{Item6}, {Item6L}, {Item6R}",
+            6 => $"{Item7}, {Item7L}, {Item7R}",
+            7 => $"{Item8}, {Item8L}, {Item8R}",
+            8 => $"{Item9}, {Item9L}, {Item9R}",
+            9 => $"{Item10}, {Item10L}, {Item10R}",
             _ => "Error"
         };
     }
 
     public void SetItem(int index, string name, string loc, bool received) {
         switch (index) {
-            case 1:
+            case 0:
                 Item1 = name;
                 Item1L = loc;
                 Item1R = received ? "Received" : "Not Received";
                 break;
-            case 2:
+            case 1:
                 Item2 = name;
                 Item2L = loc;
                 Item2R = received ? "Received" : "Not Received";
                 break;
-            case 3:
+            case 2:
                 Item3 = name;
                 Item3L = loc;
                 Item3R = received ? "Received" : "Not Received";
                 break;
-            case 4:
+            case 3:
                 Item4 = name;
                 Item4L = loc;
                 Item4R = received ? "Received" : "Not Received";
                 break;
-            case 5:
+            case 4:
                 Item5 = name;
                 Item5L = loc;
                 Item5R = received ? "Received" : "Not Received";
                 break;
-            case 6:
+            case 5:
                 Item6 = name;
                 Item6L = loc;
                 Item6R = received ? "Received" : "Not Received";
                 break;
-            case 7:
+            case 6:
                 Item7 = name;
                 Item7L = loc;
                 Item7R = received ? "Received" : "Not Received";
                 break;
-            case 8:
+            case 7:
                 Item8 = name;
                 Item8L = loc;
                 Item8R = received ? "Received" : "Not Received";
                 break;
-            case 9:
+            case 8:
                 Item9 = name;
                 Item9L = loc;
                 Item9R = received ? "Received" : "Not Received";
                 break;
-            case 10:
+            case 9:
                 Item10 = name;
                 Item10L = loc;
                 Item10R = received ? "Received" : "Not Received";

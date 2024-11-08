@@ -80,7 +80,7 @@
                     <RadzenRow>
                         <RadzenColumn Size="6">
                             <RadzenStack>
-                                <AlertListView RequestAlerts="@this._orderAlerts"/>
+                                <AlertListView UserActionAlerts="@this._orderAlerts"/>
                                 <RadzenFieldset Text="Email Vendor">
                                     <RadzenStack Orientation="Orientation.Vertical">
                                         <div class="rz-p-1 rz-text-align-center">
@@ -207,7 +207,7 @@
     private bool _includeInternalEmails = false;
     private PaymentTerm? _selectedPaymentTerm;
     private bool _poNumberGenerated = false;
-    private List<RequestAlert> _orderAlerts = [];
+    private List<UserActionAlert> _orderAlerts = [];
     private byte[]? _emailDocument;
     private bool _canPerformAction = true;
     
@@ -271,7 +271,7 @@
             ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
             CommentsTitle = "Order Comments",
         }];
-        /*var userAccount = this._userService.GetSessionUserProfile();*/
+
         if (this.PurchaseOrderDto != null) {
             this._emailList.Add(UserProfile.Email);
             this.PurchaseOrderDto.Purchaser = new PrPurchaser() {
@@ -279,7 +279,6 @@
                 Name = $"{UserProfile.FirstName} {UserProfile.LastName}",
                 Email = UserProfile.Email
             };
-            //this.PurchaseOrderDto.Purchaser=this._userAccount.
             this._emailList.Add(this.PurchaseOrderDto.Requester?.Email ?? "");
             this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
             this._ccList.AddRange(this.PurchaseOrderDto.EmailCopyList);
@@ -321,7 +320,7 @@
         this._orderAlerts.Clear();
         if (this._sendExternalEmail) {
             if(string.IsNullOrWhiteSpace(this._toEmails)) {
-                this._orderAlerts.Add(new RequestAlert() {
+                this._orderAlerts.Add(new UserActionAlert() {
                     Item = "Email Vendor",
                     Message = "No email address provided for vendor",
                     Okay = false
@@ -330,7 +329,7 @@
             }
         }
         if (okay) {
-            this._orderAlerts.Add(new RequestAlert() {
+            this._orderAlerts.Add(new UserActionAlert() {
                 Item="Purchase Request",
                 Message = "Purchase Request is ready for submission",
                 Okay = true,

@@ -8,7 +8,7 @@
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
 @using Webapp.Services
-@using Webapp.Services.Authentication
+@inherits UserActionComponent
 
 <RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem; height: 900px;">
     <RadzenStack>
@@ -55,8 +55,8 @@
                                           CanSave="@this._canSave"
                                           Mode="@this.Mode"
                                           RequestAlerts="@this._requestAlerts"
-                                          SaveClicked="@this.SavePurchaseRequestHandler"
-                                          CancelClicked="@this.CancelPurchaseRequestHandler"/>
+                                          SaveClicked="@this.SubmitHandler"
+                                          CancelClicked="@this.CancelHandler"/>
                         </RadzenStepsItem>
                     </Steps>
                 </RadzenSteps>
@@ -66,19 +66,11 @@
 </RadzenCard>
 
 @code {
-    [Inject] private IWebHostEnvironment _environment { get; set; }
-    //[Inject] private UserService _userService { get; set; }
-    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
-    [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IConfiguration configuration { get; set; }
     [Inject] private FileService _fileService { get; set; }
-    [Inject] private SpinnerService _spinnerService { get; set; }
-    
-    [Parameter] public EventCallback<string> ActionCompleted { get; set; }
-    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public bool RepeatEdit { get; set; }
-    [Parameter] public UserProfile UserProfile { get; set; }
+    
     
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;
@@ -87,21 +79,18 @@
     private bool _isUrgent = false;
     private List<UserAccountDto> _approvers = [];
     private List<string> _approverSelectList = [];
-    //private UserProfile? _userAccount = new();
     private List<Department> _departments = new();
     private List<FileData> _quotes = [];
     private PurchaseRequestInput? _finalizeDataInput = null;
-    private List<RequestAlert> _requestAlerts = [];
+    private List<UserActionAlert> _requestAlerts = [];
     private bool _canSave = false;
     private bool _docLoaded = false;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._approvers = await this._purchaseRequestService.GetApprovers();
-        /*this._userAccount = this._userService.GetSessionUserProfile();*/
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
-        /*if(this._userAccount!=null) {*/
             if (this.Mode == EditMode.NEW) {
                 await this.GeneratePurchaseRequest();
                 this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
@@ -124,7 +113,6 @@
                     this._purchaseReqInput.ApproverId = string.Empty;
                 }
             }
-        //}
     }
     
     private async Task UploadFiles() {
@@ -173,8 +161,8 @@
             }
         }
     }
-    
-    private async Task SavePurchaseRequestHandler() {
+
+    protected override async Task SubmitHandler() {
         bool spinnerActive = false;
         if (this._finalizeDataInput == null) {
             this._notificationService.Notify(NotificationSeverity.Error, 
@@ -220,11 +208,13 @@
             } else {
                 message=this.RepeatEdit ? "submitted" : "updated";
             }
-            this._notificationService.Notify(NotificationSeverity.Success, 
+
+            await this.SendRefreshRequest(PrUserAction.MODIFY);
+            this.ShowNotification(NotificationSeverity.Success, 
                 "Success",
                 $"Purchase Request has been {message} successfully");
         } else {
-            this._notificationService.Notify(NotificationSeverity.Error, 
+            this.ShowNotification(NotificationSeverity.Error, 
                 "Error",
                 $"Purchase Request {(this.Mode==EditMode.NEW ? "submission":"update")} failed");
         }
@@ -232,7 +222,7 @@
         await this.ActionCompleted.InvokeAsync(id);
     }
     
-    private async Task CancelPurchaseRequestHandler() {
+    protected override async Task CancelHandler() {
         this._quotes.Clear();
         var id = this._purchaseReqInput.Id.HasValue ? string.Empty:(this._purchaseReqInput.Id?.ToString() ?? "");
         await this.ActionCompleted.InvokeAsync(id);
@@ -240,7 +230,6 @@
     
     private async Task LoadData() {
         this._approvers = await this._purchaseRequestService.GetApprovers();
-        /*this._userAccount = this._userService.GetSessionUserProfile();*/
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
     }
@@ -263,7 +252,7 @@
         this._requestAlerts.Clear();
         if (string.IsNullOrEmpty(this._selectedApprover)) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Approver",
                 Message = "Approver not selected",
                 Okay = false,
@@ -273,7 +262,7 @@
         
         if(this._purchaseReqInput.Vendor==null) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Vendor",
                 Message = "Vendor not selected",
                 Okay = false,
@@ -283,7 +272,7 @@
         
         if (this._purchaseReqInput.PurchaseItems.Count == 0) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Vendor",
                 Message = "Vendor not selected",
                 Okay = false,
@@ -293,7 +282,7 @@
 
         if (string.IsNullOrEmpty(this._purchaseReqInput.ShippingType)) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Shipping",
                 Message = "Shipping type not selected",
                 Okay = false,
@@ -303,7 +292,7 @@
 
         if (this._purchaseReqInput.Department == null) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Department",
                 Message = "Department not selected",
                 Okay = false,
@@ -313,7 +302,7 @@
 
         if (string.IsNullOrEmpty(this._purchaseReqInput.Description)) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Purchase Request Reason",
                 Message = "Reason not provided",
                 Okay = false,
@@ -323,7 +312,7 @@
         
         if (string.IsNullOrEmpty(this._purchaseReqInput.Title)) {
             okay = false;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Title",
                 Message = "Title not provided",
                 Okay = false,
@@ -333,7 +322,7 @@
 
         if (okay) {
             this._canSave = true;
-            this._requestAlerts.Add(new RequestAlert() {
+            this._requestAlerts.Add(new UserActionAlert() {
                 Item="Purchase Request",
                 Message = "Purchase Request is ready for submission",
                 Okay = true,

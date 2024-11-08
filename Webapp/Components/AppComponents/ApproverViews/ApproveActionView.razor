@@ -1,12 +1,6 @@
-﻿@using Domain.Authentication
-@using Domain.PurchaseRequests.Dto
-@using Domain.PurchaseRequests.Model
-@using Domain.PurchaseRequests.TypeConstants
-@using Infrastructure.Services
-@using SETiAuth.Domain.Shared.Authentication
+﻿@using Domain.PurchaseRequests.TypeConstants
 @using Webapp.Data
-@using Webapp.Services
-@using Webapp.Services.Authentication
+@inherits UserActionComponent
 <style>
     .rz-panel-titlebar {
         flex-direction: row-reverse;
@@ -40,12 +34,6 @@
     </RadzenSplitterPane>
 </RadzenSplitter>
 @code {
-    [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
-    [Inject] private SpinnerService _spinnerService { get; set; }
-    [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
-    [Parameter] public EventCallback<string> ActionCompleted { get; set; }
-    
     private List<string> _approvedActions=[PurchaseRequestAction.Cancel.Name];
     private List<string> _orderedActions=[PurchaseRequestAction.Cancel.Name];
 
@@ -54,24 +42,30 @@
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
     }
-    
-    private async Task SubmitHandler() {
-        if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Approve.Name) {
-            var message="Submitting Approval...";
-            this._spinnerService.Show(message);
-            var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
-            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
-        } else if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Reject.Name) {
-            var message="Submitting Rejection...";
-            this._spinnerService.Show(message);
-            var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
-            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
-        }
-        this._spinnerService.Hide();
 
+    protected override async Task SubmitHandler() {
+        if (this.PurchaseRequest != null && this._approveRequestInput.Action != null) {
+            if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Approve.Name) {
+                var message="Submitting Approval...";
+                this._spinnerService.Show(message);
+
+            } else if(this._approveRequestInput.Action.Name==PurchaseRequestAction.Reject.Name) {
+                var message="Submitting Rejection...";
+                this._spinnerService.Show(message);
+            }
+            var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
+            if (success) {
+                await this.SendRefreshRequest(PrUserAction.APPROVE);
+                this.ShowNotification(NotificationSeverity.Success,"Success", $"Purchase Request has been successfully {this._approveRequestInput.Action.Name}");
+            } else {
+                this.ShowNotification(NotificationSeverity.Error,"Error", $" Error while performing action Action: {this._approveRequestInput.Action.Name}");
+            }
+            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
+            this._spinnerService.Hide();
+        }
     }
     
-    private async Task CancelHandler() {
-        await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
+    protected override async Task CancelHandler() {
+        await this.ActionCompleted.InvokeAsync(this.PurchaseRequest?._id.ToString());
     }
 }

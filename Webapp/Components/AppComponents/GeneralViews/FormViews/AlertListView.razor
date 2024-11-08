@@ -7,36 +7,51 @@
     }
 </style>
 
-@if (this.RequestAlerts != null) {
+@if (this.UserActionAlerts != null) {
+    @*<RadzenDataList WrapItems="true" 
+                    Data="@this.UserActionAlerts"
+                    TItem="UserActionAlert"
+                    Style="width: fit-content;"
+                    PageSize="5">
+        <Template Context="alert">
+            <RadzenAlert AlertStyle="@alert.Style"
+                         Text="@alert.Message"
+                         Title="@alert.Item"
+                         Size="AlertSize.Medium"
+                         AllowClose="false"/>
+        </Template>
+    </RadzenDataList>*@
     <RadzenStack Orientation="Orientation.Vertical" Gap="1" Style="margin: 0.5rem" Visible="true">
-        <RadzenText TextStyle="TextStyle.H5"
-                    Text="Purchase Request Alerts"
+        <RadzenText TextStyle="TextStyle.H6"
+                    Text="User Action Alerts"
                     TextAlign="TextAlign.Center"
                     Style="font-weight: bold;"/>
-        <RadzenStack Orientation="Orientation.Horizontal" 
-                     Gap="10" 
-                     JustifyContent="JustifyContent.Center"
-                     AlignItems="AlignItems.Center"
-                     Wrap="FlexWrap.Wrap">
-            @foreach (var alert in this.RequestAlerts) {
-                <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
-                             Text="@alert.Message"
-                             Title="@alert.Item"
-                             Shade="Shade.Default"
-                             Size="AlertSize.Small"
-                             AllowClose="false" 
-                             Style="@this.GetStyle()"/>
-            }
-        </RadzenStack>
+        <RadzenCard class="rz-p-1" Style="max-height: 300px; overflow: scroll">
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap="1"
+                         JustifyContent="JustifyContent.Center"
+                         AlignItems="AlignItems.Center"
+                         Wrap="FlexWrap.NoWrap">
+                @foreach (var alert in this.UserActionAlerts) {
+                    <RadzenAlert AlertStyle="@alert.Style"
+                                 Text="@alert.Message"
+                                 Title="@alert.Item"
+                                 Shade="Shade.Default"
+                                 Size="AlertSize.ExtraSmall"
+                                 AllowClose="false" />
+                }
+            </RadzenStack>
+        </RadzenCard>
+
     </RadzenStack>
 }
 
 @code {
-    [Parameter] public List<RequestAlert>? RequestAlerts { get; set; } = new();
-
+    [Parameter] public List<UserActionAlert>? UserActionAlerts { get; set; } = new();
+    
     private string GetStyle() {
-        if (this.RequestAlerts != null) {
-            return this.RequestAlerts.Count > 1 ? "width: 30%; min-height:60px;" : "width: 50%; min-height:60px;";
+        if (this.UserActionAlerts != null) {
+            return this.UserActionAlerts.Count > 1 ? "width: 30%; min-height:60px;" : "width: 50%; min-height:60px;";
         } else {
             return "";
         }

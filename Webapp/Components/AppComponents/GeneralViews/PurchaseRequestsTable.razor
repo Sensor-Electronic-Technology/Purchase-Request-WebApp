@@ -318,8 +318,7 @@
                             );
                         } else if (args.Data.Status == PrStatus.Ordered) {
                             List<ContextMenuItem> menuList = [
-                                new ContextMenuItem() { Text = "Receive Order", Value = PrUserAction.RECEIVE, Icon = "input" },
-                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.RECEIVE, Icon = "input" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();
@@ -335,7 +334,6 @@
     }
 
     private async Task SelectedStatusChangedHandler(string obj) {
-        //this._notificationService.Notify(NotificationSeverity.Info,"Selected",obj);
         var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == obj);
         if (pr != null) {
             await this._dataGrid.SelectRow(pr, true);

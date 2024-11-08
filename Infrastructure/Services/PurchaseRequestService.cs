@@ -143,13 +143,6 @@ public class PurchaseRequestService {
     
     public async Task<bool> ReceivePurchaseOrder(string? locationDescription) {
         return true;
-        /*this._requestDataService.UpdateOne()
-        if (!deleted) return false;
-
-        await this._emailService.SendReceivePurchaseOrder(input.EmailTemplate ?? [], input.Title ?? "Unknown",
-            ["aelmendorf@s-et.com" ?? ""],
-            ["aelmendorf@s-et.com" ?? ""]);
-        return true;*/
     }
     
     public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
@@ -166,7 +159,7 @@ public class PurchaseRequestService {
         
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
         if (approved) {
-            request.PrUrl = $"http://localhost:5015/action/{request._id.ToString()}/{PrUserAction.ORDER}";
+            request.PrUrl = $"http://localhost:5015/action/{request._id.ToString()}/{(int)PrUserAction.ORDER}";
         }
         
         var success=await this._requestDataService.UpdateOne(request);

@@ -1,11 +1,8 @@
 ﻿@using Domain.PurchaseRequests.Dto
-@using Domain.PurchaseRequests.Model
-@using Domain.Users
-@using Infrastructure.Services
+@using Domain.PurchaseRequests.TypeConstants
 @using Webapp.Data
-@using Webapp.Services
-@using Webapp.Services.Authentication
 @using TimeProvider = Infrastructure.Services.TimeProvider
+@inherits UserActionComponent
 <style>
     .rz-panel-titlebar {
         flex-direction: row-reverse;
@@ -22,7 +19,7 @@
                                     ResetView="@(()=> { this._isCollapsed = false; })"
                                     FinalView="@(()=> { this._isCollapsed = true; })"
                                     UserProfile="@this.UserProfile"
-                                    Submit="@this.SubmitHandler"
+                                    Submit="@this.OrderSubmitHandler"
                                     Cancel="@this.CancelHandler"/>
                 </RadzenCard>
             </RadzenStack>
@@ -36,36 +33,42 @@
 
 
 @code {
-    [Inject] private NotificationService _notificationService { get; set; }
-    //[Inject] private AuthApiService _authApiService { get; set; }
-    //[Inject] private UserService _userService { get; set; }
-    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
-    [Inject] private SpinnerService _spinnerService { get; set; }
-    [Parameter] public UserProfile UserProfile { get; set; }
-    [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
-    [Parameter] public EventCallback<string> ActionCompleted { get; set; }
     private bool _isCollapsed = false;
     private PurchaseOrderDto _purchaseOrderDto=new();
+    private byte[]? _emailDocument;
 
     protected override Task OnInitializedAsync() {
+        if (this.PurchaseRequest == null) return base.OnInitializedAsync();
         this._purchaseOrderDto = this.PurchaseRequest.ToPurchaseOrderDto();
         this._purchaseOrderDto.Date = TimeProvider.Now();
         return base.OnInitializedAsync();
     }
 
-    private async Task SubmitHandler(byte[] emailDocument) {
-        this._spinnerService.Show("Submitting Order....");
-        var success = await this._purchaseRequestService.OrderPurchaseRequest(this._purchaseOrderDto, emailDocument);
-        if (success) {
-            this._notificationService.Notify(NotificationSeverity.Success,"Ordered","Purchase request ordered successfully.");
+    private async Task OrderSubmitHandler(byte[] emailDocument) {
+        this._emailDocument = emailDocument;
+        await this.SubmitHandler();
+    }
+
+    protected override async Task SubmitHandler() {
+        if (this._emailDocument != null) {
+            this._spinnerService.Show("Submitting Order....");
+            var success = await this._purchaseRequestService.OrderPurchaseRequest(this._purchaseOrderDto, this._emailDocument);
+            if (success) {
+                await this.SendRefreshRequest(PrUserAction.ORDER);
+                this.ShowNotification(NotificationSeverity.Success,"Ordered","Purchase request ordered successfully.");
+            } else {
+                this.ShowNotification(NotificationSeverity.Error,"Order Error","There was an error ordering the purchase request.");
+            }
+            await this.ActionCompleted.InvokeAsync(this.PurchaseRequest?._id.ToString());
+            this._spinnerService.Hide();
         } else {
-            this._notificationService.Notify(NotificationSeverity.Error,"Order Error","There was an error ordering the purchase request.");
+            this.ShowNotification(NotificationSeverity.Error,
+                "Internal Order Error",
+                "Internal email byte array was null, please refresh page and try again");
         }
-        await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
-        this._spinnerService.Hide();
     }
     
-    private async Task CancelHandler() {
+    protected override async Task CancelHandler() {
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
     }
     

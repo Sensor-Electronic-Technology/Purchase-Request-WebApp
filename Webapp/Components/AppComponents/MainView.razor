@@ -3,6 +3,7 @@
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
+@using Infrastructure.Hubs
 @using Infrastructure.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @using MongoDB.Bson
@@ -10,7 +11,6 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
-@using Webapp.Components.AppComponents.Chat
 
 <RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
@@ -33,7 +33,7 @@
                 </RadzenCard>
             }
         </RadzenTabsItem>
-        <RadzenTabsItem Text="@this._templateTabText" Visible="@this._templateTabVisible" Icon="@this._tabIcon"
+        <RadzenTabsItem Text="@this._templateTabText" Visible="@this._isEditing" Icon="@this._tabIcon"
                         Style="background: #cc7119">
             @if (this._userProfile != null) {
                 @switch (this._userAction) {
@@ -46,6 +46,7 @@
                         break;
                     case PrUserAction.CANCEL:
                         <CancelRequestView PurchaseRequest="@this._actionRequest"
+                                           UserProfile="@this._userProfile"
                                            ActionCompleted="@this.CompletedHandler"/>
                         break;
                     case PrUserAction.ORDER:
@@ -56,6 +57,7 @@
                         break;
                     case PrUserAction.APPROVE:
                         <ApproveActionView PurchaseRequest="@this._actionRequest"
+                                           UserProfile="@this._userProfile"
                                            ActionCompleted="@this.CompletedHandler"/>
                         break;
                     case PrUserAction.REPEAT:
@@ -106,7 +108,7 @@
     private PurchaseRequest? _selectedRequest;
     private PurchaseRequest? _actionRequest;
     private UserProfile? _userProfile = new();
-    private bool _templateTabVisible = false;
+    private bool _isEditing = false;
     private string _templateTabText="Template";
     private string _tabIcon="autorenew";
     private int _selectedIndex = 0;
@@ -120,7 +122,7 @@
         { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") },
         { PrUserAction.APPROVE, new TabTemplate("Approve/Reject Request", "assignment_turned_in") }, 
         { PrUserAction.ORDER, new TabTemplate("Order Request", "paid") },
-        { PrUserAction.RECEIVE, new TabTemplate("Receive Order", "input") },
+        { PrUserAction.RECEIVE, new TabTemplate("Check-in Order", "input") },
         { PrUserAction.REPEAT, new TabTemplate("Repeat Request", "content_copy") }
     };
     
@@ -144,7 +146,8 @@
     }
 
     private async Task HubSetup() {
-        this._messagingClient.HubConnection.On("Connected",this.ConnectedHandler);
+        this._messagingClient.HubConnection.On(HubConstants.Events.Connected,this.ConnectedHandler);
+        this._messagingClient.HubConnection.On(HubConstants.Events.ReceiveRefresh,this.RefreshHandler);
         await this._messagingClient.StartAsync();
         if (this._messagingClient.IsConnected) {
             await this._messagingClient.Register(this._userProfile._id);
@@ -152,8 +155,20 @@
     }
 
     private Task ConnectedHandler() {
-        this._notificationService.Notify(NotificationSeverity.Success,"Success","Connected to server",duration:10000,closeOnClick:true);
+        this._logger.LogInformation("Hub Connected");
         return Task.CompletedTask;
+    }
+
+    private async Task RefreshHandler() {
+        if (!this._isEditing) {
+            this._notificationService.Notify(NotificationSeverity.Info,"Refresh Requested","New data available, reloading data...",duration:5000);
+            await this.Load();
+        } else {
+            this._notificationService.Notify(NotificationSeverity.Warning,"Refresh Requested",
+                "Please refresh data once you are finished editing",
+                duration:5000);
+        }
+        
     }
 
     protected override async Task OnParametersSetAsync() {
@@ -382,7 +397,7 @@
     }
     
     private void Reset() {
-        this._templateTabVisible = false;
+        this._isEditing = false;
         if(this._selectedRequest != null) {
             this.EditingTracker.FinishEditing(this._selectedRequest._id.ToString());
             this._selectedRequest = null;
@@ -396,7 +411,7 @@
             this._selectedIndex = 2;
             this._templateTabText = template.Name;
             this._tabIcon = template.Icon;
-            this._templateTabVisible = true;
+            this._isEditing = true;
         } else {
             this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
         }

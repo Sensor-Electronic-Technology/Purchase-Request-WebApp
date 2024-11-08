@@ -21,6 +21,10 @@ public class MessagingHub:Hub<IMessagingHub> {
             await Clients.Client(connectionId).ReceiveRefresh();
         }
     }
+    
+    public async Task SendRefreshAll() { 
+        await Clients.All.ReceiveRefresh();
+    }
 
     public async Task Register(string username) {
         var currentId = Context.ConnectionId;

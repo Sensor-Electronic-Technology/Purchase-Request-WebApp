@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Infrastructure.Hubs;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Webapp.Services;
@@ -9,7 +10,6 @@ public class ReceiveMessageEventArgs : EventArgs {
 }
 
 public class MessagingClient:IAsyncDisposable {
-    public const string HubUrl = "/messagehub";
     private readonly ILogger<MessagingClient> _logger;
     private readonly NavigationManager _navigationManager;
     public HubConnection HubConnection { get; private set; }
@@ -24,7 +24,7 @@ public class MessagingClient:IAsyncDisposable {
         NavigationManager navigationManager) {
         this._navigationManager = navigationManager;
         HubConnection = new HubConnectionBuilder()
-            .WithUrl(this._navigationManager.ToAbsoluteUri("/messagehub"))
+            .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl))
             .WithAutomaticReconnect()
             .Build();
         this._logger = logger;
@@ -39,9 +39,22 @@ public class MessagingClient:IAsyncDisposable {
         }
     }
 
+    public async Task SendRefresh(string? username) {
+        if (this.IsConnected) {
+            if (string.IsNullOrEmpty(username)) return;
+            await this.HubConnection.SendAsync(HubConstants.Methods.SendRefresh, username);
+        }
+    }
+
+    public async Task SendRefreshAll() {
+        if (this.IsConnected) {
+            await this.HubConnection.SendAsync(HubConstants.Methods.SendRefreshAll);
+        }
+    }
+
     public async Task Register(string username) {
         if (this.IsConnected) {
-            await this.HubConnection.SendAsync("Register", username);
+            await this.HubConnection.SendAsync(HubConstants.Methods.Register, username);
         }
     }
     

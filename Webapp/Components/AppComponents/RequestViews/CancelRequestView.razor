@@ -1,8 +1,7 @@
 ﻿@using Domain.PurchaseRequests.Dto
-@using Domain.PurchaseRequests.Dto.ActionInputs
 @using Domain.PurchaseRequests.Model
-@using Infrastructure.Services
-@using Webapp.Services
+@using Domain.PurchaseRequests.TypeConstants
+@inherits UserActionComponent
 
 <RadzenRow>
     <RadzenColumn Size="6" SizeMD="6">
@@ -62,14 +61,6 @@
 </RadzenRow>
 
 @code {
-    [Inject] private IWebHostEnvironment _environment { get; set; }
-    [Inject] private SpinnerService _spinnerService { get; set; }
-    [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
-    
-    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } 
-    [Parameter] public EventCallback<string> ActionCompleted { get; set; }
-    
     private DxRichEdit? _richEdit;
     private bool _emailsLoaded = false;
     private bool _docLoaded = false;
@@ -95,7 +86,7 @@
         this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/CancelTemplate.docx");
     }
     
-    private async Task SubmitHandler() {
+    protected override async Task SubmitHandler() {
         if(this.PurchaseRequest==null) {
             return;
         }
@@ -118,11 +109,12 @@
         };
         var success=await this._purchaseRequestService.CancelPurchaseRequest(input);
         if (success) {
-            this._notificationService.Notify(NotificationSeverity.Success, 
+            await this.SendRefreshRequest(PrUserAction.CANCEL);
+            this.ShowNotification(NotificationSeverity.Success, 
                 "Cancellation Request Submitted",
                 "The cancellation request has been submitted successfully");
         } else {
-            this._notificationService.Notify(NotificationSeverity.Success, 
+            this.ShowNotification(NotificationSeverity.Success, 
                 "Cancellation Request Error",
                 "There was an error submitting the cancellation request");
         }
@@ -130,7 +122,7 @@
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
     }
     
-    private async Task CancelHandler() {
+    protected override async Task CancelHandler() {
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest?._id.ToString());
     }
     

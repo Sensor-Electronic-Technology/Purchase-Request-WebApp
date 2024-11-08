@@ -15,7 +15,7 @@
              CollapseTitle="Press to expand">
     <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-            <RadzenIcon Icon="filter_list" class="rz-me-1" /><b>Queue</b>
+            <RadzenIcon Icon="filter_list" class="rz-me-1"/><b>Queue</b>
         </RadzenText>
     </HeaderTemplate>
     <ChildContent>
@@ -61,38 +61,38 @@
                                    Style="width: 100%">
                     <ChildContent>
                         @switch (this._role) {
-                        case nameof(PurchaseRequestRole.Requester): {
-                        @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
-                        <RadzenSplitButtonItem Text="Modify" Icon="autorenew" IconColor="blue" Value="@nameof(PrUserAction.MODIFY)"/>
-                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
-                        }
+                            case nameof(PurchaseRequestRole.Requester): {
+                                @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
+                                    <RadzenSplitButtonItem Text="Modify" Icon="autorenew" IconColor="blue" Value="@nameof(PrUserAction.MODIFY)"/>
+                                    <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
+                                }
 
-                        break;
-                        }
-                        case nameof(PurchaseRequestRole.Approver): {
-                        @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
-                        <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
-                        }
+                                break;
+                            }
+                            case nameof(PurchaseRequestRole.Approver): {
+                                @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
+                                    <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
+                                }
 
-                        break;
-                        }
-                        case nameof(PurchaseRequestRole.Purchaser): {
-                        @if (status.Status == PrStatus.Approved) {
-                        <RadzenSplitButtonItem Icon="input" Text="Order Request" Value="@nameof(PrUserAction.ORDER)"/>
-                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
-                        } else if (status.Status == PrStatus.Ordered) {
-                        <RadzenSplitButtonItem Text="Receive Order" Icon="open_in_new" Value="@nameof(PrUserAction.RECEIVE)"/>
-                        }
+                                break;
+                            }
+                            case nameof(PurchaseRequestRole.Purchaser): {
+                                @if (status.Status == PrStatus.Approved) {
+                                    <RadzenSplitButtonItem Icon="input" Text="Order Request" Value="@nameof(PrUserAction.ORDER)"/>
+                                    <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
+                                } else if (status.Status == PrStatus.Ordered) {
+                                    <RadzenSplitButtonItem Text="Check-in Order" Icon="input" Value="@nameof(PrUserAction.RECEIVE)"/>
+                                }
 
-                        break;
-                        }
+                                break;
+                            }
                         }
                     </ChildContent>
                 </RadzenSplitButton>
             </Template>
         </RadzenDropZoneContainer>
     </ChildContent>
-    
+
 </RadzenPanel>
 
 
@@ -103,12 +103,12 @@
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     [Parameter] public bool Collapsed { get; set; }
 
-    private string _role="";
-    
+    private string _role = "";
+
     Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value;
 
     protected override void OnInitialized() {
-        this._role=this._userService.GetUserRole();
+        this._role = this._userService.GetUserRole();
         base.OnInitialized();
     }
 
@@ -122,7 +122,7 @@
             _ => ButtonStyle.Secondary
         };
     }
-    
+
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "padding-right:.1rem; padding-left:.1rem; padding-top:.1rem; padding-bottom:.1rem;";
@@ -131,12 +131,12 @@
         //rz-background-color-primary-light rz-color-on-primary-light
     }
 
-    async Task StatusClickedHandler(RadzenSplitButtonItem? item,string id){
+    async Task StatusClickedHandler(RadzenSplitButtonItem? item, string id) {
         if (item != null) {
             if (Enum.TryParse(typeof(PrUserAction), item.Value, out var action)) {
-                await this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)action,id));
+                await this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)action, id));
             }
-        }else {
+        } else {
             await this.SelectedIdChanged.InvokeAsync(id);
         }
     }

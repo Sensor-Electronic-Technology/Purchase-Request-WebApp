@@ -11,7 +11,7 @@
                  CollapseTitle="Press to expand">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-                <RadzenIcon Icon="filter_list" class="rz-me-1" /><b>Set All</b>
+                <RadzenIcon Icon="filter_list" class="rz-me-1" /><b>Input</b>
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -22,23 +22,31 @@
                                      Orientation="Orientation.Horizontal"
                                      AlignItems="AlignItems.End">
                             <RadzenFormField Text="Location Description">
-                                <RadzenTextBox Value="@this._locationAll"
+                                <RadzenTextBox Value="@this.LocationAll"
                                                ValueChanged="@this.LocationChangedHandler"
                                                Name="Location"/>
                             </RadzenFormField>
                             <RadzenStack>
                                 <RadzenLabel>Apply to All?</RadzenLabel>
                                 <RadzenCheckBox TValue="bool"
-                                                Value="@this._applyLocationToAll"
+                                                Value="@this.ApplyLocationToAll"
                                                 ValueChanged="@this.ApplyToAllChangedHandler"/>
                             </RadzenStack>
                         </RadzenStack>
                     </RadzenFieldset>
                     <RadzenFieldset Text="Mark All Received?" class="rz-p-1">
                         <RadzenStack Gap="0">
-                            <RadzenCheckBox TValue="bool" Value="@this._receivedAll" ValueChanged="@this.AllReceivedHandler"/>
-                            <RadzenText Text="@(this._receivedAll ? "Received" : "Incoming")"/>
+                            <RadzenCheckBox TValue="bool" Value="@this.ReceiveAll" ValueChanged="@this.AllReceivedHandler"/>
+                            <RadzenText Text="@(this.ReceiveAll ? "Received" : "Incoming")"/>
                         </RadzenStack>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Receive Comments">
+                        <RadzenFormField Text="Comments">
+                            <RadzenTextArea Value="@this.ReceiveComments" 
+                                            ValueChanged="@this.ReceiveCommentsChanged" 
+                                            Style="width: 300px"
+                                            Rows="3"/>
+                        </RadzenFormField>
                     </RadzenFieldset>
                 </RadzenStack>
             </RadzenCard>
@@ -46,19 +54,18 @@
     </RadzenPanel>
     <RadzenCard>
         <RadzenCard class="area-header">
-            <RadzenText TextStyle="TextStyle.Body1">Item Delivery Status</RadzenText>
+            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">Item Delivery Status</RadzenText>
         </RadzenCard>
         <RadzenDataList WrapItems="true" Data="@ItemDelivery"
                         TItem="ItemDeliveryStatus"
                         Style="width: fit-content;"
                         PageSize="5">
             <Template Context="item">
-                @*<RadzenCard class="rz-p-1" class="info-area">*@
                 <RadzenStack Orientation="Orientation.Horizontal" 
                              AlignItems="AlignItems.Center" 
-                             JustifyContent="JustifyContent.Center">
+                             JustifyContent="JustifyContent.Center"
+                             class="rz-background-color-secondary-darker">
                         <RadzenFieldset Text="Item" Style="min-width: 250px;">
-                            @*<RadzenText><strong>@item.Item</strong></RadzenText>*@
                             <RadzenTextArea Value="@item.Item" Rows="3" Cols="40" ReadOnly="true"/>
                         </RadzenFieldset>
                         <RadzenFieldset Text="Location Description">
@@ -69,11 +76,6 @@
                                     <RadzenTextBox @bind-Value="@item.Location"
                                                    Name="Location"/>
                                 </RadzenFormField>
-                                @*<RadzenStack>
-                                    <RadzenLabel>Apply to All?</RadzenLabel>
-                                    <RadzenCheckBox TValue="bool"
-                                                    @bind-Value="@this._applyLocationToAll"/>
-                                </RadzenStack>*@
                             </RadzenStack>
                         </RadzenFieldset>
                         <RadzenFieldset Text="Received?" class="rz-p-1">
@@ -85,7 +87,6 @@
                             </RadzenStack>
                         </RadzenFieldset>
                     </RadzenStack>
-                @*</RadzenCard>*@
             </Template>
         </RadzenDataList>
     </RadzenCard>
@@ -96,40 +97,47 @@
 @code {
     [Parameter] public List<ItemDeliveryStatus> ItemDelivery { get; set; }
     [Parameter] public EventCallback<List<ItemDeliveryStatus>> ItemDeliveryChanged { get; set; }
+    [Parameter] public string? ReceiveComments { get; set; }
+    [Parameter] public EventCallback<string?> ReceiveCommentsChanged { get; set; }
+    [Parameter] public bool ReceiveAll { get; set; } = false;
+    [Parameter] public bool ApplyLocationToAll { get; set; } = false;
+    [Parameter] public string? LocationAll { get; set; } = "";
+    [Parameter] public EventCallback<bool> ReceiveAllChanged { get; set; }
+    [Parameter] public EventCallback<bool> ApplyLocationToAllChanged { get; set; }
+    [Parameter] public EventCallback<string?> LocationAllChanged { get; set; }
     
-    private string _locationAll="";
-    private bool _receivedAll = false;
-    
-    private bool _applyLocationToAll=false;
-
     private Task ItemStatusChangedHandler(ItemDeliveryStatus status,bool received) {
         status.Received=received;
         return this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery);
     }
     
     private Task ApplyToAllChangedHandler(bool applyToAll) {
-        this._applyLocationToAll=applyToAll;
-        if (!applyToAll) return this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery);
+        this.ApplyLocationToAll=applyToAll;
+        if (!applyToAll) return Task.WhenAll([this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery), 
+            this.ApplyLocationToAllChanged.InvokeAsync(this.ApplyLocationToAll)]);
         foreach (var status in this.ItemDelivery) {
-            status.Location = this._locationAll;
+            status.Location = this.LocationAll;
         }
-        return this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery);
+        return Task.WhenAll([this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery),
+            this.ApplyLocationToAllChanged.InvokeAsync(this.ApplyLocationToAll)]);
     }
 
-    private void LocationChangedHandler(string? location) {
-        this._locationAll = location;
-        if (!this._applyLocationToAll) return;
+    private Task LocationChangedHandler(string? location) {
+        this.LocationAll = location;
+        if (!this.ApplyLocationToAll) return this.LocationAllChanged.InvokeAsync(this.LocationAll);
         foreach (var status in this.ItemDelivery) {
             status.Location=location;
         }
+        return this.LocationAllChanged.InvokeAsync(this.LocationAll);
     }
     
     private Task AllReceivedHandler(bool obj) {
-        this._receivedAll = obj;
+        this.ReceiveAll = obj;
         foreach (var status in this.ItemDelivery) {
             status.Received = obj;
         }
-        return this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery);
+        return Task.WhenAll([this.ItemDeliveryChanged.InvokeAsync(this.ItemDelivery),
+            this.ReceiveAllChanged.InvokeAsync(this.ReceiveAll)]);
     }
     
 }
