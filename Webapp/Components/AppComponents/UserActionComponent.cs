@@ -40,7 +40,7 @@ public abstract class UserActionComponent:ComponentBase {
                 await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
                 break;
             }
-            case PrUserAction.RECEIVE: {
+            case PrUserAction.CHECKIN: {
                 await this._messagingClient.SendRefresh(this.PurchaseRequest?.Requester.Username);
                 await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
                 break;

@@ -7,6 +7,7 @@
     }
 </style>
 @if (this.FileBytes != null) {
+    
     <RadzenStack>
         <RadzenRow JustifyContent="JustifyContent.Start">
             <RadzenButton Text="Download" Click="DownloadHandler"
@@ -14,7 +15,7 @@
                           class="button-transparent"
                           Image="/images/download-icon.svg"/>
         </RadzenRow>
-        <PdfViewer Url="@this._embeddedSrc"/>
+        <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="max-height:700px;"/>
     </RadzenStack>
 }
 

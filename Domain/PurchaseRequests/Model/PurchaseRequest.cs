@@ -25,7 +25,7 @@ public class PurchaseRequest {
     public List<string> Quotes { get; set; } = [];
     public PurchaseOrder? PurchaseOrder { get; set; }
     public ApprovalResult? ApprovalResult { get; set; }
-    public List<ItemDeliveryStatus> ItemDelivery { get; set; } = [];
+    public CheckInResult? CheckInResult { get; set; }
     public PrStatus Status { get; set; }
     public DateTime Created { get; set; }
     public DateTime ApprovedDate { get; set; }

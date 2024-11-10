@@ -1,0 +1,106 @@
+﻿@using Domain.PurchaseRequests.Dto
+@using Domain.PurchaseRequests.Model
+@using Domain.Users
+
+
+<RadzenStack>
+    <RadzenCard class="area-header">
+        <RadzenText Text="Email Preview"
+                    TextStyle="TextStyle.H6"
+                    TextAlign="TextAlign.Center"/>
+    </RadzenCard>
+    @if (this.ShowToolbar) {
+        <DxRichEdit @ref="@this._richEdit"
+                    @bind-DocumentContent="@this._documentContent"
+                    DocumentLoaded="@this.DocumentLoadedHandler"
+                    DocumentFormat="DocumentFormat.OpenXml"
+                    BarMode="BarMode.None"
+                    ViewType="ViewType.Simple"
+                    ReadOnly="false"
+                    style="width: 100%">
+            <MailMergeSettings>
+                <DxMailMergeSettings Data="@this.MailMerge"
+                                     ViewMergedData="true"
+                                     ActiveRecord="1"/>
+            </MailMergeSettings>
+        </DxRichEdit>
+    } else {
+        <DxRichEdit @ref="@this._richEdit"
+                    @bind-DocumentContent="@this._documentContent"
+                    DocumentLoaded="@this.DocumentLoadedHandler"
+                    DocumentFormat="DocumentFormat.OpenXml"
+                    ReadOnly="false"
+                    style="width: 100%">
+            <MailMergeSettings>
+                <DxMailMergeSettings Data="@this.MailMerge"
+                                     ViewMergedData="true"
+                                     ActiveRecord="1"/>
+            </MailMergeSettings>
+        </DxRichEdit>
+    }
+
+</RadzenStack>
+
+@code {
+    [Inject] private IWebHostEnvironment _environment { get; set; }
+    [Parameter] public byte[]? MailDocument { get; set; }
+    [Parameter] public List<ReceiveMailMerge> MailMerge { get; set; } = [];
+    [Parameter] public bool DocLoaded { get; set; } = false;
+    [Parameter] public bool ShowToolbar { get; set; } = false;
+    [Parameter] public ReceiveRequestInput MailMergeData { get; set; }
+    [Parameter] public PurchaseRequest PurchaseRequest { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
+    [Parameter] public EventCallback<bool> DocLoadedChanged { get; set; }
+    [Parameter] public EventCallback<byte[]?> MailDocumentChanged { get; set; }
+    DxRichEdit _richEdit;
+    private byte[]? _documentContent;
+    
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/ReceiveTemplate.docx");
+        /*if (typeof(TItem)==typeof(ReceiveMailMerge)) {
+            this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/ReceiveTemplate.docx");
+        }else if(typeof(TItem)==typeof(RequestMailMerge)) {
+            this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
+        }*/
+    }
+    
+    protected override Task OnParametersSetAsync() {
+        var merge = new ReceiveMailMerge() { 
+            Title = this.PurchaseRequest?.Title ?? "", 
+            Requester = this.PurchaseRequest?.Requester.Name ?? "",
+            Receiver=this.UserProfile.FirstName ?? "" + " " + this.UserProfile.LastName ?? "",
+            PrAction = "Items Received"
+        };
+
+        for(var i=0;i<this.MailMergeData.ItemDelivery.Count;i++) {
+            merge.SetItem(i, this.MailMergeData.ItemDelivery[i].Item ?? "", 
+                this.MailMergeData.ItemDelivery[i].Location ?? "",
+                this.MailMergeData.ItemDelivery[i].Received);
+        }
+        this.MailMerge = [merge];
+
+        /*this.MailMerge = [new RequestMailMerge() {
+            PrAction = this.PurchaseRequestInput?.Status==PrStatus.NeedsApproval ? "Approval Requested-Modified":"Approved Purchase Request Modified",
+            Title = this.PurchaseRequestInput?.Title ?? "",
+            Approver = this.PurchaseRequestInput?.ApproverName ?? "",
+            Requester = this.PurchaseRequestInput?.RequesterName ?? "",
+            PrLink = this.PurchaseRequestInput?.PrUrl ?? "",
+            Description = this.PurchaseRequestInput?.Description ?? "",
+            AdditionalComments = this.PurchaseRequestInput?.AdditionalComments ?? "",
+        }];*/
+        return base.OnParametersSetAsync();
+    }
+    
+    //private List<TItem> MailMerge { get; set; } = [];
+    
+    
+    private async Task DocumentLoadedHandler(Document obj) {
+        this.DocLoaded = true;
+        
+        this.MailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.DocLoadedChanged.InvokeAsync(this.DocLoaded);
+        await this.MailDocumentChanged.InvokeAsync(this.MailDocument);
+        await InvokeAsync(StateHasChanged);
+    }
+}

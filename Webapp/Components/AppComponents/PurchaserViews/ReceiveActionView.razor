@@ -1,11 +1,8 @@
 ﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
-@using Domain.Users
-@using Infrastructure.Services
 @using Webapp.Data
 @using TimeProvider = Infrastructure.Services.TimeProvider
-@using Webapp.Services
 @inherits UserActionComponent
 
 <RadzenCard class="info-area">
@@ -38,18 +35,19 @@
                                     Check email preview and items received before submitting
                                 </RadzenText>
                             </RadzenCard>
-                            <RadzenFieldset Text="All Items Checked In?" class="rz-p-1 align-self-center">
+                            <RadzenFieldset Text="All Items Checked-in?" class="rz-p-1 align-self-center">
                                 <RadzenStack Gap="5" Orientation="Orientation.Horizontal">
                                     <RadzenCheckBox TValue="bool"
-                                                    @bind-Value="@this._receivedAll"/>
-                                    <RadzenText Text="@(this._receivedAll ? "All Items":"Partial Checkin")"/>
+                                                    ReadOnly="true"
+                                                    @bind-Value="@this._receiveRequestInput.Complete"/>
+                                    <RadzenText Text="@(this._receiveRequestInput.Complete ? "Full Check-in":"Partial Check-in")"/>
                                 </RadzenStack>
                             </RadzenFieldset>
                             <RadzenStack Orientation="Orientation.Horizontal"
                                          AlignItems="AlignItems.Center"
                                          JustifyContent="JustifyContent.Center">
-                                <RadzenButton Text="Submit Cancellation"
-                                              Icon="check_circle"
+                                <RadzenButton Text="Check-in"
+                                              Icon="input"
                                               Click="@this.SubmitHandler"
                                               Disabled="@(!this._canSubmit && !this._docLoaded)"
                                               Style="width: 180px; height: 70px;"/>
@@ -78,7 +76,9 @@
                     <RadzenColumn Size="6">
                         <RadzenStack>
                             <RadzenCard Variant="Variant.Outlined" class="area-header">
-                                <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+                                <RadzenText Text="Email Preview"
+                                            TextStyle="TextStyle.H5"
+                                            TextAlign="TextAlign.Center"/>
                             </RadzenCard>
                             <DxRichEdit @ref="@this._richEdit"
                                         @bind-DocumentContent="@this._documentContent"
@@ -86,8 +86,8 @@
                                         DocumentFormat="DocumentFormat.OpenXml"
                                         BarMode="BarMode.None"
                                         ViewType="ViewType.Simple"
-                                        CssClass="rz-w-100"
-                                        ReadOnly="true">
+                                        ReadOnly="false"
+                                        style="width: 100%">
                                 <MailMergeSettings>
                                     <DxMailMergeSettings Data="@this.MailMerge"
                                                          ViewMergedData="true"
@@ -104,6 +104,7 @@
 
 
 @code {
+    [Inject] private ILogger<ReceiveActionView> _logger { get; set; }
     private DxRichEdit? _richEdit;
     private bool _emailsLoaded = false;
     private bool _docLoaded = false;
@@ -122,8 +123,6 @@
     private string _alertTitle = "";
     private List<UserActionAlert> _alerts = new();
     private bool _canSubmit = false;
-    private bool _receivedAll = false;
-    
 
     protected override async Task OnInitializedAsync() { 
         await base.OnInitializedAsync();
@@ -134,33 +133,19 @@
         if(this.PurchaseRequest==null) {
             return;
         }
-        this._spinnerService.Show("Submitting Cancellation Request");
-        var merge = new ReceiveMailMerge() {
-            PrAction = "Received Items",
-            Title = this.PurchaseRequest?.Title ?? "", 
-            Requester = this.PurchaseRequest?.Requester.Name ?? "",
-            Receiver = this.UserProfile.FirstName + " " + this.UserProfile.LastName,
-            ReceiveComments = this._comments ?? "",
-        };
-        if (this._receiveRequestInput.ItemDelivery.Any()) {
-            for(int i=1;i<this._receiveRequestInput.ItemDelivery.Count-1;i++) {
-                merge.SetItem(i, this._receiveRequestInput.ItemDelivery[i].Item ?? "", 
-                    this._receiveRequestInput.ItemDelivery[i].Location ?? "",
-                    this._receiveRequestInput.ItemDelivery[i].Received);
-            }
-        }
-        this.MailMerge = [merge];
-        this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        /*var success=await this._purchaseRequestService.CancelPurchaseRequest(input);
+        this._spinnerService.Show("Submitting Check-in Request");
+        await this.UpdateMailMerge();
+        this._receiveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        var success=await this._purchaseRequestService.ReceivePurchaseOrder(this._receiveRequestInput);
         if (success) {
             this._notificationService.Notify(NotificationSeverity.Success, 
-                "Cancellation Request Submitted",
-                "The cancellation request has been submitted successfully");
+                "Checked-in",
+                "The purchase order has been checked-in successfully");
         } else {
             this._notificationService.Notify(NotificationSeverity.Success, 
-                "Cancellation Request Error",
-                "There was an error submitting the cancellation request");
-        }*/
+                "Check-in Error",
+                "There was an error checking in the purchase order");
+        }
         this._spinnerService.Hide();
         await this.ActionCompleted.InvokeAsync(this.PurchaseRequest._id.ToString());
     }
@@ -178,34 +163,34 @@
         return Task.CompletedTask;
     }
     
-    private Task CommentsChangedHandler(string value) {
+    private async Task CommentsChangedHandler(string value) {
         this._comments = value;
-        this.UpdateMailMerge();
-        return Task.CompletedTask;
+        await this.UpdateMailMerge();
     }
     
-    private void UpdateMailMerge() {
+    private Task UpdateMailMerge() {
+        this.MailMerge.Clear();
         var merge = new ReceiveMailMerge() { 
             Title = this.PurchaseRequest?.Title ?? "", 
             Requester = this.PurchaseRequest?.Requester.Name ?? "",
             Receiver=this.UserProfile.FirstName ?? "" + " " + this.UserProfile.LastName ?? "",
             ReceiveComments=this._comments ?? "",
-            PrAction = "Items Received"
+            PrAction = "Items Checked-In"
         };
-        if (this._receiveRequestInput.ItemDelivery.Any()) {
-            for(var i=0;i<this._receiveRequestInput.ItemDelivery.Count;i++) {
-                merge.SetItem(i, this._receiveRequestInput.ItemDelivery[i].Item ?? "", 
-                    this._receiveRequestInput.ItemDelivery[i].Location ?? "",
-                    this._receiveRequestInput.ItemDelivery[i].Received);
-            }
+
+        for(var i=0;i<this._receiveRequestInput.ItemDelivery.Count;i++) {
+            merge.SetItem(i, this._receiveRequestInput.ItemDelivery[i].Item ?? "", 
+                this._receiveRequestInput.ItemDelivery[i].Location ?? "",
+                this._receiveRequestInput.ItemDelivery[i].Received);
         }
-        
         this.MailMerge = [merge];
+        StateHasChanged();
+        return Task.CompletedTask;
     }
     
     private async Task DocumentLoadedHandler(Document obj) {
-        this.UpdateMailMerge();
-        this._mailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        await this.UpdateMailMerge();
+        this._receiveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         this._docLoaded = true;
         await InvokeAsync(StateHasChanged);
     }
@@ -217,17 +202,17 @@
                 this._receiveRequestInput.ItemDelivery = this.PurchaseRequest.PurchaseItems.Select(e => 
                         new ItemDeliveryStatus() { Item = e.ProductName, Received = false, Location = "",ReceivedDate = TimeProvider.Now()})
                     .ToList();
-            }else if (this.PurchaseRequest.Status == PrStatus.PartialDelivered) {
-                this._receiveRequestInput.ItemDelivery = this.PurchaseRequest.ItemDelivery;
+            }else if (this.PurchaseRequest.Status == PrStatus.Delivered) {
+                this._receiveRequestInput.ItemDelivery = this.PurchaseRequest.CheckInResult?.ItemDelivery ?? [];
             }
             this._receiveRequestInput.RequestId=this.PurchaseRequest._id;
-            this._receiveRequestInput.IsPartial = false;
+            this._receiveRequestInput.Complete = false;
             this._receiveRequestInput.Receiver = new PrReceiver() { 
                 Email = this.UserProfile.Email, 
                 Name = this.UserProfile.FirstName + " " + this.UserProfile.LastName, 
                 Username = this.UserProfile._id
             };
-            this.UpdateMailMerge();
+            await this.UpdateMailMerge();
             this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
             this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
             this._emailList.Add(this._receiveRequestInput.Receiver?.Email ?? "");
@@ -236,12 +221,12 @@
         
     }
 
-    private Task StepChangedHandler(int step) {
+    private async Task StepChangedHandler(int step) {
         if (step == 2) {
             this._alerts.Clear();
-            bool error = false;
-            bool warning = false;
-            this._receivedAll = false;
+            var error = false;
+            var warning = false;
+            this._receiveRequestInput.Complete = false;
             
             if (this._receiveRequestInput.ItemDelivery.All(e => !e.Received)) {
                 error = true;
@@ -253,7 +238,7 @@
                 });
             }
             
-            if(this._receiveRequestInput.ItemDelivery.Where(e=>!e.Received).Any(e=>string.IsNullOrEmpty(e.Location))) {
+            if(this._receiveRequestInput.ItemDelivery.Where(e=>e.Received).Any(e=>string.IsNullOrEmpty(e.Location))) {
                 error = true;
                 this._alerts.Add(new UserActionAlert() {
                     Item="Received Items",
@@ -281,7 +266,8 @@
                     Okay=false,
                     Style = AlertStyle.Warning,
                 });
-                this._receivedAll = true;
+            } else {
+                this._receiveRequestInput.Complete = true;
             }
             
             if (error) {
@@ -301,9 +287,13 @@
                     Style = AlertStyle.Success,
                 });
             }
+            this._alerts.Sort();
+            this._alerts.Reverse();
+            await this.UpdateMailMerge();
+        }else{
+            this._docLoaded = false;
         }
-        this._alerts.Sort();
-        this._alerts.Reverse();
-        return InvokeAsync(StateHasChanged);
+
+        //await InvokeAsync(StateHasChanged);
     }
 }

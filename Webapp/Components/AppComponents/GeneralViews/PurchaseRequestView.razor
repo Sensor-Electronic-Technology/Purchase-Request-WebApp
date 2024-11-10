@@ -88,7 +88,7 @@
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Purchase Order" class="tab-color-3 rz-ripple"
                                             Visible="@(this.PurchaseRequest.Status >= PrStatus.Ordered && this.PurchaseRequest.Status != PrStatus.Rejected)">
-                                <PoPdfPreview PurchaseRequest="@this.PurchaseRequest"/>
+                                <PoPdfPreview PurchaseOrderDto="@this.PurchaseRequest?.ToPurchaseOrderDto()"/>
                             </RadzenTabsItem>
                         </Tabs>
                     </RadzenTabs>

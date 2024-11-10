@@ -5,6 +5,6 @@ public enum PrUserAction {
     APPROVE,
     MODIFY,
     CANCEL,
-    RECEIVE,
+    CHECKIN,
     REPEAT
 }

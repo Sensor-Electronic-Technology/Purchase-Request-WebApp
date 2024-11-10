@@ -146,6 +146,29 @@ public class PurchaseRequestDataService {
         }
         return await this.GetPurchaseRequest(order.RequestId);
     }
+    
+    public async Task<PurchaseRequest?> UpdateFromReceive(ReceiveRequestInput receivedInput) {
+        var filter=Builders<PurchaseRequest>.Filter.Eq(e => e._id, receivedInput.RequestId);
+        var update = Builders<PurchaseRequest>.Update
+            .Set(e => e.Status, PrStatus.Delivered)
+            .Set(e => e.Receiver, receivedInput.Receiver)
+            .Set(e => e.ReceivedDate, TimeProvider.Now())
+            .Set(e => e.CheckInResult, new CheckInResult() {
+                Complete = receivedInput.Complete,
+                ItemDelivery = receivedInput.ItemDelivery
+            });
+        var result=await this._purchaseRequestCollection.UpdateOneAsync(filter,update);
+        if (!result.IsAcknowledged) {
+            return null;
+        }
+        var request=await this._purchaseRequestCollection
+            .Find(e => e._id == receivedInput.RequestId)
+            .FirstOrDefaultAsync();
+        if(request is { CheckInResult: not null }) {
+            return request;
+        }
+        return null;
+    }
 
     public async Task<bool> DeletePurchaseRequest(ObjectId id) {
         var result=await this._purchaseRequestCollection.DeleteOneAsync(e => e._id == id);

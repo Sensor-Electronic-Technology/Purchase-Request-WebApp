@@ -45,11 +45,9 @@ public class PurchaseRequestService {
         this._configuration=configuration;  
         this._logger = logger;
     }
-
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._requestDataService.GetPurchaseRequest(id);
     }
-
     public PurchaseRequestInput CreatePrInput(string name,string email,string username,string initials) {
         var input= new PurchaseRequestInput() {
             RequesterName = name,
@@ -63,7 +61,6 @@ public class PurchaseRequestService {
         input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         return input;
     }
-    
     public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
         var purchaseRequest=new PurchaseRequest {
             _id = input.Id ?? ObjectId.GenerateNewId(),
@@ -128,7 +125,6 @@ public class PurchaseRequestService {
         
         return true;
     }
-
     public async Task<bool> CancelPurchaseRequest(CancelRequestInput input) {
         var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
         if (!deleted) return false;
@@ -140,11 +136,6 @@ public class PurchaseRequestService {
             ["aelmendorf@s-et.com" ?? ""]);
         return true;
     }
-    
-    public async Task<bool> ReceivePurchaseOrder(string? locationDescription) {
-        return true;
-    }
-    
     public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
         bool approved = input.Action==PurchaseRequestAction.Approve ? true : false;
         request.ApprovalResult = new ApprovalResult() {
@@ -180,7 +171,6 @@ public class PurchaseRequestService {
             [request.Requester.Email ?? ""]);
         return false;
     }
-    
     public async Task<bool> OrderPurchaseRequest(PurchaseOrderDto order,byte[] emailDocument) {
         var request = await this._requestDataService.UpdateFromOrder(order);
         if (request == null) return false;
@@ -199,17 +189,30 @@ public class PurchaseRequestService {
             [request.Requester.Email ?? ""]);
         return true;
     }
-
+    public async Task<bool> ReceivePurchaseOrder(ReceiveRequestInput input) {
+        var request = await this._requestDataService.UpdateFromReceive(input);
+        if (request == null) return false;
+        List<FileData> files = [];
+        foreach (var quote in request.Quotes) {
+            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
+            if (fileData != null) {
+                files.Add(fileData);
+            }
+        }
+        var document = new PurchaseOrderDocument(request.ToPurchaseOrderDto(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+        await this._emailService.SendReceivedEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",
+            document.GeneratePdf(),
+            request.Status==PrStatus.Delivered,
+            files,
+            [request.Requester.Email ?? ""],
+            [request.Requester.Email ?? ""]);
+        return true;
+    }
     public async Task<PurchaseOrderDto> GetPurchaseOrderDto(ObjectId requestId) {
         var request = await this._requestDataService.GetPurchaseRequest(requestId);
         var po=request.ToPurchaseOrderDto();
         return po;   
     }
-
-    /*public async Task<string> GetNextPoNumber() {
-        
-    }*/
-    
     public async Task<List<QuotesDto>> GetQuotes() {
         var quotes=await this._requestDataService.GetQuotes();
         foreach(var quote in quotes) {

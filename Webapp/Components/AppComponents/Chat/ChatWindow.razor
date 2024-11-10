@@ -1,180 +1,113 @@
-﻿@using Domain.Users
-@using TimeProvider = Infrastructure.Services.TimeProvider
-@using Webapp.Services.Authentication
+﻿@using Domain.ChatModel
+@using Domain.Users
+@using Infrastructure.Services
 @using Webapp.Data
-<style>
-    #chat2 .form-control {
-        border-color: transparent;
-    }
+@using Webapp.Services.Authentication
 
-    #chat2 .form-control:focus {
-        border-color: transparent;
-        box-shadow: inset 0px 0px 0px 1px transparent;
+<RadzenStack>
+    <RadzenFieldset Text="Create Chat" AllowCollapse="true" Collapsed="true">
+        <RadzenCard class="rz-p-1 rz-border-radius-6">
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.Center">
+                <RadzenDropDown Data="@_users"
+                                AllowFiltering="true"
+                                FilterAsYouType="true"
+                                TextProperty="Name"
+                                ValueProperty="_id"
+                                @bind-Value="@this._selectedUser"/>
+                <RadzenButton Text="Create Chat" Click="@CreateChat"/>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenFieldset>
+    <RadzenStack>
+        <RadzenFieldset>
+            <RadzenDropDown Data="@this._chatRooms" 
+                            TValue="ChatRoomDto"
+                            AllowFiltering="true"
+                            FilterOperator="StringFilterOperator.Contains"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            TextProperty="@nameof(ChatRoomDto.Name)"
+                            Value="@this._selectedChatRoom"
+                            ValueChanged="SelectedChatRoomChangedHandler"/>
+        </RadzenFieldset>
+    
+    @if (this._loadedChatRooms.Any()) {
+        <RadzenTabs>
+            <Tabs>
+                @foreach (var chatRoom in this._loadedChatRooms) {
+                    var room = chatRoom;
+                    <RadzenTabsItem Text="@room.Name">
+                        <Template>
+                            <RadzenStack Orientation="Orientation.Horizontal" 
+                                         AlignItems="AlignItems.Center" 
+                                         JustifyContent="JustifyContent.Center">
+                                <RadzenText Text="@room.Name" TextStyle="TextStyle.Caption"/>
+                                <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" 
+                                              Size="ButtonSize.ExtraSmall"/>
+                            </RadzenStack>
+                        </Template>
+                        <ChildContent>
+                            <ChatRoomView ChatRoomId="@room.Id" CurrentUser="@this.UserProfile"/>
+                        </ChildContent>
+                        
+                    </RadzenTabsItem>
+                }
+            </Tabs>
+        </RadzenTabs>
+    } else {
+        <RadzenCard class="area-header">
+            <RadzenText Text="Select a chat room from the drop down menu" 
+                        TextAlign="TextAlign.Center" 
+                        TextStyle="TextStyle.H6"/>
+        </RadzenCard>
     }
-
-    .divider:after,
-    .divider:before {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: #eee;
-    }
-</style>
-@if (this.Messages != null) {
-    <section>
-        <div class="container py-5">
-            <div class="row d-flex justify-content-center">
-                <div class="col">
-                    <div class="card" id="chat2">
-                        <div class="card-header d-flex justify-content-between align-items-center p-3">
-                            <h5 class="mb-0">Chat</h5>
-                        </div>
-                        <div id="chat-window" class="card-body" style="position: relative; height: 600px; overflow: scroll">
-                            @if(this._groupedMessages != null && this._groupedMessages.Any()) {
-                                @foreach(var group in this._groupedMessages) {
-                                    var username=group.First().Username;
-                                    <div class="@this.GetBlockClass(username)">
-                                        @if (this.IsCurrentUserMessage(username)) {
-                                            <figure class="text-center">
-                                                <img src="@this.GetUserAvatar(username)"
-                                                     alt="avatar 1" style="width: 45px; height: 45px;">
-                                                <figcaption>@username</figcaption>
-                                            </figure>
-                                        }
-                                        <div>
-                                            @foreach (var message in group) {
-                                                <p class="@this.GetMessageClass(message.Username)">@message.Message</p>
-                                            }
-                                            <p class="small ms-3 mb-3 rounded-3 text-muted">@group.Last().Timestamp.ToString("HH:mm")</p>
-                                        </div>
-                                        @if (!this.IsCurrentUserMessage(username)) {
-                                            <figure class="text-center">
-                                                <img src="@this.GetUserAvatar(username)"
-                                                     alt="avatar 1" style="width: 45px; height: 45px;">
-                                                <figcaption>@username</figcaption>
-                                            </figure>
-                                        }
-                                    </div>
-                                }
-                            }
-                        </div>
-                        <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
-                            <img src="@this._currentUser?.AvatarPath"
-                                 alt="avatar 3" style="width: 40px; height: 100%;">
-                            <input type="text" @bind="@this._input" class="form-control form-control-lg" id="exampleFormControlInput1"
-                                   placeholder="Type message">
-                            <button @onclick="@this.Send">Send</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-}
-
+    </RadzenStack>
+</RadzenStack>
 
 @code {
-    [Inject] private IJSRuntime _jsRuntime { get; set; }
+    [Inject] private UserProfileService _userProfileService { get; set; }
+    [Inject] private ChatRoomDataService _chatRoomDataService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private UserService _userService { get; set; }
-    [Parameter] public List<ChatMessage>? Messages { get; set; }
-    private UserProfile? _currentUser { get; set; }
-
-    private string? _input;
-    private List<List<ChatMessage>>? _groupedMessages { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
     
-    protected override Task OnParametersSetAsync() {
-        this._currentUser = this._userService.GetSessionUserProfile();
-        this.ProcessMessages();
-        return base.OnParametersSetAsync();
+    private List<ChatRoomDto> _chatRooms { get; set; }
+    private List<ChatRoomDto> _loadedChatRooms { get; set; }
+    private ChatRoomDto _selectedChatRoom { get; set; }
+
+    private IEnumerable<UserProfile> _users = [];
+    private string? _selectedUser;
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._users= await this._userProfileService.GetProfiles();
+        this._chatRooms = await this._chatRoomDataService.GetUserChatRooms(this.UserProfile._id) ?? [];
     }
     
-    protected override async Task OnAfterRenderAsync(bool firstRender) {
-        if (!firstRender) {
-            await this._jsRuntime.InvokeVoidAsync("eval", 
-                $"document.getElementById('chat-window').scrollBottom = document.getElementById('chat-window').scrollHeight");
-        }
-    }
-
-    private Task Send() {
-        if (this._input != null && this._currentUser != null && this._groupedMessages != null) {
-            this.Messages ??= [];
-
-            if (this._groupedMessages.Last().Last().Username == this._currentUser?._id) {
-                this._groupedMessages.Last().Add(new ChatMessage(TimeProvider.Now(), this._currentUser?._id ?? "unknown", this._input));
-            } else {
-                this._groupedMessages.Add(new List<ChatMessage>() {
-                    new ChatMessage(TimeProvider.Now(), this._currentUser?._id ?? "", this._input)
-                });
+    private async Task CreateChat() {
+        if (!string.IsNullOrEmpty(this._selectedUser)) {
+            var chatRoom=await this._chatRoomDataService.CreateChatRoom(this.UserProfile._id, this._selectedUser);
+            if (chatRoom != null) {
+                this._loadedChatRooms.Add(chatRoom);
+                this._notificationService.Notify(NotificationSeverity.Success,"Chat Room Created",
+                    "Chat room created successfully");
             }
-            this._input = null;
-            StateHasChanged();
-        }
-        return Task.CompletedTask;
-    }
-    
-    private bool IsCurrentUserMessage(string username) {
-        return username == this._currentUser?._id;
-    }
-
-    private string GetBlockClass(string username) {
-        if(username==this._currentUser?._id) {
-            return "d-flex flex-row justify-content-start mb-4";
-        } else {
-            return "d-flex flex-row justify-content-end mb-4";
-        }
-    }
-
-    private string GetMessageClass(string username) {
-        if(username==this._currentUser?._id) {
-            return "small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary";
-        } else {
-            return "small p-2 me-3 mb-1 text-white rounded-3 bg-primary";
-        }
-    }
-    
-    private string GetUserAvatar(string username) {
-        if(username==this._currentUser?._id) {
-            //return "/images/avatars/alien-avatar-space-svgrepo-com.svg";
-            return this._currentUser.AvatarPath;
-        } else {
-            return "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp";
-        }
-    }
-
-    private void ProcessMessages() {
-        if(this.Messages == null) {
-            return;
-        }
-        var sortedMessages = this.Messages.OrderBy(m => m.Timestamp).ToList();
-        this._groupedMessages = new List<List<ChatMessage>>();
-        var currentGroup = new List<ChatMessage>();
-        for (int i = 0; i < sortedMessages.Count; i++) {
-            /*if (currentGroup.Count == 0 ||
-                (sortedMessages[i].Username == currentGroup.Last().Username &&
-                 sortedMessages[i].Timestamp - currentGroup.Last().Timestamp <= TimeSpan.FromSeconds(20))) {
-                currentGroup.Add(sortedMessages[i]);
-            } else {
-                this._groupedMessages.Add(new List<ChatMessage>(currentGroup));
-                currentGroup.Clear();
-                currentGroup.Add(sortedMessages[i]);
-            }*/
             
-            
-            if (currentGroup.Count == 0 ||
-                (sortedMessages[i].Username == currentGroup.Last().Username)) {
-                currentGroup.Add(sortedMessages[i]);
-            } else {
-                this._groupedMessages.Add(new List<ChatMessage>(currentGroup));
-                currentGroup.Clear();
-                currentGroup.Add(sortedMessages[i]);
+        } else {
+            this._notificationService.Notify(NotificationSeverity.Error,"Error: No User Selected",
+                "Please select a user to create a chat room");
+        }
+        
+ 
+    }
+
+    private async Task SelectedChatRoomChangedHandler(ChatRoomDto chat) {
+        if (this._loadedChatRooms.FirstOrDefault(e => e.Id == chat.Id) == null) {
+            var chatRoom = await this._chatRoomDataService.GetChatRoomDto(chat.Id);
+            if (chatRoom != null) {
+                this._loadedChatRooms.Add(chatRoom);
             }
         }
-
-        if (currentGroup.Count > 0) {
-            this._groupedMessages.Add(currentGroup);
-        }
     }
-
 
 }

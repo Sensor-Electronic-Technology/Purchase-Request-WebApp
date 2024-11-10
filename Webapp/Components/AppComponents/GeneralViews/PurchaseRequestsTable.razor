@@ -172,7 +172,6 @@
     </RadzenSplitter>
 </RadzenRow>
 
-
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
     [Inject] private UserService _userService { get; set; }
@@ -188,10 +187,6 @@
     private bool _viewPainCollapsed = true;
     private string _viewPaneSize = "50%";
     private bool _queueCollapsed = false;
-
-    private void CancelRequestHandler(PurchaseRequest request) {
-        Console.WriteLine("Cancel Request");
-    }
 
     private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
         if (obj.Count > 0) {
@@ -271,7 +266,7 @@
         if (PurchaseRequestRole.TryFromName(role, out PurchaseRequestRole requestRole)) {
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
-                    if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
+                    if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
                         List<ContextMenuItem> menuList = [
                             new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
                             new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
@@ -280,7 +275,7 @@
                                 this.ContextActionHandler(args, e).Wait();
                             }
                         );
-                    }else if(args.Data.Status == PrStatus.Ordered || args.Data.Status == PrStatus.Delivered) {
+                    }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered) {
                         List<ContextMenuItem> menuList = [
                             new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                         ];
@@ -293,7 +288,7 @@
                     break;
                 }
                 case nameof(PurchaseRequestRole.Approver): {
-                    if (args.Data.Status == PrStatus.NeedsApproval || args.Data.Status == PrStatus.Approved) {
+                    if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
                         List<ContextMenuItem> menuList = [
                             new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
                         ];
@@ -306,19 +301,27 @@
                     break;
                 }
                 case nameof(PurchaseRequestRole.Purchaser): {
-                    if (args.Data.Status == PrStatus.Approved || args.Data.Status == PrStatus.Ordered) {
-                        if (args.Data.Status == PrStatus.Approved) {
+                    if (args.Data.Status == PrStatus.Approved) {
+                        List<ContextMenuItem> menuList = [
+                            new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
+                            new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                        ];
+                        this._contextMenuService.Open(args, menuList, (e) => {
+                                this.ContextActionHandler(args, e).Wait();
+                            }
+                        );
+                    }else if (args.Data.Status == PrStatus.Ordered) {
+                        List<ContextMenuItem> menuList = [
+                            new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                        ];
+                        this._contextMenuService.Open(args, menuList, (e) => {
+                                this.ContextActionHandler(args, e).Wait();
+                            }
+                        );
+                    }else if (args.Data.Status == PrStatus.Delivered) {
+                        if(args.Data.CheckInResult is { Complete: false }) {
                             List<ContextMenuItem> menuList = [
-                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
-                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
-                            ];
-                            this._contextMenuService.Open(args, menuList, (e) => {
-                                    this.ContextActionHandler(args, e).Wait();
-                                }
-                            );
-                        } else if (args.Data.Status == PrStatus.Ordered) {
-                            List<ContextMenuItem> menuList = [
-                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.RECEIVE, Icon = "input" }
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();

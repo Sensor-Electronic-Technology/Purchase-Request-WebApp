@@ -67,7 +67,7 @@
                                              RepeatEdit="true"
                                              Mode="EditMode.EDIT"/>
                         break;
-                    case PrUserAction.RECEIVE:
+                    case PrUserAction.CHECKIN:
                         <ReceiveActionView PurchaseRequest="@this._actionRequest"
                                            ActionCompleted="@this.CompletedHandler"
                                            UserProfile="@this._userProfile"/>
@@ -122,7 +122,7 @@
         { PrUserAction.CANCEL, new TabTemplate("Cancel Request", "highlight_off") },
         { PrUserAction.APPROVE, new TabTemplate("Approve/Reject Request", "assignment_turned_in") }, 
         { PrUserAction.ORDER, new TabTemplate("Order Request", "paid") },
-        { PrUserAction.RECEIVE, new TabTemplate("Check-in Order", "input") },
+        { PrUserAction.CHECKIN, new TabTemplate("Check-in Order", "input") },
         { PrUserAction.REPEAT, new TabTemplate("Repeat Request", "content_copy") }
     };
     
@@ -206,7 +206,7 @@
                         }
                         break;
                     }
-                    case PrUserAction.RECEIVE: {
+                    case PrUserAction.CHECKIN: {
                         if (role==nameof(PurchaseRequestRole.Purchaser) || role==nameof(PurchaseRequestRole.Requester)) {
                             await this.ReceiveHandler();
                         }
@@ -238,7 +238,7 @@
             case PrUserAction.REPEAT:
                 await this.RepeatHandler();
                 break;
-            case PrUserAction.RECEIVE:
+            case PrUserAction.CHECKIN:
                 await this.ReceiveHandler();
                 break;
             default:
@@ -296,7 +296,7 @@
                 this._actionRequest = await this._purchaseRequestService.GetPurchaseRequest(id);
                 if (this._actionRequest != null) {
                     this._actionRequest._id = ObjectId.GenerateNewId(); 
-                    this.TransitionTab(PrUserAction.RECEIVE);
+                    this.TransitionTab(PrUserAction.CHECKIN);
                     await InvokeAsync(StateHasChanged);
                 } else {
                     this._notificationService.Notify(NotificationSeverity.Error,"Error","Request not found");
@@ -307,7 +307,7 @@
         } else {
             if (this._selectedRequest != null) {
                 this._actionRequest = this._selectedRequest;
-                this.TransitionTab(PrUserAction.RECEIVE);
+                this.TransitionTab(PrUserAction.CHECKIN);
                 await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");
@@ -426,7 +426,14 @@
             this.EditingTracker.UserTryClear(this._userProfile._id);
             this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userProfile._id,this._userService.GetUserRole());
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
-            this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status)).ToList();
+            /*this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status,false)).ToList();*/
+            this._purchaseReqStatuses=this._purchaseRequests.Select(pr => {
+                var complete=pr is { Status: PrStatus.Delivered, CheckInResult.Complete: true };
+                return new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status,complete);
+            }).ToList();
+            foreach (var request in this._purchaseRequests) {
+                
+            }
             Console.WriteLine($"User: {this._userProfile._id} has {_purchaseRequests.Count} requests");
         }
         await InvokeAsync(StateHasChanged);

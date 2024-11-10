@@ -32,6 +32,7 @@ builder.Services.AddDevExpressBlazor(options => {
     options.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5;
     options.SizeMode = DevExpress.Blazor.SizeMode.Small;
 });
+builder.Services.AddLocalization();
 builder.Services.AddMvc();
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddScoped<SpinnerService>();
@@ -57,6 +58,9 @@ builder.Services.AddHostedService<PrEditTrackerCleanup>();
 builder.Services.AddSetiFileClient();
 builder.Services.AddInfrastructure();
 var app = builder.Build();
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .AddSupportedCultures("en-us")
+    .AddSupportedUICultures("en-us"));
 var logger = app.Services.GetService<ILogger<Program>>();
 var scopeFactory = app.Services.GetService<IServiceScopeFactory>();
 if(scopeFactory==null) {

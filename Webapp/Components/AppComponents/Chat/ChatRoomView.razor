@@ -1,0 +1,193 @@
+﻿@using Domain.ChatModel
+@using Domain.Users
+@using Infrastructure.Services
+@using MongoDB.Bson
+@using TimeProvider = Infrastructure.Services.TimeProvider
+@using Webapp.Services.Authentication
+@using Webapp.Data
+<style>
+    #chat2 .form-control {
+        border-color: transparent;
+    }
+    #chat2 .form-control:focus {
+        border-color: transparent;
+        box-shadow: inset 0px 0px 0px 1px transparent;
+    }
+    .divider:after,
+    .divider:before {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #eee;
+    }
+</style>
+@if (this._loaded) {
+    <section>
+        <div class="container py-5">
+            <div class="row d-flex justify-content-center">
+                <div class="col">
+                    <div class="card" id="chat2">
+                        <div class="card-header d-flex justify-content-between align-items-center p-3">
+                            <h5 class="mb-0">Chat</h5>
+                        </div>
+                        <div id="chat-window" class="card-body" style="position: relative; height: 600px; max-height: 600px; overflow: scroll">
+                            @if(this._groupedMessages != null && this._groupedMessages.Any()) {
+                                @foreach(var group in this._groupedMessages) {
+                                    var username=group.First().Username;
+                                    <div class="@this.GetBlockClass(username)">
+                                        @if (this.IsCurrentUserMessage(username)) {
+                                            <figure class="text-center">
+                                                <img src="@this.GetUserAvatar(username)"
+                                                     alt="avatar 1" style="width: 45px; height: 45px;">
+                                                <figcaption>@username</figcaption>
+                                            </figure>
+                                        }
+                                        <div>
+                                            @foreach (var message in group) {
+                                                <p class="@this.GetMessageClass(message.Username)">@message.Message</p>
+                                            }
+                                            <p class="small ms-3 mb-3 rounded-3 text-muted">@group.Last().Timestamp.ToString("HH:mm")</p>
+                                        </div>
+                                        @if (!this.IsCurrentUserMessage(username)) {
+                                            <figure class="text-center">
+                                                <img src="@this.GetUserAvatar(username)"
+                                                     alt="avatar 1" style="width: 45px; height: 45px;">
+                                                <figcaption>@username</figcaption>
+                                            </figure>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+                            <img src="@this.CurrentUser?.AvatarPath"
+                                 alt="avatar 3" style="width: 40px; height: 100%;">
+                            <input type="text" @bind="@this._input" class="form-control form-control-lg" id="exampleFormControlInput1"
+                                   placeholder="Type message">
+                            <button @onclick="@this.Send">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+
+@code {
+    [Inject] private IJSRuntime _jsRuntime { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
+    [Inject] private ChatRoomDataService _chatRoomDataService { get; set; }
+    [Inject] private UserProfileService _profileService { get; set; }
+    [Parameter] public ObjectId ChatRoomId { get; set; }
+    [Parameter] public UserProfile CurrentUser { get; set; }
+    private UserProfile? _member;
+    private ChatRoom? _chatRoom;
+    private List<ChatMessage> _messages { get; set; } = [];
+    private string? _input;
+    private List<List<ChatMessage>>? _groupedMessages { get; set; }
+    private bool _loaded = false;
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._chatRoom=await this._chatRoomDataService.GetChatRoom(this.ChatRoomId);
+        if (this._chatRoom != null) {
+            this._member=await this._profileService.GetProfile(this._chatRoom.MemberId);
+            this._loaded = true;
+        }
+        /*this._messages= new() {
+            new ChatMessage(now, "aelmendo", "Hello"),
+            new ChatMessage(now.AddSeconds(5), "aelmendo", "How are you?"),
+            new ChatMessage(now.AddSeconds(10), "aelmendo", "I am fine"),
+            new ChatMessage(now.AddSeconds(15), "rjain", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(20), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(25), "aelmendo", "What are you doing?"),
+            new ChatMessage(now.AddSeconds(30), "rjain", "I am working on a project"),
+            new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
+            new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
+        };*/
+    }
+
+    protected override Task OnParametersSetAsync() {
+        
+        this.ProcessMessages();
+        return base.OnParametersSetAsync();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            await this._jsRuntime.InvokeVoidAsync("eval", 
+                $"document.getElementById('chat-window').scrollBottom = document.getElementById('chat-window').scrollHeight");
+        }
+    }
+
+    private Task Send() {
+        if (this._input != null && this._groupedMessages != null) {
+            
+            if (this._groupedMessages.Last().Last().Username == this.CurrentUser._id) {
+                this._groupedMessages.Last().Add(new ChatMessage(TimeProvider.Now(), this.CurrentUser?._id ?? "unknown", this._input));
+            } else {
+                this._groupedMessages.Add([new ChatMessage(TimeProvider.Now(), this.CurrentUser?._id ?? "", this._input)]);
+            }
+            this._input = default;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+    
+    private bool IsCurrentUserMessage(string username) {
+        return username == this.CurrentUser._id;
+    }
+
+    private string GetBlockClass(string username) {
+        if(username==this.CurrentUser._id) {
+            return "d-flex flex-row justify-content-start mb-4";
+        } else {
+            return "d-flex flex-row justify-content-end mb-4";
+        }
+    }
+
+    private string GetMessageClass(string username) {
+        if(username==this.CurrentUser._id) {
+            return "small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary";
+        } else {
+            return "small p-2 me-3 mb-1 text-white rounded-3 bg-primary";
+        }
+    }
+    
+    private string GetUserAvatar(string username) {
+        if(username==this.CurrentUser._id) {
+            //return "/images/avatars/alien-avatar-space-svgrepo-com.svg";
+            return this.CurrentUser.AvatarPath ?? "";
+        } else {
+            return this._member?.AvatarPath ?? "";
+        }
+    }
+
+    private void ProcessMessages() {
+        if (this._chatRoom == null) {
+            return;
+        }
+        this._messages.Clear();
+        this._messages=this._chatRoom.Messages.Select(e=>new ChatMessage(e.Value.TimeStamp,e.Key,e.Value.Message)).ToList();
+        /*foreach(var roomMessage in this._chatRoom.Messages) {
+            this._messages.Add(new ChatMessage(roomMessage.Value.TimeStamp, roomMessage.Key, roomMessage.Value.Message));
+        }*/
+        var sortedMessages = this._messages.OrderBy(m => m.Timestamp).ToList();
+        this._groupedMessages = new List<List<ChatMessage>>();
+        var currentGroup = new List<ChatMessage>();
+        for (int i = 0; i < sortedMessages.Count; i++) {
+            if (currentGroup.Count == 0 ||
+                (sortedMessages[i].Username == currentGroup.Last().Username)) {
+                currentGroup.Add(sortedMessages[i]);
+            } else {
+                this._groupedMessages.Add(new List<ChatMessage>(currentGroup));
+                currentGroup.Clear();
+                currentGroup.Add(sortedMessages[i]);
+            }
+        }
+        if (currentGroup.Count > 0) {
+            this._groupedMessages.Add(currentGroup);
+        }
+    }
+}

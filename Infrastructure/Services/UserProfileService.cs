@@ -17,6 +17,11 @@ public class UserProfileService {
             .FirstOrDefaultAsync();
     }
     
+    public async Task<List<UserProfile>> GetProfiles() {
+        return await _userProfiles.Find(e=>true)
+            .ToListAsync();
+    }
+    
     public async Task<bool> ProfileExists(string username) {
         return await _userProfiles.Find(e=>e._id==username)
             .AnyAsync();

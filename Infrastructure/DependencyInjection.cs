@@ -14,6 +14,7 @@ public static class DependencyInjection {
         services.AddScoped<PurchaseRequestDataService>();
         services.AddScoped<AvatarDataService>();
         services.AddScoped<PoNumberService>();
+        services.AddScoped<ChatRoomDataService>();
         return services;
     }
 }
