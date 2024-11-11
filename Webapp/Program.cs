@@ -10,6 +10,9 @@ using Webapp.Services.Authentication;
 using Infrastructure;
 using Infrastructure.Hubs;
 using Infrastructure.Services;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using QuestPDF.Infrastructure;
 using SetiFileStore.FileClient;
 using Webapp.Services;
@@ -17,6 +20,37 @@ using Webapp.Services;
 QuestPDF.Settings.License = LicenseType.Community;
 /*DevExpress.XtraPrinting.PrintingOptions.Pdf.RenderingEngine = DevExpress.XtraPrinting.XRPdfRenderingEngine.Skia;*/
 var builder = WebApplication.CreateBuilder(args);
+// Setup logging to be exported via OpenTelemetry
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+});
+
+var otel = builder.Services.AddOpenTelemetry();
+otel.WithMetrics(metrics =>
+{
+    // Metrics provider from OpenTelemetry
+    metrics.AddAspNetCoreInstrumentation();
+    metrics.AddRuntimeInstrumentation();
+    metrics.AddConsoleExporter();
+    // Metrics provides by ASP.NET Core in .NET 8
+    metrics.AddMeter("Microsoft.AspNetCore.Hosting");
+    metrics.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+});
+
+// Add Tracing for ASP.NET Core and our custom ActivitySource and export via OTLP
+otel.WithTracing(tracing => {
+    tracing.AddAspNetCoreInstrumentation();
+    tracing.AddConsoleExporter();
+});
+
+// Export OpenTelemetry data via OTLP, using env vars for the configuration
+var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+if (otlpEndpoint != null) {
+    otel.UseOtlpExporter();
+}
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
@@ -88,5 +122,4 @@ app.UseAntiforgery();
 app.MapHub<MessagingHub>("/messagehub");
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-//app.Urls.Add("http://0.0.0.0:8080");
 app.Run();
