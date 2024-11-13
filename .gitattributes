@@ -1,2 +1,6 @@
-wwwroot/* linguist-vendored
+* linguist-vendored
+*.cs linguist-vendored=false
+*.css linguist-vendored=false
+*.js linguist-vendored=false
+
 
