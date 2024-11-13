@@ -14,7 +14,7 @@ public class AvatarDataService {
     private IConfiguration _configuration;
     private readonly string _avatarDomain;
     
-    public static List<string> Avatars { get; private set; }
+    /*public static List<string> Avatars { get; private set; }*/
     
     public AvatarDataService(IMongoClient mongoClient,
         FileService fileService,

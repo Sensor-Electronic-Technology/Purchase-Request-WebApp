@@ -43,7 +43,7 @@ public static class DependencyInjection {
             .AddSupportedCultures("en-us")
             .AddSupportedUICultures("en-us"));
 
-        await app.DownloadAssets();
+        /*await app.DownloadAssets();*/
         if (!app.Environment.IsDevelopment()) {
             app.UseExceptionHandler("/Error", createScopeForErrors: true);
         }
