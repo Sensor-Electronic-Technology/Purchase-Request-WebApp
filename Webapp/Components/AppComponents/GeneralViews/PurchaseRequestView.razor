@@ -27,21 +27,40 @@
                                                      Size="AlertSize.Small"
                                                      AllowClose="false" Style="font-size: 14px !important;"/>
                                         @if (this.PurchaseRequest.Status == PrStatus.Rejected) {
-                                        @if (this.PurchaseRequest.ApprovalResult != null) {
-                                        <RadzenFieldset Text="Rejection Comments">
-                                            <RadzenText TextAlign="TextAlign.Center"
-                                                        Text="@this.PurchaseRequest.ApprovalResult.Comments"
-                                                        TextStyle="TextStyle.H6"
-                                                        Style="width: 300px; height: fit-content;"/>
-                                        </RadzenFieldset>
+                                            @if (this.PurchaseRequest.ApprovalResult != null) {
+                                                <RadzenFieldset Text="Rejection Comments">
+                                                    <RadzenText TextAlign="TextAlign.Center"
+                                                                Text="@this.PurchaseRequest.ApprovalResult.Comments"
+                                                                TextStyle="TextStyle.H6"
+                                                                Style="width: 300px; height: fit-content;"/>
+                                                </RadzenFieldset>
+                                            }
                                         }
+                                        @if (this.PurchaseRequest.Status == PrStatus.Delivered) {
+                                            <RadzenTabs>
+                                                <Tabs>
+                                                    <RadzenTabsItem Text="Check-In Details" class="tab-color-1">
+                                                        <DeliveredView PurchaseRequest="@this.PurchaseRequest"/>
+                                                    </RadzenTabsItem>
+                                                    <RadzenTabsItem Text="Request Info." class="tab-color-2">
+                                                        <RequestInformationView Description="@this.PurchaseRequest.Description"
+                                                                                Name="@this.PurchaseRequest.Requester?.Name"
+                                                                                Title="@this.PurchaseRequest.Title"
+                                                                                IsUrgent="@this.PurchaseRequest.Urgent"
+                                                                                SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                                                Mode="EditMode.VIEW"/>
+                                                    </RadzenTabsItem>
+                                                </Tabs>
+                                            </RadzenTabs>
+                                        } else {
+                                            <RequestInformationView Description="@this.PurchaseRequest.Description"
+                                                                    Name="@this.PurchaseRequest.Requester?.Name"
+                                                                    Title="@this.PurchaseRequest.Title"
+                                                                    IsUrgent="@this.PurchaseRequest.Urgent"
+                                                                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                                    Mode="EditMode.VIEW"/>
                                         }
-                                        <RequestInformationView Description="@this.PurchaseRequest.Description"
-                                                                Name="@this.PurchaseRequest.Requester?.Name"
-                                                                Title="@this.PurchaseRequest.Title"
-                                                                IsUrgent="@this.PurchaseRequest.Urgent"
-                                                                SelectedApprover="@this.PurchaseRequest.Approver.Name"
-                                                                Mode="EditMode.VIEW"/>
+
                                     </RadzenStack>
                                 </RadzenCard>
 

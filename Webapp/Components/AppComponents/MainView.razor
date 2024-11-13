@@ -15,10 +15,21 @@
 <RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
         <RadzenTabsItem Icon="dashboard" Text="Overview" Style="background:#4a764a">
-            <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests"
-                                   @bind-SelectedPurchaseRequest="@this._selectedRequest"
-                                   UserAction="@this.UserActionHandler"
-                                   PurchaseReqStatuses="@this._purchaseReqStatuses"/>
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Requests" Style="background:#4f7ab7">
+                        <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests"
+                                               @bind-SelectedPurchaseRequest="@this._selectedRequest"
+                                               UserAction="@this.UserActionHandler"
+                                               PurchaseReqStatuses="@this._purchaseReqStatuses"
+                                               UserProfile="@this._userProfile"/>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Po Tracker" Style="background: #462583">
+                        <PoTrackerView PurchaseRequests="@this.GetTrackerRequests()"/>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+
         </RadzenTabsItem>
         <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
             @if (this._userProfile != null) {
@@ -129,29 +140,22 @@
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this.EditingTracker.OnTimeout += this.EditTrackerTimeout;
-        this._logger.LogInformation("MainView Initialized");
-        var now = DateTime.Now;
-        this.messages= new() {
-            new ChatMessage(now, "aelmendo", "Hello"),
-            new ChatMessage(now.AddSeconds(5), "aelmendo", "How are you?"),
-            new ChatMessage(now.AddSeconds(10), "aelmendo", "I am fine"),
-            new ChatMessage(now.AddSeconds(15), "rjain", "What are you doing?"),
-            new ChatMessage(now.AddSeconds(20), "rjain", "I am working on a project"),
-            new ChatMessage(now.AddSeconds(25), "aelmendo", "What are you doing?"),
-            new ChatMessage(now.AddSeconds(30), "rjain", "I am working on a project"),
-            new ChatMessage(now.AddSeconds(35), "jdoe", "Hello everyone"),
-            new ChatMessage(now.AddSeconds(40), "jdoe", "How's it going?")
-        };
         await this.Load();
     }
 
     private async Task HubSetup() {
         this._messagingClient.HubConnection.On(HubConstants.Events.Connected,this.ConnectedHandler);
         this._messagingClient.HubConnection.On(HubConstants.Events.ReceiveRefresh,this.RefreshHandler);
-        await this._messagingClient.StartAsync();
-        if (this._messagingClient.IsConnected) {
-            await this._messagingClient.Register(this._userProfile._id);
+        if (!this._messagingClient.IsConnected) {
+            await this._messagingClient.StartAsync();
         }
+        /*if (this._messagingClient.IsConnected) {
+            await this._messagingClient.Register(this._userProfile._id);
+        }*/
+    }
+
+    private List<PurchaseRequest> GetTrackerRequests() {
+        return this._purchaseRequests.Where(e => e.Status is  PrStatus.Ordered or PrStatus.Delivered).ToList();
     }
 
     private Task ConnectedHandler() {
@@ -426,7 +430,6 @@
             this.EditingTracker.UserTryClear(this._userProfile._id);
             this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userProfile._id,this._userService.GetUserRole());
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
-            /*this._purchaseReqStatuses=this._purchaseRequests.Select(pr=>new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status,false)).ToList();*/
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr => {
                 var complete=pr is { Status: PrStatus.Delivered, CheckInResult.Complete: true };
                 return new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status,complete);
@@ -441,7 +444,7 @@
     
     public ValueTask DisposeAsync() {
         this.EditingTracker.OnTimeout -= this.EditTrackerTimeout;
-        return ValueTask.CompletedTask;
+        return this._messagingClient.DisposeAsync();
     }
 
 }

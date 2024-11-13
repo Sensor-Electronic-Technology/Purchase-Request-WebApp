@@ -20,6 +20,7 @@
             this._userProfile.Email = this.UserSession.UserAccount.Email;
             this._userProfile.FirstName = this.UserSession.UserAccount.FirstName;
             this._userProfile.LastName = this.UserSession.UserAccount.LastName;
+            this._userProfile.Role = this.UserSession.UserAccount.Role;
         }
         return base.OnParametersSetAsync();
     }

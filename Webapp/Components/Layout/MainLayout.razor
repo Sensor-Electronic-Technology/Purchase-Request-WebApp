@@ -37,7 +37,7 @@
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
                         <RadzenSidebarToggle Icon="change_history"
                                              Click="@(() => this._headerVisible = !this._headerVisible)"
-                                             MouseEnter="@((args)=>ShowTooltip(args,"Hide Header: click to hide top bar"))"
+                                             MouseEnter="@((args)=>ShowTooltip(args,"Hide Header: click to hide top bar",options:new TooltipOptions() { Position=TooltipPosition.Left }))"
                                              class="rz-m-0"/>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">

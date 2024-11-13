@@ -24,28 +24,55 @@
                                         TextAlign="TextAlign.Center"
                                         TextStyle="TextStyle.Subtitle1"/>
                         </RadzenCard>
-                        <RadzenStack Orientation="Orientation.Horizontal"
-                                     JustifyContent="JustifyContent.Center">
-                            <RadzenFieldset Text="Select Payment">
-                                <RadzenFormField Text="Payment Term">
-                                    <RadzenDropDown TValue="PaymentTerm"
-                                                    Data="@PaymentTerm.List"
-                                                    TextProperty="Name"
-                                                    AllowClear="true"
-                                                    Value="@this._selectedPaymentTerm"
-                                                    ValueChanged="@this.PaymentTermChangedHandler"
-                                                    class="item-selector"/>
-                                </RadzenFormField>
-                            </RadzenFieldset>
-                            <RadzenFieldset Text="Verify Shipping">
-                                <ShippingSelector @bind-ShippingType="@this.PurchaseOrderDto.ShippingMethod"/>
-                            </RadzenFieldset>
-                            <RadzenFieldset Text="Verify or Change Ship To">
-                                <RadzenFormField Text="Ship To">
-                                    <RadzenTextBox Placeholder="Ship To(Attention)" @bind-Value="@this.PurchaseOrderDto.ShipTo"/>
-                                </RadzenFormField>
-                            </RadzenFieldset>
+                        <RadzenStack Orientation="Orientation.Vertical">
+                            <RadzenStack Orientation="Orientation.Horizontal"
+                                         JustifyContent="JustifyContent.Center">
+                                <RadzenFieldset Text="Select Payment">
+                                    <RadzenFormField Text="Payment Term">
+                                        <RadzenDropDown TValue="PaymentTerm"
+                                                        Data="@PaymentTerm.List"
+                                                        TextProperty="Name"
+                                                        AllowClear="true"
+                                                        Value="@this._selectedPaymentTerm"
+                                                        ValueChanged="@this.PaymentTermChangedHandler"
+                                                        class="item-selector"/>
+                                    </RadzenFormField>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Verify Shipping">
+                                    <ShippingSelector @bind-ShippingType="@this.PurchaseOrderDto.ShippingMethod"/>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Verify or Change Ship To">
+                                    <RadzenFormField Text="Ship To">
+                                        <RadzenTextBox Placeholder="Ship To(Attention)" @bind-Value="@this.PurchaseOrderDto.ShipTo"/>
+                                    </RadzenFormField>
+                                </RadzenFieldset>
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                                <RadzenFieldset Text="Purchase Type">
+                                    <RadzenFormField Text="Select Purchase Type">
+                                        <RadzenDropDown TValue="PurchaseType"
+                                                        Data="@PurchaseType.List"
+                                                        TextProperty="Value"
+                                                        AllowClear="true"
+                                                        Value="@this._selectedPurchaseType"
+                                                        ValueChanged="@this.PurchaseTypeChangedHandler"
+                                                        class="item-selector"/>
+                                    </RadzenFormField>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Item Type">
+                                    <RadzenFormField Text="Select Item Type">
+                                        <RadzenDropDown TValue="ItemType"
+                                                        Data="@ItemType.List"
+                                                        TextProperty="Value"
+                                                        AllowClear="true"
+                                                        Value="@this._selectedItemType"
+                                                        ValueChanged="@this.ItemTypeChangedHandler"
+                                                        class="item-selector"/>
+                                    </RadzenFormField>
+                                </RadzenFieldset>
+                            </RadzenStack>
                         </RadzenStack>
+                        
                         <PurchaseItemsTable Mode="EditMode.EDIT"
                                             ShowHeader="false"
                                             @bind-PurchaseItems="@this.PurchaseOrderDto.Items"/>
@@ -210,6 +237,8 @@
     private List<UserActionAlert> _orderAlerts = [];
     private byte[]? _emailDocument;
     private bool _canPerformAction = true;
+    private PurchaseType? _selectedPurchaseType;
+    private ItemType? _selectedItemType;
     
 
     
@@ -241,6 +270,18 @@
     private Task PaymentTermChangedHandler(PaymentTerm payment) {
         this._selectedPaymentTerm=payment;
         this.PurchaseOrderDto.PaymentTerms = payment;
+        return Task.CompletedTask;
+    }
+    
+    private Task PurchaseTypeChangedHandler(PurchaseType purchaseType) {
+        this._selectedPurchaseType = purchaseType;
+        this.PurchaseOrderDto.PurchaseType = purchaseType;
+        return Task.CompletedTask;
+    }
+    
+    private Task ItemTypeChangedHandler(ItemType itemType) {
+        this._selectedItemType = itemType;
+        this.PurchaseOrderDto.ItemType = itemType;
         return Task.CompletedTask;
     }
     

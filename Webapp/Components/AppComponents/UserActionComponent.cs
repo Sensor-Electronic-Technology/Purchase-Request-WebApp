@@ -28,37 +28,8 @@ public abstract class UserActionComponent:ComponentBase {
         return base.OnInitializedAsync();
     }
 
-    protected async Task SendRefreshRequest(PrUserAction action) {
-        switch (action) {
-            case PrUserAction.APPROVE: {
-                await this._messagingClient.SendRefreshAll();
-                break;
-            }
-
-            case PrUserAction.ORDER: {
-                await this._messagingClient.SendRefresh(this.PurchaseRequest?.Requester.Username);
-                await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
-                break;
-            }
-            case PrUserAction.CHECKIN: {
-                await this._messagingClient.SendRefresh(this.PurchaseRequest?.Requester.Username);
-                await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
-                break;
-            }
-            case PrUserAction.CANCEL: {
-                if (this.PurchaseRequest?.Status == PrStatus.Approved) {
-                    await this._messagingClient.SendRefreshAll();
-                } else {
-                    await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
-                }
-                break;
-            }
-            case PrUserAction.MODIFY:
-            case PrUserAction.REPEAT: {
-                await this._messagingClient.SendRefresh(this.PurchaseRequest?.Approver.Username);
-                break;
-            }
-        }
+    protected async Task SendRefresh() {
+        await this._messagingClient.SendRefreshAll();
     }
     
     protected virtual Task RefreshHandler() {
@@ -66,12 +37,12 @@ public abstract class UserActionComponent:ComponentBase {
         return Task.CompletedTask;
     }
 
-    protected void ShowNotification(NotificationSeverity severity,string title,string message) {
+    protected void ShowNotification(NotificationSeverity severity,string title,string message,int duration=5000) {
         this._notificationService.Notify(new NotificationMessage {
             Severity=severity,
             Detail=message,
             Summary = title,
-            Duration = 5000
+            Duration = duration
         });
     }
 }

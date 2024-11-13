@@ -58,7 +58,7 @@
                                 AllowRowSelectOnRowClick="true">
                     <GroupHeaderTemplate>
                         <RadzenAlert Text="@(context.GroupDescriptor.GetTitle()+":"+context.Data.Key)"
-                                     AlertStyle="@this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus),context.Data.Key.ToString()))"
+                                     AlertStyle="@(this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus),context.Data.Key.ToString())))"
                                      AllowClose="false"
                                      Size="AlertSize.ExtraSmall"/>
                     </GroupHeaderTemplate>

@@ -55,7 +55,7 @@
             }
             var success = await this._purchaseRequestService.ApproveRejectPurchaseRequest(this._approveRequestInput, this.PurchaseRequest);
             if (success) {
-                await this.SendRefreshRequest(PrUserAction.APPROVE);
+                await this.SendRefresh();
                 this.ShowNotification(NotificationSeverity.Success,"Success", $"Purchase Request has been successfully {this._approveRequestInput.Action.Name}");
             } else {
                 this.ShowNotification(NotificationSeverity.Error,"Error", $" Error while performing action Action: {this._approveRequestInput.Action.Name}");

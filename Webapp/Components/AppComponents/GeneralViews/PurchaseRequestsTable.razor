@@ -54,7 +54,7 @@
                                             ValueChanged="@this.SelectedChangedHandler">
                                 <GroupHeaderTemplate>
                                     <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
-                                                 AlertStyle="@this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus), context.Data.Key.ToString()))"
+                                                 AlertStyle="@(this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus), context.Data.Key.ToString())))"
                                                  AllowClose="false"
                                                  Size="AlertSize.ExtraSmall"/>
                                 </GroupHeaderTemplate>
@@ -174,13 +174,14 @@
 
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
-    [Inject] private UserService _userService { get; set; }
+    /*[Inject] private UserService _userService { get; set; }*/
     [Inject] private NotificationService _notificationService { get; set; }
     [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
     [Parameter] public List<PurchaseRequestStatus>? PurchaseReqStatuses { get; set; }
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
 
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
@@ -261,9 +262,7 @@
     }
 
     private void ContextMenuHandle(DataGridCellMouseEventArgs<PurchaseRequest> args) {
-        var role = this._userService.GetUserRole();
-        Console.WriteLine($"Role: {role}");
-        if (PurchaseRequestRole.TryFromName(role, out PurchaseRequestRole requestRole)) {
+        if (PurchaseRequestRole.TryFromName(this.UserProfile.Role, out PurchaseRequestRole requestRole)) {
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
                     if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
@@ -289,9 +288,17 @@
                 }
                 case nameof(PurchaseRequestRole.Approver): {
                     if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
-                        List<ContextMenuItem> menuList = [
-                            new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
-                        ];
+                        List<ContextMenuItem> menuList;
+                        if (args.Data.Requester.Username == this.UserProfile._id) {
+                             menuList= [
+                                new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                            ];
+                        } else {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
+                            ];
+                        }
                         this._contextMenuService.Open(args, menuList, (e) => {
                                 this.ContextActionHandler(args, e).Wait();
                             }
@@ -353,7 +360,6 @@
             await this.UserAction.InvokeAsync(arg);
         }
     }
-
     void ShowColumnPicker(MouseEventArgs args) =>
         this._contextMenuService.Open(args, ds =>
             @<RadzenListBox TValue="object" Style="height:200px;background-color:#fff"

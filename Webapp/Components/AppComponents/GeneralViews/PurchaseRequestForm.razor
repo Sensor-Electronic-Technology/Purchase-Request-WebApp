@@ -209,7 +209,7 @@
                 message=this.RepeatEdit ? "submitted" : "updated";
             }
 
-            await this.SendRefreshRequest(PrUserAction.MODIFY);
+            await this.SendRefresh();
             this.ShowNotification(NotificationSeverity.Success, 
                 "Success",
                 $"Purchase Request has been {message} successfully");
@@ -350,7 +350,6 @@
         });
         items.ForEach(e=>e.TotalCost=e.Quantity * e.UnitCost);
         this._purchaseReqInput.PurchaseItems = items;
-        this._purchaseReqInput.Department = new Department(){Name = "Epi"};
         this._purchaseReqInput.ShippingType = ShippingTypes.Ground.Value;
         this._purchaseReqInput.Urgent = true;
         this._purchaseReqInput.Title = "Consultant Computers";

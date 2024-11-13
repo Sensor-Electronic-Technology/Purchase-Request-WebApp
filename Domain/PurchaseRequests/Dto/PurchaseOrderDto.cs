@@ -20,6 +20,8 @@ public class PurchaseOrderDto {
     public List<string> EmailCopyList { get; set; }
     public string? FOB { get; set; }
     public string? PaymentTerms { get; set; }
+    public string? PurchaseType { get; set; }
+    public string? ItemType { get; set; }
     public decimal TotalCost=>this.Items.Sum(x=>x.TotalCost);
     public string? Comments { get; set; }
 }

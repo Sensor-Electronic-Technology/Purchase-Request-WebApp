@@ -15,12 +15,7 @@ public class MessagingClient:IAsyncDisposable {
     public HubConnection HubConnection { get; private set; }
     public bool IsConnected => HubConnection.State == HubConnectionState.Connected;
     private bool _isStarted;
-    
-    public event EventHandler<ReceiveMessageEventArgs>? OnReceiveMessage;
-    public event EventHandler? OnReceiveRefresh;
-    
-    public MessagingClient(IConfiguration configuration,
-        ILogger<MessagingClient> logger,
+    public MessagingClient(IConfiguration configuration, ILogger<MessagingClient> logger, 
         NavigationManager navigationManager) {
         this._navigationManager = navigationManager;
         HubConnection = new HubConnectionBuilder()
@@ -28,12 +23,14 @@ public class MessagingClient:IAsyncDisposable {
             .WithAutomaticReconnect()
             .Build();
         this._logger = logger;
+        this._isStarted = false;
     }
     
     public async Task StartAsync() {
         if(this._isStarted) return;
         try {
             await HubConnection.StartAsync();
+            this._isStarted = true;
         }catch(Exception e) {
             this._logger.LogError(e,"Failed to start messaging client");
         }
@@ -62,6 +59,7 @@ public class MessagingClient:IAsyncDisposable {
         if(!this._isStarted) return;
         try {
             await HubConnection.StopAsync();
+            this._isStarted = false;
         }catch(Exception e) {
             this._logger.LogError(e,"Failed to stop messaging client");
         }

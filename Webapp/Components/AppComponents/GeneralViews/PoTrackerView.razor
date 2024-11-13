@@ -1,0 +1,139 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+
+<RadzenStack>
+    <RadzenCard class="area-header">
+        <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">
+            <RadzenIcon Icon="storm"/><b>Po Tracker</b>
+        </RadzenText>
+    </RadzenCard>
+    <RadzenCard class="info-area">
+        <RadzenDataGrid TItem="PurchaseRequest" 
+                        Data="@this.PurchaseRequests"
+                        AllowFiltering="true"
+                        AllowColumnResize="true"
+                        AllowAlternatingRows="true"
+                        FilterMode="FilterMode.CheckBoxList"
+                        CellRender="@this.CellRender"
+                        Density="Density.Default">
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Req. Date">
+                    <Template Context="data">
+                        <span>@data.Created.ToString("d")</span>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="Department.Name" Title="Department"/>
+                <RadzenDataGridColumn Property="Requester.Name" Title="Requester"/>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.PurchaseOrder)" Title="Purchase Type">
+                    <Template Context="data">
+                        @if(PurchaseType.TryFromName(data.PurchaseOrder.PurchaseType, out PurchaseType purchaseType)) {
+                            <span>@purchaseType.Value</span>
+                        } else {
+                            <span>@data.PurchaseOrder.PurchaseType</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description" AllowCheckBoxListVirtualization="false">
+                    <Template Context="data">
+                        <span @ref="@this._descriptionElement" 
+                              @onmousedown="@(()=>this.ShowTooltip(this._descriptionElement,data.Description ?? ""))">@data.Description</span>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="Urgent" Title="Priority">
+                    <Template Context="data">
+                        <span>@(data.Urgent ? "Urgent":"Normal")</span>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="PurchaseOrder.ItemType" Title="Item Type">
+                    <Template Context="data">
+                        @if(ItemType.TryFromName(data.PurchaseOrder.ItemType, out ItemType itemType)) {
+                            <span>@itemType.Value</span>
+                        } else {
+                            <span>@data.PurchaseOrder.ItemType</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)" Title="To Finance" FormatString="{0:d}"/>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)" Title="Po Date" FormatString="{0:d}"/>
+                <RadzenDataGridColumn Property="PurchaseOrder.PoNumber" Title="Po#"/>
+                <RadzenDataGridColumn Property="Vendor.Name" Title="Vendor"/>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)" Title="Check-in Date">
+                    <Template Context="data">
+                        @if (data.ReceivedDate == DateTime.UnixEpoch) {
+                            <span></span>
+                        } else {
+                            <span>@data.ReceivedDate.ToString("d")</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Status)" Title="Status">
+                    <Template Context="data">
+                        @if (data.Status == PrStatus.Delivered) {
+                            if(data.CheckInResult?.Complete == true) {
+                                <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
+                            } else { 
+                                <span style='color: var(--rz-text-contrast-color)'>Delivered (Pending)</span>
+                            }
+                        } else {
+                            <span style='color: var(--rz-text-contrast-color)'>Open</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    [Inject] private TooltipService _toolTipService { get; set; }
+    [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; } = [];
+    
+    ElementReference _descriptionElement;
+    
+    private void ShowTooltip(ElementReference reference, string text) {
+         this._toolTipService.Open(reference,childContent=> 
+                 @<div class="rz-text-wrap" style="max-width: 300px; background-color: rgba(0,0,0,.2)">
+                    @text
+                 </div>
+         ,o: new TooltipOptions {
+             Position = TooltipPosition.Bottom,
+             Duration = 10000
+         });
+    }
+    
+    void CellRender(DataGridCellRenderEventArgs<PurchaseRequest> args) {
+        if (args.Column.Property == nameof(PurchaseRequest.Status)) {
+            @if (args.Data.Status == PrStatus.Delivered) {
+                if(args.Data.CheckInResult?.Complete == true) {
+                    args.Attributes.Add("style", "background-color: var(--rz-success)");
+                } else {
+                    args.Attributes.Add("style", "background-color: var(--rz-series-4)");
+                }
+            } else {
+                args.Attributes.Add("style", "background-color: var(--rz-info)");
+            }
+        }
+    }
+    
+    public class StatusFormatProvider : IFormatProvider, ICustomFormatter {
+        public string Format(string format, object arg, IFormatProvider formatProvider) {
+            if (object.Equals(arg, PrStatus.Delivered)) {
+                if(object.Equals(arg, true)) {
+                    return "Delivered";
+                } else {
+                    return "Delivered (Pending)";
+                }
+            } else {
+                return "";
+            } 
+        }
+        
+        public object GetFormat(Type formatType) {
+            if (formatType == typeof(ICustomFormatter)) {
+                return this;
+            }
+            return null;
+        }
+    }
+    
+}

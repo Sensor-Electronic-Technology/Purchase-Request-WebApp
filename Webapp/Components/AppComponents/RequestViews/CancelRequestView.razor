@@ -109,7 +109,7 @@
         };
         var success=await this._purchaseRequestService.CancelPurchaseRequest(input);
         if (success) {
-            await this.SendRefreshRequest(PrUserAction.CANCEL);
+            await this.SendRefresh();
             this.ShowNotification(NotificationSeverity.Success, 
                 "Cancellation Request Submitted",
                 "The cancellation request has been submitted successfully");

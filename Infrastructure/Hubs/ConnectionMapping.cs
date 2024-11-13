@@ -25,11 +25,18 @@ public class ConnectionMapping<T> where T : class{
     }
 
     public IEnumerable<string> GetConnections(T key) {
-        HashSet<string> connections;
-        if(this._connections.TryGetValue(key, out connections)) {
+        if(this._connections.TryGetValue(key, out HashSet<string>? connections)) {
             return connections;
         }
         return [];
+    }
+    
+    public void PrintConnections() {
+        foreach(var connection in this._connections) {
+            foreach(var conn in connection.Value) {
+                Console.WriteLine($"Key:{connection.Key} Connection: {conn}");
+            }
+        }
     }
     
     public T? GetKey(string connectionId) {

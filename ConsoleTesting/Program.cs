@@ -67,8 +67,9 @@ foreach (var a in arr) {
 
 //await ComplexQueryTest();
 //await CheckMongoTime();
+//await ModifyPurchaseRequestPo();
 
-List<UserActionAlert> alerts = [
+/*List<UserActionAlert> alerts = [
     new UserActionAlert() { Okay = false, Item = "Item1" },
     new UserActionAlert() { Okay = false, Item = "Item2" }, 
     new UserActionAlert() { Okay = false, Item = "Item3" },
@@ -86,8 +87,67 @@ alerts.Sort();
 Console.WriteLine("After Sort:");
 foreach (var alert in alerts) {
     Console.WriteLine($"{alert.Item}: {alert.Okay}");
+}*/
+
+async Task GeneratePurchaseRequests() {
+    string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var contactCollection = database.GetCollection<Contact>("contacts");
+    var departmentCollection = database.GetCollection<Department>("departments");
+    var collection=database.GetCollection<PurchaseRequest>("purchase_requests");
+
+    List<string> prTitles = [
+    "OWR-Heating Pads","SafetyLoop Replacement PSUs","Monitor Stand","ASystem SCSI HDD","Thermocouple Board 2022",
+    "Cisco Fiber Replacement","Desk Phones","NAS Replacement Drive","Server Management Software","Screen Beam-ConfC",
+    "SDCard Readers And ArduinoMega"];
+
+    foreach (var title in prTitles) {
+        PurchaseRequest purchaseRequest = new PurchaseRequest() {
+            _id = ObjectId.GenerateNewId(),
+            Title = title,
+            Description = title,
+            Created = TimeProvider.Now(),
+            Department = await departmentCollection.Find(e => e.Name == "Support").FirstOrDefaultAsync(),
+            Vendor = await contactCollection.OfType<Vendor>().Find(e => e.Name == "Amazon.com").FirstOrDefaultAsync(),
+            Status = PrStatus.NeedsApproval,
+            Urgent = false,
+            PurchaseItems = [
+                new PurchaseItem() { ProductName = "Star tech 4 port video splitter/546287str", Quantity = 1, UnitCost = 45.69m },
+                new PurchaseItem() { ProductName = "Logitech Mouse/Keyboard Combo/mk432", Quantity = 1, UnitCost = 24.65m },
+                new PurchaseItem() { ProductName = "Intel I7 546214 mini pc", Quantity = 3, UnitCost = 459.45m }
+            ],
+            ShippingType = ShippingTypes.Ground.Value,
+            Requester = new PrRequester() {
+                Username = "aelmendo",
+                Name = "Andrew Elmendorf",
+                Email = "aelmendorf@s-et.com"
+            },
+            Approver = new PrApprover() {
+                Name="PR Approve",
+                Username = "pr-approver",
+                Email = "itsupport@s-et.com"
+            },
+        };
+        purchaseRequest.PurchaseItems.ForEach(e=>e.TotalCost=e.Quantity * e.UnitCost);
+        await collection.InsertOneAsync(purchaseRequest);
+    }
 }
 
+async Task ModifyPurchaseRequestPo() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var collection = database.GetCollection<PurchaseRequest>("purchase_requests");
+    var purchaseRequests = await collection.Find(e => e.Status== PrStatus.Ordered || e.Status==PrStatus.Delivered).ToListAsync();
+    foreach (var purchaseRequest in purchaseRequests) {
+        purchaseRequest.PurchaseOrder.ItemType = ItemType.Other.Name;
+        purchaseRequest.PurchaseOrder.PurchaseType = PurchaseType.PurchaseCreditType.Name;
+        var update=Builders<PurchaseRequest>.Update.Set(e => e.PurchaseOrder, purchaseRequest.PurchaseOrder);
+        await collection.UpdateOneAsync(e=>e._id==purchaseRequest._id,update);
+        Console.WriteLine($"Updated PurchaseRequest: {purchaseRequest.Title}");
+    }
+    Console.WriteLine("Completed,Check database");
+}
 
 async Task CheckMongoTime() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -223,9 +283,7 @@ void TestNumberFormat() {
     int value = 1;
 
     for(int i=0;i<4;i++) {
-    
-    
-    
+        
         if(value/1000>0) {
             Console.WriteLine($"Value: {value} Modified: {value}");
         } else {

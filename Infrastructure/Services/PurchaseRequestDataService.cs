@@ -132,7 +132,9 @@ public class PurchaseRequestDataService {
                     PoNumber = order.PoNumber,
                     PoComments = order.Comments,
                     PaymentTerms = order.PaymentTerms,
-                    ShipTo = order.ShipTo
+                    ShipTo = order.ShipTo,
+                    PurchaseType=order.PurchaseType,
+                    ItemType=order.ItemType,
                 })
             .Set(e=>e.Purchaser,order.Purchaser)
             .Set(e => e.OrderedDate, TimeProvider.Now())
@@ -210,7 +212,7 @@ public class PurchaseRequestDataService {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).AnyAsync();
     }
 
-    public IMongoQueryable<PurchaseRequest>? GetQueryObject() {
+    public IQueryable<PurchaseRequest>? GetQueryObject() {
         return this._purchaseRequestCollection.AsQueryable();
     }
     

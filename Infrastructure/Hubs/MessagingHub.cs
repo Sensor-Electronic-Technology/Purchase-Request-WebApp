@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Infrastructure.Hubs;
 public class MessagingHub:Hub<IMessagingHub> {
-    /*private static readonly Dictionary<string, string> UserLookup = new Dictionary<string, string>();*/
     private static readonly ConnectionMapping<string> Connections=new ConnectionMapping<string>();
     public async Task SendMessage(string username, string message) {
         var to = Connections.GetConnections(username);
@@ -28,10 +27,16 @@ public class MessagingHub:Hub<IMessagingHub> {
 
     public async Task Register(string username) {
         var currentId = Context.ConnectionId;
-        if (!Connections.GetConnections(username).Any()) {
+        if (Connections.GetKey(currentId)==null) {
             Connections.Add(username,currentId);
             await Clients.Client(currentId).Connected();
         }
+        Connections.PrintConnections();
+        //foreach(var user in Connections.)
+        /*if (!Connections.GetConnections(username).Any()) {
+            Connections.Add(username,currentId);
+            await Clients.Client(currentId).Connected();
+        }*/
     }
 
     public override Task OnDisconnectedAsync(Exception? exception) {

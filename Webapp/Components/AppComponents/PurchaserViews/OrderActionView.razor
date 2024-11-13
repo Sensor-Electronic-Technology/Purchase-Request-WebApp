@@ -54,7 +54,7 @@
             this._spinnerService.Show("Submitting Order....");
             var success = await this._purchaseRequestService.OrderPurchaseRequest(this._purchaseOrderDto, this._emailDocument);
             if (success) {
-                await this.SendRefreshRequest(PrUserAction.ORDER);
+                await this.SendRefresh();
                 this.ShowNotification(NotificationSeverity.Success,"Ordered","Purchase request ordered successfully.");
             } else {
                 this.ShowNotification(NotificationSeverity.Error,"Order Error","There was an error ordering the purchase request.");
