@@ -169,7 +169,7 @@ public class PurchaseRequestService {
             files,
             [request.Requester.Email ?? ""],
             [request.Requester.Email ?? ""]);
-        return false;
+        return true;
     }
     public async Task<bool> OrderPurchaseRequest(PurchaseOrderDto order,byte[] emailDocument) {
         var request = await this._requestDataService.UpdateFromOrder(order);
@@ -250,10 +250,6 @@ public class PurchaseRequestService {
     public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
         return await this._requestDataService.GetPurchaseRequests(username,role);
     }
-    
-    /*public async Task<List<PurchaseRequest>> GetApproverRequests(string username) {
-        return await this._requestDataService.GetApproverRequests(username);
-    }*/
     
     public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {
         return await this._requestDataService.GetUserPurchaseRequests(filter);

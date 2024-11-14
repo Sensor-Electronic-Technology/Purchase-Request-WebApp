@@ -22,7 +22,7 @@ public class MessagingHub:Hub<IMessagingHub> {
     }
     
     public async Task SendRefreshAll() { 
-        await Clients.All.ReceiveRefresh();
+        await Clients.Others.ReceiveRefresh();
     }
 
     public async Task Register(string username) {

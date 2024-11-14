@@ -1,19 +1,40 @@
 
+.rz-body{
+    padding: 0.5rem !important;
+}
+
+.rz-tabview-panel{
+    padding: 0.5rem !important;
+}
+
+.dropzone{
+    overflow: scroll;
+    max-height: 300px;
+    flex: 1; 
+    gap: 1rem;
+}
+
+.dropzone-header{
+    position: sticky; 
+    top: 0;
+}
+
 .button-transparent{
     background-color:rgb(0,0,0,0) !important;
     opacity: 100% !important;
 }
 
 .area-header {
-    background-color: var(--rz-primary-light) !important;
+    background-color: var(--rz-secondary-light) !important;
     border-radius: var(--rz-border-radius-6) !important;
-    padding: 0.5rem !important;
+    padding: 0.7rem !important;
+    opacity: 80%;
 }
 
 .item-selector{
     width: 200px;
     height: fit-content;
-    font-size: 18px !important;
+    font-size: 16px !important;
 }
 
 .group-header{
@@ -41,7 +62,7 @@
 .step-card{
     max-height: 750px; !important;
     /*overflow: scroll !important;*/
-    padding: 0.5rem !important;
+    padding: 0.1rem !important;
     border-radius: var(--rz-border-radius-4) !important;
 }
 
@@ -49,34 +70,43 @@
     background-color: var(--rz-secondary) !important;
     border-radius: var(--rz-border-radius-3) !important;
 }
-.tab-color-1{
-    background-color: var(--rz-success) !important;
+
+.tab-color{
+    opacity: 80%;
+}
+.tab-color-1 {
+    background-color: var(--rz-success-light) !important;
     border: var(--rz-success-dark) !important;
     border-radius: var(--rz-border-radius-3) !important;
+    opacity: 80%;
 }
 
 .tab-color-2{
-    background-color: var(--rz-primary) !important;
+    background-color: var(--rz-primary-dark) !important;
     border: var(--rz-primary-darker) !important;
     border-radius: var(--rz-border-radius-3) !important;
+    opacity: 80%;
 }
 
 .tab-color-3{
     background-color: var(--rz-info) !important;
     border: var(--rz-info-darker) !important;
     border-radius: var(--rz-border-radius-3) !important;
+    /*opacity: 80%;*/
 }
 
 .tab-color-4{
     background-color: var(--rz-secondary) !important;
     border: var(--rz-secondary-darker) !important;
     border-radius: var(--rz-border-radius-3) !important;
+   /* opacity: 80%;*/
 }
 
 .tab-color-5{
     background-color: var(--rz-series-4) !important;
     border: var(--rz-info-darker) !important;
     border-radius: var(--rz-border-radius-3) !important;
+    /*opacity: 80%;*/
 }
 
 

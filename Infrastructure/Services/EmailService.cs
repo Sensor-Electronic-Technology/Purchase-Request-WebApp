@@ -13,7 +13,7 @@ using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 namespace Infrastructure.Services;
 
 public class EmailService {
-    public static readonly string FromAddress = "purchase.request@s-et.com";
+    private static readonly string FromAddress = "purchase.request@s-et.com";
     private EmailSettings _emailSettings;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<EmailService> _logger;
@@ -144,7 +144,7 @@ public class EmailService {
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
+            //html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
             if (approved && !string.IsNullOrWhiteSpace(url)) {
                 html = html.Replace("{prLink}",$"<a href=\"{url}\">Order Link</a>");
             }

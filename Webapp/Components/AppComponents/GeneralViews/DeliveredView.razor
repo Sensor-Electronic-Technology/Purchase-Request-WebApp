@@ -11,8 +11,8 @@
                         Density="Density.Default">
             <Columns>
                 <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Item)" Title="Item" Width="40%"/>
-                <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Location)" Title="Item" Width="40%"/>
-                <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Received)" Title="Item" Width="10%">
+                <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Location)" Title="Location" Width="40%"/>
+                <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Received)" Title="Received" Width="10%">
                     <Template Context="data">
                         <RadzenText>@(data.Received ? "Received":"Incoming")</RadzenText>
                     </Template>

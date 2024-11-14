@@ -70,12 +70,17 @@
                                     <RadzenStack Orientation="Orientation.Vertical"
                                                  AlignItems="AlignItems.Center">
                                         <RadzenStack Orientation="Orientation.Horizontal">
-                                            <DepartmentSelector @bind-Department="@this.PurchaseRequest.Department"/>
-                                            <RadzenFieldset Text="Shipping">
+                                            <RadzenFieldset Text="Department" Style="padding: 0 !important;">
+                                                <RadzenText TextAlign="TextAlign.Center"
+                                                            Text="@this.PurchaseRequest.Department?.Name"
+                                                            TextStyle="TextStyle.Body1"
+                                                            Style="width: 150px; height: fit-content;"/>
+                                            </RadzenFieldset>
+                                            <RadzenFieldset Text="Shipping" Style="padding: 0 !important;">
                                                 <RadzenText TextAlign="TextAlign.Center"
                                                             Text="@this.PurchaseRequest.ShippingType"
-                                                            TextStyle="TextStyle.H6"
-                                                            Style="width: 300px; height: fit-content;"/>
+                                                            TextStyle="TextStyle.Body1"
+                                                            Style="width: 150px; height: fit-content;"/>
                                             </RadzenFieldset>
                                         </RadzenStack>
                                         <RadzenFieldset Text="Vendor">

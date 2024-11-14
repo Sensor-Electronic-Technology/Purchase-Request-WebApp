@@ -9,6 +9,7 @@
         flex-direction: row-reverse;
         justify-content:left;
     }
+
 </style>
 <RadzenPanel Collapsed="@this.Collapsed"
              AllowCollapse="true"
@@ -24,31 +25,42 @@
                                  CanDrop="args => false"
                                  ItemRender="@this.OnItemRender"
                                  ItemSelector="@this.ItemSelector">
-
             <ChildContent>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-1">
-                    <RadzenDropZone Value="PrStatus.NeedsApproval" class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                        <RadzenText Text="Needs Approval" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                    <RadzenDropZone Value="PrStatus.NeedsApproval" class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4 dropzone">
+                        <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-warning-lighter dropzone-header">
+                            <RadzenText Text="@($"Needs Approval: {this._needApprovalCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                        </RadzenCard>
+                        
+
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Approved"
-                                    class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="padding-bottom: 0; padding-right: 0; flex: 1; gap: 1rem;">
-                        <RadzenText Text="Approved" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                                    class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4 dropzone" Style="padding-bottom: 0; padding-right: 0;">
+                        <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-info-lighter dropzone-header">
+                            <RadzenText Text="@($"Approved: {this._approvedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                        </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Ordered"
-                                    class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                        <RadzenText Text="Ordered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                                    class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4 dropzone">
+                        <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-success-lighter dropzone-header">
+                            <RadzenText Text="@($"Ordered: {this._orderedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                        </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Delivered"
-                                    class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                        <RadzenText Text="Delivered" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                                    class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4 dropzone">
+                        <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-secondary-lighter dropzone-header">
+                            <RadzenText Text="@($"Delivered: {this._deliveredCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                        </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Rejected"
-                                    class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
-                        <RadzenText Text="Rejected" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center"/>
+                                    class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4 dropzone">
+                        <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-danger-lighter dropzone-header">
+                            <RadzenText Text="@($"Rejected: {this._rejectedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                        </RadzenCard>
                     </RadzenDropZone>
                 </RadzenStack>
             </ChildContent>
@@ -73,6 +85,7 @@
                                 @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
                                     <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
                                 }
+
                                 break;
                             }
                             case nameof(PurchaseRequestRole.Purchaser): {
@@ -81,9 +94,10 @@
                                     <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
                                 } else if (status.Status == PrStatus.Ordered) {
                                     <RadzenSplitButtonItem Text="Check-in Order" Icon="input" Value="@nameof(PrUserAction.CHECKIN)"/>
-                                }else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
+                                } else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
                                     <RadzenSplitButtonItem Text="Check-in Order" Icon="input" Value="@nameof(PrUserAction.CHECKIN)"/>
                                 }
+
                                 break;
                             }
                         }
@@ -98,19 +112,35 @@
 
 @code {
     [Inject] private UserService _userService { get; set; }
-    [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; }
+    [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; } = [];
     [Parameter] public EventCallback<string> SelectedIdChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     [Parameter] public bool Collapsed { get; set; }
+    
     private string _role = "";
+    private int _needApprovalCount = 0;
+    private int _approvedCount = 0;
+    private int _orderedCount = 0;
+    private int _deliveredCount = 0;
+    private int _rejectedCount = 0;
 
     Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value;
 
     protected override void OnInitialized() {
         this._role = this._userService.GetUserRole();
+
         base.OnInitialized();
     }
-    
+
+    protected override Task OnParametersSetAsync() {
+        this._needApprovalCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.NeedsApproval);
+        this._approvedCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.Approved);
+        this._orderedCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.Ordered);
+        this._deliveredCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.Delivered);
+        this._rejectedCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.Rejected);
+        return base.OnParametersSetAsync();
+    }
+
     private ButtonStyle GetButtonColor(PurchaseRequestStatus status) {
         if (status is { IsComplete: false, Status: PrStatus.Delivered }) {
             return ButtonStyle.Warning;
@@ -120,7 +150,7 @@
     }
 
     private string GetButtonText(PurchaseRequestStatus status) {
-        return status is {Status:PrStatus.Delivered, IsComplete:false} ? $"{status.Name} (Incomplete)" : status.Name;
+        return status is {Status:PrStatus.Delivered, IsComplete:false} ? $"{status.DateStr}:{status.Name} (Incomplete)" : $"{status.Name} {status.DateStr}";
     }
     
     
@@ -129,8 +159,6 @@
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "padding-right:.1rem; padding-left:.1rem; padding-top:.1rem; padding-bottom:.1rem;";
         args.Attributes["class"] = "rz-card rz-variant-filled";
-        //args.Visible = args.Item.Status != PrStatus.Delivered;
-        //rz-background-color-primary-light rz-color-on-primary-light
     }
 
     async Task StatusClickedHandler(RadzenSplitButtonItem? item, string id) {

@@ -34,7 +34,7 @@
                                         TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                         <RadzenCard>
-                            <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>
+                            @*<RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>*@
                             <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
@@ -51,6 +51,7 @@
                                             AllowColumnReorder="true"
                                             LogicalFilterOperator="LogicalFilterOperator.Or"
                                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            GridLines="DataGridGridLines.Both"
                                             ValueChanged="@this.SelectedChangedHandler">
                                 <GroupHeaderTemplate>
                                     <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
@@ -58,8 +59,11 @@
                                                  AllowClose="false"
                                                  Size="AlertSize.ExtraSmall"/>
                                 </GroupHeaderTemplate>
+                                <HeaderTemplate>
+                                    <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>
+                                </HeaderTemplate>
                                 <Columns>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title" TItem="string"/>
+                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
                                     <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created Date">
                                         <Template Context="request">
                                             @request.Created.ToString("MM/dd/yy")
@@ -132,27 +136,21 @@
                                             @switch (request.Status) {
                                                 case PrStatus.NeedsApproval:
                                                     <span style='color: var(--rz-text-contrast-color)'>Pending</span>
-                                                    @*<RadzenText Text="Pending" Style="color: red"/>*@
                                                     break;
                                                 case PrStatus.Approved:
                                                     <span style='color: var(--rz-text-contrast-color)'>Approved</span>
-                                                    @*<RadzenText Text="Approved" Style="color: green"/>*@
                                                     break;
                                                 case PrStatus.Ordered:
                                                     <span style='color: var(--rz-text-contrast-color)'>Ordered</span>
-                                                    @*<RadzenText Text="Rejected" Style="color: mediumpurple"/>*@
                                                     break;
                                                 case PrStatus.Delivered:
                                                     <span style='color: var(--rz-text-contrast-color)'>Delivered</span>
-                                                    @*<RadzenText Text="Delivered" Style="color: green"/>*@
                                                     break;
                                                 case PrStatus.Rejected:
                                                     <span style='color: var(--rz-text-contrast-color)'>Rejected</span>
-                                                    @*<RadzenText Text="Delivered" Style="color: green"/>*@
                                                     break;
                                                 default:
                                                     <span style='color: var(--rz-text-contrast-color)'>Unknown</span>
-                                                    @*<RadzenText Text="Unknown" Style="color: black"/>*@
                                                     break;
                                             }
                                         </Template>
@@ -229,7 +227,7 @@
         if (args.Column.Property == nameof(PurchaseRequest.Status)) {
             switch (args.Data.Status) {
                 case PrStatus.Approved:
-                    args.Attributes.Add("style", "background-color: var(--rz-series-4)");
+                    args.Attributes.Add("style", "background-color: var(--rz-series-1)");
                     break;
                 case PrStatus.Delivered:
                     args.Attributes.Add("style", "background-color: var(--rz-success)");
@@ -292,6 +290,7 @@
                         if (args.Data.Requester.Username == this.UserProfile._id) {
                              menuList= [
                                 new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" },
+                                new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
                                 new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                             ];
                         } else {
@@ -309,10 +308,20 @@
                 }
                 case nameof(PurchaseRequestRole.Purchaser): {
                     if (args.Data.Status == PrStatus.Approved) {
-                        List<ContextMenuItem> menuList = [
-                            new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
-                            new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
-                        ];
+                        List<ContextMenuItem> menuList;
+                        if (args.Data.Requester.Username == this.UserProfile._id) {
+                            menuList= [
+                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
+                                new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                            ];
+                        } else {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                            ];
+                        }
+
                         this._contextMenuService.Open(args, menuList, (e) => {
                                 this.ContextActionHandler(args, e).Wait();
                             }

@@ -1,15 +1,17 @@
 ﻿@using Domain.PurchaseRequests.TypeConstants
-<RadzenFormField Text="Shipping">
-    <RadzenDropDown TValue="string"
-                    Data="@ShippingTypes.List"
-                    Value="@this.ShippingType"
-                    ValueChanged="@this.ShippingTypeChanged"
-                    Placeholder="Select an Shipping Method"
-                    ValueProperty="Value"
-                    TextProperty="Name"
-                    AllowClear="true"
-                    class="item-selector"/>
-</RadzenFormField>
+
+    <RadzenFormField Text="Select Freight">
+        <RadzenDropDown TValue="string"
+                        Data="@ShippingTypes.List"
+                        Value="@this.ShippingType"
+                        ValueChanged="@this.ShippingTypeChanged"
+                        Placeholder="Select an Shipping Method"
+                        ValueProperty="Value"
+                        TextProperty="Name"
+                        AllowClear="true"
+                        class="item-selector"/>
+    </RadzenFormField>
+
 
 @code {
     [Parameter] public string ShippingType { get; set; }

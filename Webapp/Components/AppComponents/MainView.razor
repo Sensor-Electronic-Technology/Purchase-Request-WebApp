@@ -12,7 +12,7 @@
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
 
-<RadzenTabs SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
+<RadzenTabs css="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
         <RadzenTabsItem Icon="dashboard" Text="Overview" Style="background:#4a764a">
             <RadzenTabs>
@@ -149,9 +149,6 @@
         if (!this._messagingClient.IsConnected) {
             await this._messagingClient.StartAsync();
         }
-        /*if (this._messagingClient.IsConnected) {
-            await this._messagingClient.Register(this._userProfile._id);
-        }*/
     }
 
     private List<PurchaseRequest> GetTrackerRequests() {
@@ -432,7 +429,17 @@
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr => {
                 var complete=pr is { Status: PrStatus.Delivered, CheckInResult.Complete: true };
-                return new PurchaseRequestStatus(pr._id.ToString(),pr.Title ?? "No Title", pr.Status,complete);
+                string dateStr = pr.Status switch {
+                    PrStatus.NeedsApproval => pr.Created.ToString("MM/dd/yy"),
+                    PrStatus.Approved => pr.ApprovedDate.ToString("MM/dd/yy"),
+                    PrStatus.Ordered => pr.OrderedDate.ToString("MM/dd/yy"),
+                    PrStatus.Delivered => pr.ReceivedDate.ToString("MM/dd/yy"),
+                    PrStatus.Rejected => pr.RejectedDate.ToString("MM/dd/yy"),
+                    _ => "00-00-00",
+                };
+                                
+                
+                return new PurchaseRequestStatus(pr._id.ToString(), pr.Title ?? "No Title", pr.Status, complete, dateStr);
             }).ToList();
             foreach (var request in this._purchaseRequests) {
                 

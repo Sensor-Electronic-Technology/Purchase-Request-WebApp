@@ -1,0 +1,8 @@
+﻿.rz-panel-titlebar {
+    flex-direction: row-reverse;
+    justify-content:left;
+}
+
+.rz-card{
+    padding: 0 !important;
+}

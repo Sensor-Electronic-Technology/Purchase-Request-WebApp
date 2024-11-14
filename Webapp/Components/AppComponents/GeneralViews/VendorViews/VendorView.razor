@@ -24,6 +24,7 @@
                         <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
                                     Placeholder="(000) 000-0000 x0000" Name="Phone"
                                     @bind-Value="@this.Vendor.Phone"
+                                    ReadOnly="@this.IsReadOnly()"
                                     Style="width: 100%;" aria-label="Phone"/>
                     </ChildContent>
                 </RadzenFormField>
@@ -35,6 +36,7 @@
                         <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
                                     Placeholder="(000) 000-0000" Name="Fax"
                                     @bind-Value="@this.Vendor.Fax"
+                                    ReadOnly="@this.IsReadOnly()"
                                     Style="width: 100%;" aria-label="Fax"/>
                     </ChildContent>
                 </RadzenFormField>

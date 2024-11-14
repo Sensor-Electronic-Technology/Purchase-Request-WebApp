@@ -5,6 +5,7 @@ using Infrastructure.Hubs;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.Extensions.FileProviders;
 using MongoDB.Driver;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -37,8 +38,29 @@ public static class DependencyInjection {
         return services;
     }
 
+    public static WebApplication AddAssets(this WebApplication app,WebApplicationBuilder builder) {
+        List<string> paths = ["images/avatars","images","MailTemplateFiles"];
+        List<IFileProvider> fileProviders = [];
+        foreach (var path in paths) {
+            var provider = new PhysicalFileProvider(
+                Path.Combine(builder.Environment.WebRootPath, path));
+            fileProviders.Add(provider);
+        }
+        fileProviders.Add(app.Environment.WebRootFileProvider);
+        app.Environment.WebRootFileProvider = new CompositeFileProvider(fileProviders);
+        /*//app.Environment.WebRootFileProvider=new CompositeFileProvider()
+        var secondaryProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.WebRootPath, "images/avatars"));
+        
+        app.Environment.WebRootFileProvider = new CompositeFileProvider(
+            app.Environment.WebRootFileProvider, secondaryProvider);*/
+        return app;
+    }
+
     public static async Task<WebApplication> BuildApp(this WebApplicationBuilder builder) {
+
         var app=builder.Build();
+        /*app.AddAssets(builder);*/
         app.UseRequestLocalization(new RequestLocalizationOptions()
             .AddSupportedCultures("en-us")
             .AddSupportedUICultures("en-us"));
@@ -50,6 +72,7 @@ public static class DependencyInjection {
 
         app.MapControllers();
         app.MapStaticAssets();
+        //app.UseStaticFiles();
         app.UseAntiforgery();
         app.MapHub<MessagingHub>("/messagehub");
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
@@ -57,7 +80,7 @@ public static class DependencyInjection {
     }
 
     public static IHostApplicationBuilder AddBlazorComponents(this IHostApplicationBuilder builder) {
-        builder.Services.AddMetrics(builder);
+        //builder.Services.AddMetrics(builder);
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddCircuitOptions(options => options.DetailedErrors = true)

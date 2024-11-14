@@ -2,4 +2,4 @@
 
 namespace Domain.PurchaseRequests.Dto;
 
-public record PurchaseRequestStatus(string Id, string Name,PrStatus Status,bool IsComplete);
+public record PurchaseRequestStatus(string Id, string Name,PrStatus Status,bool IsComplete,string DateStr);

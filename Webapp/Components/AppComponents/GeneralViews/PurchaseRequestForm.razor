@@ -273,8 +273,8 @@
         if (this._purchaseReqInput.PurchaseItems.Count == 0) {
             okay = false;
             this._requestAlerts.Add(new UserActionAlert() {
-                Item="Vendor",
-                Message = "Vendor not selected",
+                Item="Purchase Items",
+                Message = "There are no items to purchase",
                 Okay = false,
                 Style = AlertStyle.Danger
             });
@@ -300,7 +300,7 @@
             });
         }
 
-        if (string.IsNullOrEmpty(this._purchaseReqInput.Description)) {
+        if (string.IsNullOrWhiteSpace(this._purchaseReqInput.Description)) {
             okay = false;
             this._requestAlerts.Add(new UserActionAlert() {
                 Item="Purchase Request Reason",
@@ -310,7 +310,7 @@
             });
         }
         
-        if (string.IsNullOrEmpty(this._purchaseReqInput.Title)) {
+        if (string.IsNullOrWhiteSpace(this._purchaseReqInput.Title)) {
             okay = false;
             this._requestAlerts.Add(new UserActionAlert() {
                 Item="Title",

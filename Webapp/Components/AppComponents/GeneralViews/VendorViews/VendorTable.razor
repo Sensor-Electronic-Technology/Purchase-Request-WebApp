@@ -45,6 +45,7 @@
                         Sort="@Reset"
                         Page="@Reset"
                         Filter="@Reset"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                         Style="overflow: scroll !important;">
             <HeaderTemplate>
                 <RadzenButton ButtonStyle="ButtonStyle.Success"
@@ -162,7 +163,6 @@
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        //
         this._vendors = await this._contactDataService.GetVendors();
     }
 
@@ -191,11 +191,12 @@
 
     async Task SaveRow(Vendor vendor) {
         await _vendorsGrid.UpdateRow(vendor);
+        await this._contactDataService.Update(vendor);
     }
 
     void CancelEdit(Vendor vendor) {
-        Reset(vendor);
-        _vendorsGrid.CancelEditRow(vendor);
+        this.Reset(vendor);
+        this._vendorsGrid.CancelEditRow(vendor);
     }
     
     async Task DeleteRow(Vendor vendor) {
