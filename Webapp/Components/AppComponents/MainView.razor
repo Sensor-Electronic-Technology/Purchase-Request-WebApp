@@ -12,26 +12,27 @@
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
 
-<RadzenTabs css="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" SelectedIndexChanged="TabIndexChangedHandler">
+<RadzenTabs class="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" 
+            SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
-        <RadzenTabsItem Icon="dashboard" Text="Overview" Style="background:#4a764a">
+        <RadzenTabsItem Icon="dashboard" Text="Overview" class="tab-color-1 rz-ripple">
             <RadzenTabs>
                 <Tabs>
-                    <RadzenTabsItem Text="Requests" Style="background:#4f7ab7">
+                    <RadzenTabsItem Text="Requests" class="tab-color-4 rz-ripple">
                         <PurchaseRequestsTable PurchaseRequests="@this._purchaseRequests"
                                                @bind-SelectedPurchaseRequest="@this._selectedRequest"
                                                UserAction="@this.UserActionHandler"
                                                PurchaseReqStatuses="@this._purchaseReqStatuses"
                                                UserProfile="@this._userProfile"/>
                     </RadzenTabsItem>
-                    <RadzenTabsItem Text="Po Tracker" Style="background: #462583">
+                    <RadzenTabsItem Text="Po Tracker" class="tab-color-5 rz-ripple">
                         <PoTrackerView PurchaseRequests="@this.GetTrackerRequests()"/>
                     </RadzenTabsItem>
                 </Tabs>
             </RadzenTabs>
 
         </RadzenTabsItem>
-        <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" Style="background: #0a53be">
+        <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" class="tab-color-2 rz-ripple">
             @if (this._userProfile != null) {
                 <PurchaseRequestForm ActionCompleted="@this.CompletedHandler"
                                      UserProfile="@this._userProfile"
@@ -44,8 +45,7 @@
                 </RadzenCard>
             }
         </RadzenTabsItem>
-        <RadzenTabsItem Text="@this._templateTabText" Visible="@this._isEditing" Icon="@this._tabIcon"
-                        Style="background: #cc7119">
+        <RadzenTabsItem Text="@this._templateTabText" Visible="@this._isEditing" Icon="@this._tabIcon" class="tab-color-3 rz-ripple">
             @if (this._userProfile != null) {
                 @switch (this._userAction) {
                     case PrUserAction.MODIFY:

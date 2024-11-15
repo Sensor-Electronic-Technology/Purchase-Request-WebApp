@@ -7,14 +7,14 @@
 @if (this.PurchaseRequest == null) {
     <p class="text-center">No purchase request selected</p>
 } else {
-    <RadzenCard class="pr-view-card">
+    <RadzenCard>
         <RadzenTabs>
             <Tabs>
-                <RadzenTabsItem Text="Info" class="tab-color-4 rz-ripple">
+                <RadzenTabsItem Text="Info" class="rz-ripple tab-color-1">
                     <RadzenTabs RenderMode="TabRenderMode.Server"
                                 @bind-SelectedIndex="@this._tabIndex">
                         <Tabs>
-                            <RadzenTabsItem Text="Request Information" class="tab-color-1 rz-ripple">
+                            <RadzenTabsItem Text="Request Information" class="rz-ripple">
                                 <RadzenCard class="info-area">
                                     <RadzenStack Gap="1">
                                         <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
@@ -39,10 +39,10 @@
                                         @if (this.PurchaseRequest.Status == PrStatus.Delivered) {
                                             <RadzenTabs>
                                                 <Tabs>
-                                                    <RadzenTabsItem Text="Check-In Details" class="tab-color-1">
+                                                    <RadzenTabsItem Text="Check-In Details">
                                                         <DeliveredView PurchaseRequest="@this.PurchaseRequest"/>
                                                     </RadzenTabsItem>
-                                                    <RadzenTabsItem Text="Request Info." class="tab-color-2">
+                                                    <RadzenTabsItem Text="Request Info.">
                                                         <RequestInformationView Description="@this.PurchaseRequest.Description"
                                                                                 Name="@this.PurchaseRequest.Requester?.Name"
                                                                                 Title="@this.PurchaseRequest.Title"
@@ -65,7 +65,7 @@
                                 </RadzenCard>
 
                             </RadzenTabsItem>
-                            <RadzenTabsItem Text="Purchase Information" class="tab-color-2 rz-ripple">
+                            <RadzenTabsItem Text="Purchase Information" class="rz-ripple">
                                 <RadzenCard class="info-area">
                                     <RadzenStack Orientation="Orientation.Vertical"
                                                  AlignItems="AlignItems.Center">
@@ -91,11 +91,11 @@
                                 </RadzenCard>
 
                             </RadzenTabsItem>
-                            <RadzenTabsItem Text="Purchase Items" class="tab-color-3 rz-ripple">
+                            <RadzenTabsItem Text="Purchase Items" class="rz-ripple">
                                 <PurchaseItemsTable @bind-PurchaseItems="@this.PurchaseRequest.PurchaseItems"
                                                     Mode="EditMode.VIEW"/>
                             </RadzenTabsItem>
-                            <RadzenTabsItem Text="Comments/Quotes" class="tab-color-4 rz-ripple">
+                            <RadzenTabsItem Text="Comments/Quotes" class="rz-ripple">
                                 <CommentsQuotesView CurrentQuoteIds="@this.PurchaseRequest.Quotes"
                                                     AdditionalComments="@this.PurchaseRequest.AdditionalComments"
                                                     Mode="EditMode.VIEW"/>
@@ -104,13 +104,13 @@
                         </Tabs>
                     </RadzenTabs>
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Pdfs" class="tab-color-1 rz-ripple">
+                <RadzenTabsItem Text="Pdfs" class="tab-color-2 rz-ripple">
                     <RadzenTabs>
                         <Tabs>
-                            <RadzenTabsItem Text="Purchase Request" class="tab-color-2 rz-ripple">
+                            <RadzenTabsItem Text="Purchase Request" class="rz-ripple tab-color-4">
                                 <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequest.ToInput()"/>
                             </RadzenTabsItem>
-                            <RadzenTabsItem Text="Purchase Order" class="tab-color-3 rz-ripple"
+                            <RadzenTabsItem Text="Purchase Order" class="rz-ripple tab-color-5"
                                             Visible="@(this.PurchaseRequest.Status >= PrStatus.Ordered && this.PurchaseRequest.Status != PrStatus.Rejected)">
                                 <PoPdfPreview PurchaseOrderDto="@this.PurchaseRequest?.ToPurchaseOrderDto()"/>
                             </RadzenTabsItem>

@@ -1,12 +1,10 @@
 ﻿@using SetiFileStore.FileClient
 @using SetiFileStore.Domain.Contracts
 @inject IJSRuntime JSRuntime;
-
-
 @using Webapp.Data
 
 @if(this.Quotes==null || !this.Quotes.Any()) {
-    <RadzenText Text="Purchase request has no quotes"/>
+    <RadzenText TextAlign="TextAlign.Center" Text="Purchase request has no quotes" TextStyle="TextStyle.H6"/>
 } else {
     <RadzenCard class="info-area">
         <RadzenStack>

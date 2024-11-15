@@ -53,16 +53,32 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)" Title="To Finance" FormatString="{0:d}"/>
-                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)" Title="Po Date" FormatString="{0:d}"/>
+                <RadzenDataGridColumn Property="ApprovedDate" Title="To Finance" FormatString="{0:d}">
+                    <Template Context="request">
+                        @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
+                            @request.Created.ToString("MM/dd/yy")
+                        } else {
+                            <span></span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="OrderedDate" Title="Po Date" FormatString="{0:d}">
+                    <Template Context="request">
+                        @if (request.Status >= PrStatus.Ordered && request.Status != PrStatus.Rejected) {
+                            @request.OrderedDate.ToString("MM/dd/yy")
+                        } else {
+                            <span></span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="PurchaseOrder.PoNumber" Title="Po#"/>
                 <RadzenDataGridColumn Property="Vendor.Name" Title="Vendor"/>
-                <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)" Title="Check-in Date">
-                    <Template Context="data">
-                        @if (data.ReceivedDate == DateTime.UnixEpoch) {
-                            <span></span>
+                <RadzenDataGridColumn Property="ReceivedDate" Title="Check-in Date">
+                    <Template Context="request">
+                        @if (request.Status==PrStatus.Delivered) {
+                            @request.ReceivedDate.ToString("MM/dd/yy")
                         } else {
-                            <span>@data.ReceivedDate.ToString("d")</span>
+                            <span></span>
                         }
                     </Template>
                 </RadzenDataGridColumn>

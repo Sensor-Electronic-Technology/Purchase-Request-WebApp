@@ -8,6 +8,7 @@
         <ContainerRegistry>docker.io</ContainerRegistry>
         <ContainerRepository>aelmendorf234/purchase-request</ContainerRepository>
         <ContainerImageTag>dev</ContainerImageTag>
+        <LangVersion>13</LangVersion>
     </PropertyGroup>
     
     <ItemGroup>

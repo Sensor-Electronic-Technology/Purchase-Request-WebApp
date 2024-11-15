@@ -39,12 +39,12 @@
                                                      @bind-ShippingType="@this._purchaseReqInput.ShippingType"/>
                             
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Purchase Items" PreviousText="Request Information" NextText="Comments & Quotes">
+                        <RadzenStepsItem Text="Purchase Items" PreviousText="Purchase Information" NextText="Comments & Quotes">
                             <PurchaseItemsTable @bind-PurchaseItems="@this._purchaseReqInput.PurchaseItems"
                                                 Mode="@this.Mode"/>
                             
                         </RadzenStepsItem>
-                        <RadzenStepsItem Text="Comments & Quotes" PreviousText="Request Information" NextText="Finalize">
+                        <RadzenStepsItem Text="Comments & Quotes" PreviousText="Purchase Items" NextText="Finalize">
                             <CommentsQuotesView @bind-Quotes="@this._quotes"
                                                 Mode="@this.Mode"
                                                 @bind-CurrentQuoteIds="@this._purchaseReqInput.Quotes"

@@ -21,13 +21,13 @@
             <RadzenStack Orientation="Orientation.Vertical">
                 <RadzenTabs>
                     <Tabs>
-                        <RadzenTabsItem Text="Additional Comments" class="tab-color-4">
+                        <RadzenTabsItem Text="Additional Comments">
                             <RadzenTextArea Placeholder="Additional message appended to the request"
                                             Value="@this.AdditionalComments"
                                             ValueChanged="@this.AdditionalCommentsChanged"
                                             Style="width: 100%; height:100px;"/>
                         </RadzenTabsItem>
-                        <RadzenTabsItem Text="Upload Quotes" class="tab-color-2">
+                        <RadzenTabsItem Text="Upload Quotes">
                             <QuotesControl Quotes="@this.Quotes" Mode="@this.Mode"
                                            CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
                                            QuotesChanged="@this.QuotesChanged"

@@ -27,7 +27,7 @@
 .area-header {
     background-color: var(--rz-secondary-light) !important;
     border-radius: var(--rz-border-radius-6) !important;
-    padding: 0.7rem !important;
+    padding: 0.3rem !important;
     opacity: 80%;
 }
 
@@ -53,15 +53,9 @@
     border-radius: var(--rz-border-radius-5) !important;
 }
 
-.pr-view-card{
-    max-height: 900px; 
-    min-height: 700px !important;
-    /*overflow: scroll*/
-}
-
 .step-card{
-    max-height: 750px; !important;
-    /*overflow: scroll !important;*/
+    max-height: 900px; !important;
+    overflow: scroll !important;
     padding: 0.1rem !important;
     border-radius: var(--rz-border-radius-4) !important;
 }
@@ -71,48 +65,32 @@
     border-radius: var(--rz-border-radius-3) !important;
 }
 
-.tab-color{
-    opacity: 80%;
-}
-.tab-color-1 {
-    background-color: var(--rz-success-light) !important;
-    border: var(--rz-success-dark) !important;
-    border-radius: var(--rz-border-radius-3) !important;
-    opacity: 80%;
+.tab-color-1{
+    background-color:#4a764a !important;
 }
 
 .tab-color-2{
-    background-color: var(--rz-primary-dark) !important;
-    border: var(--rz-primary-darker) !important;
-    border-radius: var(--rz-border-radius-3) !important;
-    opacity: 80%;
+    background-color: #0a53be !important;
 }
 
 .tab-color-3{
-    background-color: var(--rz-info) !important;
-    border: var(--rz-info-darker) !important;
-    border-radius: var(--rz-border-radius-3) !important;
-    /*opacity: 80%;*/
+    background-color: #cc7119 !important;
 }
 
 .tab-color-4{
-    background-color: var(--rz-secondary) !important;
-    border: var(--rz-secondary-darker) !important;
-    border-radius: var(--rz-border-radius-3) !important;
-   /* opacity: 80%;*/
+    background-color:#4f7ab7 !important;
 }
 
 .tab-color-5{
-    background-color: var(--rz-series-4) !important;
-    border: var(--rz-info-darker) !important;
-    border-radius: var(--rz-border-radius-3) !important;
-    /*opacity: 80%;*/
+    background-color: #462583 !important;
 }
 
 
-html, body {
+
+
+/*html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
+}*/
 
 a, .btn-link {
     color: #006bb7;

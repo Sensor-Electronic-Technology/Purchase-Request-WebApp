@@ -28,13 +28,15 @@
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenCard Style="width: 100%">
                     <RadzenStack>
-                        <RadzenCard Variant="Variant.Outlined" class="rz-border-radius-6 area-header">
+                        <RadzenCard class="area-header">
                             <RadzenText Text="Purchase Requests"
                                         TextStyle="TextStyle.H6"
                                         TextAlign="TextAlign.Center"/>
+                            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">
+                                Hover mouse over colums with large text to view in popup
+                            </RadzenText>
                         </RadzenCard>
                         <RadzenCard>
-                            @*<RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>*@
                             <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
@@ -49,7 +51,7 @@
                                             AllowColumnPicking="true"
                                             AllowSorting="true"
                                             AllowColumnReorder="true"
-                                            LogicalFilterOperator="LogicalFilterOperator.Or"
+                                            LogicalFilterOperator="LogicalFilterOperator.And"
                                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                             GridLines="DataGridGridLines.Both"
                                             ValueChanged="@this.SelectedChangedHandler">
@@ -60,63 +62,25 @@
                                                  Size="AlertSize.ExtraSmall"/>
                                 </GroupHeaderTemplate>
                                 <HeaderTemplate>
-                                    <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection"/>
+                                    <RadzenStack Orientation="Orientation.Horizontal">
+                                        <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Icon="tab_close"/>
+                                        <RadzenButton Click="@this.ClearFilterHandler" Text="Clear Filter(s)" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Icon="clear_all"/>
+                                    </RadzenStack>
                                 </HeaderTemplate>
                                 <Columns>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Title)" Title="Title"/>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Created)" Title="Created Date">
+                                    <RadzenDataGridColumn Property="Created" Title="Created" Visible="true">
                                         <Template Context="request">
                                             @request.Created.ToString("MM/dd/yy")
                                         </Template>
                                     </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ApprovedDate)" Title="Approved Date" Visible="false">
-                                        <Template Context="request">
-                                            @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
-                                                @request.Created.ToString("MM/dd/yy")
-                                            } else {
-                                                <span>Not Approved</span>
-                                            }
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.OrderedDate)" Title="Ordered Date" Visible="false">
-                                        <Template Context="request">
-                                            @if (request.Status >= PrStatus.Ordered && request.Status != PrStatus.Rejected) {
-                                                @request.OrderedDate.ToString("MM/dd/yy")
-                                            } else {
-                                                <span>Not Ordered</span>
-                                            }
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ReceivedDate)" Title="Received Date" Visible="false">
-                                        <Template Context="request">
-                                            @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
-                                                @request.ReceivedDate.ToString("MM/dd/yy")
-                                            } else {
-                                                <span>Not Received</span>
-                                            }
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.RejectedDate)" Title="Rejected Date" Visible="false">
-                                        <Template Context="request">
-                                            @if (request.Status == PrStatus.Rejected) {
-                                                @request.RejectedDate.ToString("MM/dd/yy")
-                                            } else {
-                                                <span>Not Received</span>
-                                            }
-                                        </Template>
-                                    </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Description)" Title="Description" Visible="false"/>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.AdditionalComments)" Title="Comments" Visible="false"/>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.ShippingType)" Title="Freight" Visible="false"/>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Urgent)" Title="Urgent?" Visible="false"/>
-                                    <RadzenDataGridColumn Property="Requester" FilterProperty="Requester.Name"
-                                                          Type="@typeof(string)"
-                                                          Title="Requester">
+                                    <RadzenDataGridColumn Property="Title" Title="Title" Visible="true"/>
+                                    <RadzenDataGridColumn Property="Description" Title="Description" Visible="false"/>
+                                    <RadzenDataGridColumn Property="Requester" FilterProperty="Requester.Name" Type="@typeof(string)" Title="Requester" Visible="true">
                                         <Template Context="request">
                                             @request.Requester.Name
                                         </Template>
                                     </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="Approver" FilterProperty="Approver.Name" Type="@typeof(string)" Visible="true" Title="Approver">
+                                    <RadzenDataGridColumn Property="Approver" FilterProperty="Approver.Name" Type="@typeof(string)" Title="Approver" Visible="true">
                                         <Template Context="request">
                                             @request.Approver.Name
                                         </Template>
@@ -131,7 +95,46 @@
                                             @request.Vendor?.Name
                                         </Template>
                                     </RadzenDataGridColumn>
-                                    <RadzenDataGridColumn Property="@nameof(PurchaseRequest.Status)" Title="Status">
+                                    <RadzenDataGridColumn Property="AdditionalComments" Title="Comments" Visible="false"/>
+                                    <RadzenDataGridColumn Property="ShippingType" Title="Freight" Visible="false"/>
+                                    <RadzenDataGridColumn Property="Urgent" Title="Urgent?" Visible="false"/>
+                                    <RadzenDataGridColumn Property="ApprovedDate" Title="Approved Date" Visible="true">
+                                        <Template Context="request">
+                                            @if (request.Status >= PrStatus.Approved && request.Status != PrStatus.Rejected) {
+                                                @request.Created.ToString("MM/dd/yy")
+                                            } else {
+                                                <span></span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn Property="OrderedDate" Title="Ordered Date" Visible="true">
+                                        <Template Context="request">
+                                            @if (request.Status >= PrStatus.Ordered && request.Status != PrStatus.Rejected) {
+                                                @request.OrderedDate.ToString("MM/dd/yy")
+                                            } else {
+                                                <span></span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn Property="ReceivedDate" Title="Received Date" Visible="true">
+                                        <Template Context="request">
+                                            @if (request.Status==PrStatus.Delivered) {
+                                                @request.ReceivedDate.ToString("MM/dd/yy")
+                                            } else {
+                                                <span></span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn Property="RejectedDate" Title="Rejected Date" Visible="true">
+                                        <Template Context="request">
+                                            @if (request.Status == PrStatus.Rejected) {
+                                                @request.RejectedDate.ToString("MM/dd/yy")
+                                            } else {
+                                                <span></span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn Property="Status" Title="Status">
                                         <Template Context="request">
                                             @switch (request.Status) {
                                                 case PrStatus.NeedsApproval:
@@ -251,6 +254,13 @@
         await SelectedPurchaseRequestChanged.InvokeAsync(null);
         this._viewPainCollapsed = true;
         this._queueCollapsed = false;
+
+    }
+    
+    private async Task ClearFilterHandler() {
+        foreach (var col in this._dataGrid.ColumnsCollection) {
+            await this._dataGrid.ClearFilter(col, true);
+        }
     }
 
     private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args, MenuItemEventArgs e) {

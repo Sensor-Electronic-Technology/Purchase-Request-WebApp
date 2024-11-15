@@ -17,10 +17,24 @@
 @switch (this.Mode) {
     case EditMode.NEW: {
         <RadzenCard Variant="Variant.Outlined" class="info-area">
-            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+            <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                        Drag and drop files to upload
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                        ** Files cannot be encrypted **
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                        Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                        Maximum file size: 10MB
+                    </RadzenText>
+            </RadzenCard>
             <RadzenUpload id="ddUpload"
                           @ref="@this._upload"
-                          ChooseText="Dra and drop here or click to choose files"
+                          ChooseText="Drag and drop here or click to choose files to upload"
+                          Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                           Auto="false"
                           Multiple="true"
                           Change="@this.OnClientChange"
@@ -34,12 +48,26 @@
             <Tabs>
                 <RadzenTabsItem Text="Add Additional Quotes">
                     <RadzenCard Variant="Variant.Outlined" class="info-area">
-                        <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Drag and drop files to upload</RadzenText>
+                        <RadzenCard>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                                Drag and drop files to upload
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                                ** Files cannot be encrypted **
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                                Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                                Maximum file size: 10MB
+                            </RadzenText>
+                        </RadzenCard>
                         <RadzenUpload id="ddUpload"
                                       @ref="@this._upload"
-                                      ChooseText="Drag and drop here or click to choose files"
+                                      ChooseText="Drag and drop here or click to choose files to upload"
                                       Auto="false"
                                       Multiple="true"
+                                      Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                                       Change="@this.OnClientChange"
                                       InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select file" } })"
                                       Style="width: 100%"/>

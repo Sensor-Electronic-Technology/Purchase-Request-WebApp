@@ -31,8 +31,6 @@
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-warning-lighter dropzone-header">
                             <RadzenText Text="@($"Needs Approval: {this._needApprovalCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
                         </RadzenCard>
-                        
-
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Approved"
@@ -75,7 +73,7 @@
                         @switch (this._role) {
                             case nameof(PurchaseRequestRole.Requester): {
                                 @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
-                                    <RadzenSplitButtonItem Text="Modify" Icon="autorenew" IconColor="blue" Value="@nameof(PrUserAction.MODIFY)"/>
+                                    <RadzenSplitButtonItem Text="Modify" Icon="autorenew" Value="@nameof(PrUserAction.MODIFY)"/>
                                     <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
                                 }
 
@@ -153,8 +151,6 @@
         return status is {Status:PrStatus.Delivered, IsComplete:false} ? $"{status.DateStr}:{status.Name} (Incomplete)" : $"{status.Name} {status.DateStr}";
     }
     
-    
-
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "padding-right:.1rem; padding-left:.1rem; padding-top:.1rem; padding-bottom:.1rem;";
