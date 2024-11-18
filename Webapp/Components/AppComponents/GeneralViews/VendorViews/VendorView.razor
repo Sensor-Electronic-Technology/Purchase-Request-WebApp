@@ -5,92 +5,169 @@
 @if (this.Vendor == null) {
     <RadzenText Text="No Vendor Selected" TextStyle="TextStyle.H5"/>
 } else {
-    <RadzenStack Orientation="Orientation.Vertical" Gap="10" Style="width:600px;">
-        <RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-                <RadzenFormField Text="Name">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Name" ReadOnly="@this.IsReadOnly()"/>
-                </RadzenFormField>
-                <RadzenFormField Text="Contact">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Attention" ReadOnly="@this.IsReadOnly()"/>
-                </RadzenFormField>
-            </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-                <RadzenFormField Text="Phone" Component="Phone" AllowFloatingLabel="false">
-                    <Start>
-                        <RadzenIcon Icon="call" />
-                    </Start>
-                    <ChildContent>
-                        <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
-                                    Placeholder="(000) 000-0000 x0000" Name="Phone"
-                                    @bind-Value="@this.Vendor.Phone"
-                                    ReadOnly="@this.IsReadOnly()"
-                                    Style="width: 100%;" aria-label="Phone"/>
-                    </ChildContent>
-                </RadzenFormField>
-                <RadzenFormField Text="Fax" Component="Fax" AllowFloatingLabel="false">
-                    <Start>
-                        <RadzenIcon Icon="fax" />
-                    </Start>
-                    <ChildContent>
-                        <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
-                                    Placeholder="(000) 000-0000" Name="Fax"
-                                    @bind-Value="@this.Vendor.Fax"
-                                    ReadOnly="@this.IsReadOnly()"
-                                    Style="width: 100%;" aria-label="Fax"/>
-                    </ChildContent>
-                </RadzenFormField>
-            </RadzenStack>
-            <RadzenFormField Text="Street">
-                <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress" ReadOnly="@this.IsReadOnly()"/>
-            </RadzenFormField>
-        </RadzenStack>
-        <RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
-                <RadzenFormField Text="City">
-                    <RadzenTextBox @bind-Value="@this.Vendor.City" ReadOnly="@this.IsReadOnly()"/>
-                </RadzenFormField>
-                <RadzenFormField Text="State">
-                    <RadzenTextBox @bind-Value="@this.Vendor.State" ReadOnly="@this.IsReadOnly()"/>
-                </RadzenFormField>
-                <RadzenFormField Text="Country">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Country" ReadOnly="@this.IsReadOnly()"/>
-                </RadzenFormField>
-            </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenFormField Text="Zip">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Zip" ReadOnly="@this.IsReadOnly()" Style="width: 150px;"/>
-                </RadzenFormField>
-                <RadzenFormField Text="Email">
-                    <RadzenTextBox @bind-Value="@this.Vendor.Email" ReadOnly="@this.IsReadOnly()" Style="width: 450px"/>
-                </RadzenFormField>
-            </RadzenStack>
-        </RadzenStack>
-        <RadzenFieldset Text="Save/Cancel" Visible="@(!this.IsReadOnly())">
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-                <RadzenButton ButtonStyle="ButtonStyle.Primary" 
-                              Text="Save" 
-                              Click="@this.SaveHandler" 
-                              Disabled="@this.IsReadOnly()"
-                              Style="width: 150px;height: 50px;"/>
-                <RadzenButton ButtonStyle="ButtonStyle.Secondary" 
-                              Text="Cancel" 
-                              Click="@this.Cancel" 
-                              Disabled="@this.IsReadOnly()"
-                              Style="width: 150px;height: 50px;"/>
-            </RadzenStack>
+    <RadzenTemplateForm TItem="Vendor" Data="@this.Vendor" 
+                        Style="@($"min-width:{this.Width};")"
+                        Submit="@this.SaveHandler" 
+                        InvalidSubmit="@this.InvalidSubmit">
+        <RadzenFieldset Text="Vendor Info">
+            <RadzenRow>
+                <RadzenColumn Size="5">
+                    <RadzenFieldset Text="Info">
+                        <RadzenStack>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Name" Component="VendorName"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox Style="width: 100%;" 
+                                                   Name="VendorName" 
+                                                   @bind-Value="@this.Vendor.Name"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                    <RadzenRequiredValidator Component="VendorName" Text="Vendor name is required"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Contact" Component="VendorContact"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox Style="width: 100%;" 
+                                                   Name="VendorContact" 
+                                                   @bind-Value="@this.Vendor.Attention"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Email" Component="VendorEmail"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox Style="width: 100%;"
+                                                   @bind-Value="@this.Vendor.Email"
+                                                   ReadOnly="@this.IsReadOnly()"
+                                                   Name="VendorEmail"/>
+                                    <RadzenEmailValidator 
+                                        Component="VendorEmail" Text="Invalid email format" Popup="false"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Phone" Component="VendorPhone"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
+                                                Placeholder="(000) 000-0000 x0000" Name="VendorPhone"
+                                                @bind-Value="@this.Vendor.Phone"
+                                                ReadOnly="@this.IsReadOnly()"
+                                                Style="width: 100%;" aria-label="Phone"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Fax" Component="VendorFax"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]"
+                                                Placeholder="(000) 000-0000" Name="VendorFax"
+                                                @bind-Value="@this.Vendor.Fax"
+                                                ReadOnly="@this.IsReadOnly()"
+                                                Style="width: 100%;" aria-label="Fax"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </RadzenColumn>
+                <RadzenColumn Size="7">
+                    <RadzenFieldset Text="Address">
+                        <RadzenStack>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Country" Component="Country"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox @bind-Value="@this.Vendor.Country" 
+                                                   AutoCompleteType="AutoCompleteType.Country"
+                                                   Style="width: 100%"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="City" Component="City"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox @bind-Value="@this.Vendor.City"
+                                                   Style="width: 100%"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Address" Component="Address"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress" 
+                                                   AutoCompleteType="AutoCompleteType.StreetAddress"
+                                                   Style="width: 100%"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="5">
+                                    <RadzenLabel Text="State / Province / Region" Component="State"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="7">
+                                    <RadzenTextBox @bind-Value="@this.Vendor.State" 
+                                                   AutoCompleteType="AutoCompleteType.State"
+                                                   Style="width: 100%"
+                                                   ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="2">
+                                    <RadzenLabel Text="Zip / Postal Code" Component="Zip"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="10">
+                                    <RadzenMask @bind-Value="@this.Vendor.Zip"
+                                                Mask="*****-****"
+                                                Pattern="[0-9]"
+                                                AutoCompleteType="AutoCompleteType.ZipCode"
+                                                Style="width: 100%"
+                                                ReadOnly="@this.IsReadOnly()"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenFieldset Text="Save/Cancel" Visible="@(!this.IsReadOnly())">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary"
+                                  Text="Save"
+                                  ButtonType="ButtonType.Submit"
+                                  Disabled="@this.IsReadOnly()"
+                                  Style="width: 150px;height: 50px;"/>
+                    <RadzenButton ButtonStyle="ButtonStyle.Secondary"
+                                  Text="Cancel"
+                                  Click="@this.Cancel"
+                                  Disabled="@this.IsReadOnly()"
+                                  Style="width: 150px;height: 50px;"/>
+                </RadzenStack>
+            </RadzenFieldset>
         </RadzenFieldset>
-    </RadzenStack>
+    </RadzenTemplateForm>
+    
 }
 
 @code {
+    [Inject] private DialogService _dialogService { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
+    [Inject] private ContactDataService _dataService { get; set; }
     [Parameter] public Vendor? Vendor { get; set; } = new();
+    [Parameter] public string Width { get; set; } ="600px";
     /*[Parameter] public EventCallback<Vendor> VendorChanged { get; set; }*/
     [Parameter] public EventCallback<Vendor> VendorUpdated { get; set; }
     [Parameter] public EditMode Mode { get; set; }
-    [Inject] private DialogService _dialogService { get; set; }
-
-    [Inject] private ContactDataService _dataService { get; set; }
     
     private bool _switchValue=false;
     private string _label="Enable";
@@ -122,10 +199,17 @@
         await this.VendorUpdated.InvokeAsync(this.Vendor);
         this._dialogService.Close();
     }
-    
-    private async Task Cancel() {
-        this._dialogService.Close();
+
+    private Task InvalidSubmit() {
+        this._notificationService.Notify(NotificationSeverity.Error,"Input Error(s)","There are errors in the form, please correct them before submitting.");
+        return Task.CompletedTask;
     }
+    
+    private Task Cancel() {
+        this._dialogService.Close();
+        return Task.CompletedTask;
+    }
+    
     void OnChange(bool? value, string name) {
         if (value.HasValue) {
             this._switchValue = value.Value;

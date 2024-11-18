@@ -54,8 +54,8 @@
 }
 
 .step-card{
-    max-height: 900px; !important;
-    overflow: scroll !important;
+/*    max-height: 900px; !important;
+    overflow: scroll !important;*/
     padding: 0.1rem !important;
     border-radius: var(--rz-border-radius-4) !important;
 }

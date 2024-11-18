@@ -1,4 +1,6 @@
 ﻿@using ButtonSize = Radzen.ButtonSize
+@using Orientation = Radzen.Orientation
+@using Webapp.Data
 @using BlazorBootstrap
 
 <style>
@@ -7,16 +9,71 @@
     }
 </style>
 @if (this.FileBytes != null) {
-    
-    <RadzenStack>
-        <RadzenRow JustifyContent="JustifyContent.Start">
+    var extension = Path.GetExtension(this.FileName);
+    /*Console.WriteLine($"Extension: {extension}");*/
+    @if (FileDisplayType.PDF.Extensions.Contains(extension)) {
+        <RadzenStack>
+            <RadzenRow JustifyContent="JustifyContent.Start">
+                <RadzenButton Text="Download" Click="DownloadHandler"
+                              Size="ButtonSize.Small"
+                              class="button-transparent"
+                              Image="/images/download-icon.svg"/>
+            </RadzenRow>
+            <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="max-height:700px;"/>
+        </RadzenStack>
+    }else if (FileDisplayType.DOC.Extensions.Contains(extension)) {
+        <RadzenStack>
+            <RadzenRow JustifyContent="JustifyContent.Start">
+                <RadzenButton Text="Download" Click="DownloadHandler"
+                              Size="ButtonSize.Small"
+                              class="button-transparent"
+                              Image="/images/download-icon.svg"/>
+            </RadzenRow>
+            <DxRichEdit DocumentFormat="DocumentFormat.OpenXml"
+                        BarMode="BarMode.Ribbon"
+                        ViewType="ViewType.Simple"
+                        ReadOnly="true"
+                        DocumentContent="@this.FileBytes"
+                        style="width: 100%"/>
+        </RadzenStack>
+    }else if (FileDisplayType.IMAGE.Extensions.Contains(extension)) {
+        <RadzenStack>
+            <RadzenRow JustifyContent="JustifyContent.Start">
+                <RadzenButton Text="Download" Click="DownloadHandler"
+                              Size="ButtonSize.Small"
+                              class="button-transparent"
+                              Image="/images/download-icon.svg"/>
+            </RadzenRow>
+            <RadzenImage Path="@($"data:image/jpeg;base64,{Convert.ToBase64String(this.FileBytes)}")" AlternateText="quote" />
+        </RadzenStack>
+    } else {
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+            <RadzenCard>
+                <RadzenText Text="Preview is only available for images, pdfs, and docs.  Please download to view"/>
+            </RadzenCard>
             <RadzenButton Text="Download" Click="DownloadHandler"
                           Size="ButtonSize.Small"
                           class="button-transparent"
                           Image="/images/download-icon.svg"/>
-        </RadzenRow>
-        <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="max-height:700px;"/>
-    </RadzenStack>
+        </RadzenStack>
+    }
+
+
+    @*@if (!this.FileName.Contains(".docx")) {
+
+
+    } else {
+        <RadzenStack>
+            <RadzenRow JustifyContent="JustifyContent.Start">
+                <RadzenButton Text="Download" Click="DownloadHandler"
+                              Size="ButtonSize.Small"
+                              class="button-transparent"
+                              Image="/images/download-icon.svg"/>
+            </RadzenRow>
+            <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="max-height:700px;"/>
+        </RadzenStack>
+    }*@
+
 }
 
 
@@ -26,12 +83,19 @@
     [Parameter] public string FileName { get; set; } = string.Empty;
     private bool _prNull = true;
     private string _embeddedSrc = string.Empty;
+    private FileDisplayType _fileDisplayType = FileDisplayType.OTHER;
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
     }
 
     protected override async Task OnParametersSetAsync() {
+        var extension = Path.GetExtension(this.FileName);
+
+
+        
+        
+        
         if (FileBytes is { Length: > 0 }) {
             if (this._prNull) {
                 this._embeddedSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);

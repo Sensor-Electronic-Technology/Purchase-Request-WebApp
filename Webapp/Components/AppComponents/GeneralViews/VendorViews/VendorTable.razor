@@ -213,6 +213,7 @@
         await this._dialogService.OpenAsync<VendorView>("New Vendor",
             new Dictionary<string, object> {
                 { "Mode", EditMode.NEW },
+                {"Width", "900px"},
                 {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
             },new DialogOptions() {
                 Width = "fit-content",

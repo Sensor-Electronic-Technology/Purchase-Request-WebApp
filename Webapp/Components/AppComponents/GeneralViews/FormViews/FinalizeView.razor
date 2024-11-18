@@ -37,9 +37,14 @@
                         </RadzenFieldset>
                     </RadzenRow>
                     <AlertListView UserActionAlerts="@this.RequestAlerts"/>
-                    <EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
+                    @*<RadzenFieldset Text="Email Recipients">
+                        <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
+                        <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
+                    </RadzenFieldset>*@
+                    @*<EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
                                    CcListChanged="@EmailListChangedHandler"
-                                   IsCollapsed="false"/>
+                                   IsCollapsed="false"/>*@
+                    <EmailRecipientView EmailList="@this._emailList" @bind-EmailCcList="@this.PurchaseRequestInput.EmailCcList"/>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="6">
@@ -90,7 +95,6 @@
 
 @code {
     [Inject] private IWebHostEnvironment _environment { get; set; }
-    [Inject] private AuthApiService _authService { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
     [Parameter] public EventCallback<PurchaseRequestInput?> PurchaseRequestInputChanged { get; set; }
     [Parameter] public bool DocLoaded { get; set; }
@@ -110,11 +114,17 @@
     DxRichEdit _richEdit;
     
     private List<RequestMailMerge> MailMerge { get; set; } = [];
+    private List<string> _emailList = [];
+    private List<string> _ccList = [];
 
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this.DocumentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
+        if(this.PurchaseRequestInput != null) {
+            this._emailList.Add(this.PurchaseRequestInput.RequesterEmail ?? "Requester Email");
+            this._emailList.Add(this.PurchaseRequestInput.ApproverEmail ?? "Approver Email");
+        }
     }
 
     protected override Task OnParametersSetAsync() {

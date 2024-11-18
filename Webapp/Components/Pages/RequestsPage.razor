@@ -19,6 +19,35 @@
                         Hover mouse over colums with large text to view in popup
                     </RadzenText>
                 </RadzenCard>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Start">
+                    <RadzenFieldset Text="Page Count" Style="align-self: start">
+                        <RadzenStack>
+                            <RadzenSelectBar TValue="int"
+                                             Size="ButtonSize.Small"
+                                             @bind-Value="@this._pageCount">
+                                <Items>
+                                    <RadzenSelectBarItem Value="10" Text="10"/>
+                                    <RadzenSelectBarItem Value="20" Text="20"/>
+                                    <RadzenSelectBarItem Value="30" Text="30"/>
+                                    <RadzenSelectBarItem Value="40" Text="40"/>
+                                </Items>
+                            </RadzenSelectBar>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Grid Density" Style="align-self: start">
+                        <RadzenStack>
+                            <RadzenSelectBar TValue="Density"
+                                             Size="ButtonSize.Small"
+                                             @bind-Value="@this._density">
+                                <Items>
+                                    <RadzenSelectBarItem Value="@Density.Default" Text="Default"/>
+                                    <RadzenSelectBarItem Value="@Density.Compact" Text="Compact"/>
+                                </Items>
+                            </RadzenSelectBar>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </RadzenStack>
+
                 <RadzenDataGrid @ref="@this._dataGrid"
                                 TItem="PurchaseRequest"
                                 Data="@this._requests"
@@ -28,7 +57,7 @@
                                 Value="@this._selectedRequests"
                                 CellRender="@this.CellRender"
                                 Render="@this.OnRender"
-                                Density="Density.Compact"
+                                Density="@this._density"
                                 AllowColumnResize="true"
                                 AllowFiltering="true"
                                 FilterMode="FilterMode.Advanced"
@@ -36,6 +65,8 @@
                                 AllowSorting="true"
                                 AllowColumnReorder="true"
                                 IsLoading="@this._isLoading"
+                                AllowPaging="true"
+                                PageSize="@this._pageCount"
                                 LogicalFilterOperator="LogicalFilterOperator.And"
                                 FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                 GridLines="DataGridGridLines.Both"
@@ -162,7 +193,7 @@
     
     private RadzenDataFilter<PurchaseRequest> dataFilter;
     private IEnumerable<PurchaseRequest> _filteredRequests;
-    private IEnumerable<PurchaseRequest> _requests;
+    private IQueryable<PurchaseRequest> _requests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
     bool auto = true;
     private bool _isLoading = false;
@@ -170,11 +201,13 @@
     private PurchaseRequest? _selectedRequest;
     private IList<PurchaseRequest>? _selectedRequests;
     private bool _collapsed = true;
+    private int _pageCount = 20;
+    private Density _density = Density.Compact;
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         _isLoading = true;
-        this._requests= await _dataService.GetPurchaseRequests();
+        this._requests= await _dataService.GetPurchaseRequestsQuery();
         _isLoading = false;
     }
     

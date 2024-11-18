@@ -25,6 +25,9 @@
                                         TextStyle="TextStyle.Subtitle1"/>
                         </RadzenCard>
                         <RadzenStack Orientation="Orientation.Vertical">
+                                <RadzenFormField Text="Vendor" class="align-self-center" Style="width:350px">
+                                    <RadzenTextBox Placeholder="Vendor Name" @bind-Value="@this.PurchaseOrderDto.Vendor.Name"/>
+                                </RadzenFormField>
                             <RadzenStack Orientation="Orientation.Horizontal"
                                          JustifyContent="JustifyContent.Center">
                                 <RadzenFieldset Text="Select Payment">
@@ -155,7 +158,7 @@
                                         <RadzenButton Text="Submit"
                                                       ButtonStyle="ButtonStyle.Primary"
                                                       Click="@this.SubmitHandler"
-                                                      Disabled="@(!this._docLoaded)"
+                                                      Disabled="@(!this._docLoaded || !this._canSave)"
                                                       Style="width: 150px; height: 60px;"/>
                                         <RadzenButton Text="Cancel"
                                                       ButtonStyle="ButtonStyle.Danger"
@@ -239,7 +242,7 @@
     private bool _canPerformAction = true;
     private PurchaseType? _selectedPurchaseType;
     private ItemType? _selectedItemType;
-    
+    private bool _canSave = false;
 
     
     protected override async Task OnInitializedAsync() {
@@ -364,11 +367,68 @@
                 this._orderAlerts.Add(new UserActionAlert() {
                     Item = "Email Vendor",
                     Message = "No email address provided for vendor",
-                    Okay = false
+                    Okay = false,
+                    Style = AlertStyle.Danger
                 });
                 okay = false;
             }
         }
+
+        if (string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.ShippingMethod)) {
+            this._orderAlerts.Add(new UserActionAlert() {
+                Item = "Shipping Method",
+                Message = "Shipping Method must be selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+            okay = false;
+        }
+        
+        if(string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.PurchaseType)) {
+            this._orderAlerts.Add(new UserActionAlert() {
+                Item = "Purchase Type",
+                Message = "Purchase Type must be selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+            okay = false;
+        } else {
+            if(PurchaseType.TryFromValue(this.PurchaseOrderDto?.PurchaseType, out var purchaseType)) {
+                if (purchaseType.Name == PurchaseType.PurchaseOrderType.Name) {
+                    if (string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.ShipTo)) {
+                        this._orderAlerts.Add(new UserActionAlert() {
+                            Item = "Ship To",
+                            Message = "Ship To cannot be empter when Purchase Type is Purchase Order",
+                            Okay = false,
+                            Style = AlertStyle.Danger
+                        });
+                        okay = false;
+                    }
+                }
+            }
+        }
+        
+        if(string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.ItemType)) {
+            this._orderAlerts.Add(new UserActionAlert() {
+                Item = "Item Type",
+                Message = "Item Type must be selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+            okay = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.PaymentTerms)) {
+            this._orderAlerts.Add(new UserActionAlert() {
+                Item="Payment Type",
+                Message = "Payment Type must be selected",
+                Okay = false,
+                Style = AlertStyle.Danger
+            });
+            okay = false;
+        }
+
+        this._canSave = okay;
         if (okay) {
             this._orderAlerts.Add(new UserActionAlert() {
                 Item="Purchase Request",
@@ -386,23 +446,17 @@
     
     private async Task SelectedStepChangedHandler(int step) {
         if (this._selectedStep==0 && step != 0) {
-            if(this._selectedPaymentTerm==null) {
-                this._notificationService.Notify(NotificationSeverity.Error,
-                    "Missing Data","Payment Term must be selected before continuing", 5000, closeOnClick:true);
-                this._selectedStep = 0;
-            } else {
-                this._selectedStep=step;
-                if(step==this._lastStep) {
-                    this.GenerateOrderAlerts();
-                    if (!this._poNumberGenerated) {
-                        var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
-                        if (!string.IsNullOrEmpty(poNumber._id)) {
-                            this.PurchaseOrderDto.PoNumber = poNumber._id;
-                            this._poNumberGenerated = true;
-                        }
+            this._selectedStep=step;
+            if(step==this._lastStep) {
+                this.GenerateOrderAlerts();
+                if (!this._poNumberGenerated) {
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
+                    if (!string.IsNullOrEmpty(poNumber._id)) {
+                        this.PurchaseOrderDto.PoNumber = poNumber._id;
+                        this._poNumberGenerated = true;
                     }
-                    await this.FinalView.InvokeAsync();
                 }
+                await this.FinalView.InvokeAsync();
             }
         } else {
             if (step == this._lastStep && this._selectedStep != this._lastStep) {

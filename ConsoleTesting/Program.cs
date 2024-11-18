@@ -10,6 +10,7 @@ using SETiAuth.Domain.Shared.Constants;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Ardalis.SmartEnum;
 using Infrastructure.Services;
 using ClosedXML.Excel;
 using Domain;
@@ -87,6 +88,28 @@ alerts.Sort();
 Console.WriteLine("After Sort:");
 foreach (var alert in alerts) {
     Console.WriteLine($"{alert.Item}: {alert.Okay}");
+}*/
+
+Console.WriteLine("137 80 78 71 13 10 26 10");
+Console.WriteLine(string.Join(" ","%PNG"u8.ToArray()));
+
+byte[] pngBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
+byte[] pngBytes2 = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+Console.WriteLine(string.Join(" ", pngBytes));
+Console.WriteLine(string.Join(" ", pngBytes2));
+
+/*var ext = ".docx";
+foreach(var type in FileDisplayType.List) {
+    string.Join(",", type.Extensions);
+    Console.WriteLine($"Type: {type.Name} Extensions: {string.Join(",", type.Extensions)}");
+    if (type.Extensions.Contains(ext)) {
+        Console.WriteLine($"Type: {type.Name}");
+    }
+}*/
+/*if (FileDisplayType.DOC.Extensions.Contains(ext)) {
+    
+} else {
+    
 }*/
 
 async Task GeneratePurchaseRequests() {
@@ -792,4 +815,14 @@ public class UserActionAlert:IEquatable<UserActionAlert> , IComparable<UserActio
             return 0;
         }
     }
+}
+
+public class FileDisplayType:SmartEnum<FileDisplayType,string> {
+    public static readonly FileDisplayType PDF=new(nameof(PDF),"PDF",[".pdf"]);
+    public static readonly FileDisplayType IMAGE=new(nameof(IMAGE),"Image",[".jpg",".jpeg",".png"]);
+    public static readonly FileDisplayType DOC=new(nameof(DOC),"Document",[".doc",".docx"]);
+    public static readonly FileDisplayType OTHER=new(nameof(OTHER),"Other",[".xls",".xlsx"]);
+    public List<string> Extensions = [];
+
+    private FileDisplayType(string name, string value,params string[] ext) : base(name, value) { }
 }

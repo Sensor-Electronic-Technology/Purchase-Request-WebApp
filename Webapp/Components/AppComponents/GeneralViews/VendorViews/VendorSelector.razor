@@ -25,7 +25,7 @@
                 <RadzenSplitButtonItem Text="Edit" Value="@nameof(EditMode.EDIT)"/>
             </ChildContent>
         </RadzenSplitButton>
-        <VendorView Vendor="@this.Vendor" Mode="EditMode.VIEW"/>
+        <VendorView Vendor="@this.Vendor" Width="900px" Mode="EditMode.VIEW"/>
     }
 
 </RadzenStack>
@@ -62,6 +62,7 @@
                     await this._dialogService.OpenAsync<VendorView>("New Vendor",
                         new Dictionary<string, object> {
                             { "Mode", mode },
+                            {"Width","900px"},
                             {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
                         },new DialogOptions() {
                             Width = "fit-content",
@@ -73,10 +74,13 @@
                             "No Vendor Selected");
                         return;
                     }
+
+                    var vendor = this.Vendor;
                     await this._dialogService.OpenAsync<VendorView>("Edit Vendor",
                         new Dictionary<string, object> {
-                            { "Vendor", this.Vendor }, 
+                            { "Vendor", vendor }, 
                             { "Mode", mode },
+                            {"Width","900px"},
                             {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
                         },new DialogOptions() {
                             Width = "fit-content",

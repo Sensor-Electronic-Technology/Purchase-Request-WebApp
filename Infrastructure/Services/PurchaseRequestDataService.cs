@@ -181,6 +181,10 @@ public class PurchaseRequestDataService {
         return await this._purchaseRequestCollection.Find(pr => true).ToListAsync();
     }
     
+    public Task<IQueryable<PurchaseRequest>> GetPurchaseRequestsQuery() {
+        return Task.FromResult(this._purchaseRequestCollection.AsQueryable().AsQueryable());
+    }
+    
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).FirstOrDefaultAsync();
     }

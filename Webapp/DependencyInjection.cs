@@ -80,7 +80,7 @@ public static class DependencyInjection {
     }
 
     public static IHostApplicationBuilder AddBlazorComponents(this IHostApplicationBuilder builder) {
-        builder.Services.AddMetrics(builder);
+        //builder.Services.AddMetrics(builder);
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddCircuitOptions(options => options.DetailedErrors = true)

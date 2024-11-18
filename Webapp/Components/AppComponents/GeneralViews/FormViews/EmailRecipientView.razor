@@ -1,0 +1,22 @@
+﻿
+<RadzenStack>
+    <RadzenFieldset Text="Email Recipients">
+        <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
+        <RadzenText Text="@String.Join(" , ", this.EmailList)" TextStyle="TextStyle.Subtitle1"/>
+    </RadzenFieldset>
+    <EmailPickList CcList="@this.EmailCcList"
+                   CcListChanged="@EmailListChangedHandler"
+                   IsCollapsed="false"/>
+</RadzenStack>
+
+@code {
+    [Parameter] public List<string> EmailCcList { get; set; } = [];
+    [Parameter] public List<string> EmailList { get; set; } = [];
+    [Parameter] public EventCallback<List<string>> EmailCcListChanged { get; set; }
+    
+    
+    private async Task EmailListChangedHandler(List<string> emailList) {
+        this.EmailCcList = emailList;
+        await this.EmailCcListChanged.InvokeAsync(emailList);
+    }
+}

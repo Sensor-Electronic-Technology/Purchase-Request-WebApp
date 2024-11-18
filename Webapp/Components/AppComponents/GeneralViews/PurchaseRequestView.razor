@@ -60,7 +60,6 @@
                                                                     SelectedApprover="@this.PurchaseRequest.Approver.Name"
                                                                     Mode="EditMode.VIEW"/>
                                         }
-
                                     </RadzenStack>
                                 </RadzenCard>
 
@@ -83,10 +82,9 @@
                                                             Style="width: 150px; height: fit-content;"/>
                                             </RadzenFieldset>
                                         </RadzenStack>
-                                        <RadzenFieldset Text="Vendor">
-                                            <VendorView Vendor="@this.PurchaseRequest.Vendor"
-                                                        Mode="@EditMode.VIEW"/>
-                                        </RadzenFieldset>
+                                        <VendorView Vendor="@this.PurchaseRequest.Vendor"
+                                                    Width="650px"
+                                                    Mode="@EditMode.VIEW"/>
                                     </RadzenStack>
                                 </RadzenCard>
 
