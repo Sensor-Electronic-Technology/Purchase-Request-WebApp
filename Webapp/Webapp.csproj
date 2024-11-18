@@ -9,6 +9,7 @@
         <ContainerRepository>aelmendorf234/purchase-request</ContainerRepository>
         <ContainerImageTag>dev</ContainerImageTag>
         <LangVersion>13</LangVersion>
+        <AssemblyName>PrWebApp</AssemblyName>
     </PropertyGroup>
     
     <ItemGroup>

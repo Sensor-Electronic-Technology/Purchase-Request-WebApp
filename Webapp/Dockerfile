@@ -23,4 +23,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 USER root
-ENTRYPOINT ["dotnet", "Webapp.dll"]
+ENTRYPOINT ["dotnet", "PrWebApp.dll"]
