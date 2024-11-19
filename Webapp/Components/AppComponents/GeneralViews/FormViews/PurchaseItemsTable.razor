@@ -25,7 +25,7 @@
             }
         }
         <RadzenStack>
-            <RadzenDataGrid @ref="ordersGrid"
+            <RadzenDataGrid @ref="_requestsGrid"
                             TItem="PurchaseItem"
                             AllowAlternatingRows="false" AllowFiltering="false"
                             AllowPaging="false" AllowSorting="false"
@@ -133,7 +133,7 @@
     [Parameter] public EventCallback<List<PurchaseItem>> PurchaseItemsChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
     [Parameter] public bool ShowHeader { get; set; } = true;
-    RadzenDataGrid<PurchaseItem> ordersGrid;
+    RadzenDataGrid<PurchaseItem> _requestsGrid;
     List<PurchaseItem> itemsToInsert = new List<PurchaseItem>();
     List<PurchaseItem> itemsToUpdate = new List<PurchaseItem>();
     DataGridEditMode editMode = DataGridEditMode.Single;
@@ -154,7 +154,7 @@
             Reset();
         }
         itemsToUpdate.Add(purchaseItem);
-        await ordersGrid.EditRow(purchaseItem);
+        await _requestsGrid.EditRow(purchaseItem);
     }
 
     void OnUpdateRow(PurchaseItem purchaseItem) {
@@ -162,21 +162,21 @@
     }
 
     async Task SaveRow(PurchaseItem purchaseItem) {
-        await ordersGrid.UpdateRow(purchaseItem);
+        await _requestsGrid.UpdateRow(purchaseItem);
     }
 
     void CancelEdit(PurchaseItem purchaseItem) {
         Reset(purchaseItem);
-        ordersGrid.CancelEditRow(purchaseItem);
+        _requestsGrid.CancelEditRow(purchaseItem);
     }
     
     Task DeleteRow(PurchaseItem purchaseItem) {
         this.Reset(purchaseItem);
         if(this.PurchaseItems.Contains(purchaseItem)) {
             this.PurchaseItems.Remove(purchaseItem);
-            this.ordersGrid.Reload();
+            this._requestsGrid.Reload();
         } else {
-            this.ordersGrid.CancelEditRow(purchaseItem);
+            this._requestsGrid.CancelEditRow(purchaseItem);
         }
         return Task.CompletedTask;
     }
@@ -185,7 +185,7 @@
         this.Reset();
         var purchaseItem = new PurchaseItem();
         itemsToInsert.Add(purchaseItem);
-        await ordersGrid.InsertRow(purchaseItem);
+        await _requestsGrid.InsertRow(purchaseItem);
     }
 
     void OnCreateRow(PurchaseItem purchaseItem) {

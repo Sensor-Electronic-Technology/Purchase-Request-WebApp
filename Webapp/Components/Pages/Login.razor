@@ -30,10 +30,34 @@
 @code {
     [Parameter] public string Id { get; set; } = "";
     [Parameter] public int? Action { get; set; } = 0;
+    [Inject] private DialogService _dialogService { get; set; }
     
     private async Task OnLogin(LoginArgs args) {
         var session =await this.AuthApiService.Login(args.Username, args.Password, args.RememberMe);
         if(session==null) {
+            /*await this._dialogService.Alert("Invalid login credentials, please try again", "Login Failed", 
+                new AlertOptions() {
+                OkButtonText = "Okay",
+                CloseDialogOnEsc = true,
+                CloseDialogOnOverlayClick = true,
+                ShowClose = true,
+                ContentCssClass = "rz-background-color-danger-light",
+                CssClass = "rz-background-color-danger-light"
+            });*/
+            await this._dialogService.OpenAsync("", ds =>
+                    @<RadzenAlert Title="Login Failed" Text="Invalid login credentials, please try again" 
+                                  AlertStyle="AlertStyle.Danger" 
+                                  AllowClose="false"
+                                  Size="AlertSize.Large"/>,
+                new DialogOptions() { 
+                    ShowTitle = false, 
+                    ShowClose = true,
+                    Style = "min-height:auto;min-width:auto;width:auto", 
+                    ContentCssClass = "rz-p-0 rz-m-0",
+                    CssClass = "rz-p-0 rz-m-0",
+                    CloseDialogOnEsc = true,
+                    CloseDialogOnOverlayClick = true,
+                });
             return;
         }
         var exists = await this.UserService.ProfileExists(session.UserAccount.Username);

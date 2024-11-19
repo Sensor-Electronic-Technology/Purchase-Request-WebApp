@@ -15,17 +15,22 @@ namespace Infrastructure.Services;
 
 public class PurchaseRequestDataService {
     private readonly IMongoCollection<PurchaseRequest> _purchaseRequestCollection;
+    private readonly AppTimeProvider _timeProvider;
     
-    public PurchaseRequestDataService(IMongoClient client, IOptions<DatabaseSettings> options) {
+    public PurchaseRequestDataService(IMongoClient client, 
+        IOptions<DatabaseSettings> options,AppTimeProvider timeProvider) {
         var database = client.GetDatabase(options.Value.PurchaseRequestDatabase ?? "purchase_req_db");
         this._purchaseRequestCollection = database.GetCollection<PurchaseRequest>(options.Value.PurchaseRequestCollection ?? "purchase_requests");
+        this._timeProvider = timeProvider;
     }
-
+    public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
+        return await this._purchaseRequestCollection.Find(pr => pr._id == id).FirstOrDefaultAsync();
+    }
     public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
         if(PurchaseRequestRole.TryFromName(role, out var prRole)) {
             switch (prRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
-                    return await this.GetRequesterRequest(username).ToListAsync();
+                    return await this.GetRequesterRequests(username).ToListAsync();
                 }
                 case nameof(PurchaseRequestRole.Approver): {
                     return await this.GetApproverRequests(username).ToListAsync();
@@ -40,18 +45,18 @@ public class PurchaseRequestDataService {
         return [];
     }
 
-    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequest(string username) {
+    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequests(string username) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
         using var cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username,findOptions);
         while (await cursor.MoveNextAsync()) {
             var batch = cursor.Current;
             foreach (var item in batch) {
                 if (item.Status == PrStatus.Delivered) {
-                    if (TimeProvider.DaysSince(item.ReceivedDate) <= 7) {
+                    if (this._timeProvider.DaysSince(item.ReceivedDate) <= 7) {
                         yield return item;
                     }
                 }else if(item.Status==PrStatus.Rejected) {
-                    if(TimeProvider.DaysSince(item.RejectedDate) <= 7) {
+                    if(this._timeProvider.DaysSince(item.RejectedDate) <= 7) {
                         yield return item;
                     }
                 } else {
@@ -72,7 +77,7 @@ public class PurchaseRequestDataService {
                 }else if (item.Status>=PrStatus.Ordered) {
                     if (item.Purchaser?.Username != username) continue;
                     if (item.Status == PrStatus.Delivered) {
-                        if(TimeProvider.DaysSince(item.ReceivedDate) <= 7) {
+                        if(this._timeProvider.DaysSince(item.ReceivedDate) <= 7) {
                             yield return item;
                         }
                     } else {
@@ -90,7 +95,7 @@ public class PurchaseRequestDataService {
             var batch = cursor.Current;
             foreach (var item in batch) {
                 if (item.Status == PrStatus.Delivered) {
-                    if (TimeProvider.DaysSince(item.ReceivedDate) <= 7) {
+                    if (this._timeProvider.DaysSince(item.ReceivedDate) <= 7) {
                         yield return item;
                     }
                 }else  {
@@ -108,11 +113,11 @@ public class PurchaseRequestDataService {
             var batch = cursor.Current;
             foreach (var item in batch) {
                 if (item.Status == PrStatus.Delivered) {
-                    if (TimeProvider.DaysSince(item.ReceivedDate) <= 7) {
+                    if (this._timeProvider.DaysSince(item.ReceivedDate) <= 7) {
                         requests.Add(item);
                     }
                 }else if(item.Status==PrStatus.Rejected) {
-                    if(TimeProvider.DaysSince(item.RejectedDate) <= 7) {
+                    if(this._timeProvider.DaysSince(item.RejectedDate) <= 7) {
                         requests.Add(item);
                     }
                 } else {
@@ -137,7 +142,7 @@ public class PurchaseRequestDataService {
                     ItemType=order.ItemType,
                 })
             .Set(e=>e.Purchaser,order.Purchaser)
-            .Set(e => e.OrderedDate, TimeProvider.Now())
+            .Set(e => e.OrderedDate, this._timeProvider.Now())
             .Set(e => e.PurchaseItems, order.Items)
             .Set(e => e.Vendor, order.Vendor)
             .Set(e=>e.EmailCopyList,order.EmailCopyList)
@@ -154,7 +159,7 @@ public class PurchaseRequestDataService {
         var update = Builders<PurchaseRequest>.Update
             .Set(e => e.Status, PrStatus.Delivered)
             .Set(e => e.Receiver, receivedInput.Receiver)
-            .Set(e => e.ReceivedDate, TimeProvider.Now())
+            .Set(e => e.ReceivedDate, this._timeProvider.Now())
             .Set(e => e.CheckInResult, new CheckInResult() {
                 Complete = receivedInput.Complete,
                 ItemDelivery = receivedInput.ItemDelivery
@@ -177,20 +182,8 @@ public class PurchaseRequestDataService {
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
     
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests() {
-        return await this._purchaseRequestCollection.Find(pr => true).ToListAsync();
-    }
-    
-    public Task<IQueryable<PurchaseRequest>> GetPurchaseRequestsQuery() {
-        return Task.FromResult(this._purchaseRequestCollection.AsQueryable().AsQueryable());
-    }
-    
-    public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
-        return await this._purchaseRequestCollection.Find(pr => pr._id == id).FirstOrDefaultAsync();
-    }
-    
-    public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {
-        return await this._purchaseRequestCollection.Find(filter).ToListAsync();
+    public async Task<IQueryable<PurchaseRequest>?> GetPurchaseRequestsQuery() {
+        return this._purchaseRequestCollection.AsQueryable();
     }
     
     public async Task InsertOne(PurchaseRequest purchaseRequest) {
@@ -202,22 +195,8 @@ public class PurchaseRequestDataService {
         return result.IsAcknowledged;
     }
     
-    public async Task<bool> MarkReceived(ObjectId id,ReceiveRequestInput input) {
-        /*var update = Builders<PurchaseRequest>.Update
-            .Set(e => e.Status, PrStatus.Delivered)
-            .Set(e => e.LocationDescription, locationDescription)
-            .Set(e=>e.ReceivedDate,TimeProvider.Now());
-        var result = await this._purchaseRequestCollection.UpdateOneAsync(e => e._id == id, update);
-        return result.IsAcknowledged;*/
-        return true;
-    }
-    
     public async Task<bool> Exists(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).AnyAsync();
-    }
-
-    public IQueryable<PurchaseRequest>? GetQueryObject() {
-        return this._purchaseRequestCollection.AsQueryable();
     }
     
     public async Task<List<QuotesDto>> GetQuotes() {

@@ -1,0 +1,10 @@
+﻿@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Data
+
+
+@code {
+    [Parameter] public UserAccountDto User { get; set; }
+    [Parameter] public EventCallback<UserAccountDto> UserChanged { get; set; }
+    [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
+    
+}

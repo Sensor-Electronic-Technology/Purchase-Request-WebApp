@@ -27,13 +27,14 @@ public class PurchaseRequestService {
     private readonly ILogger<PurchaseRequestService> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
+    private readonly AppTimeProvider _timeProvider;
     
     public PurchaseRequestService(PurchaseRequestDataService requestDataService,UserProfileService userProfileService,
         DepartmentDataService departmentDataService,ContactDataService contactDataService, EmailService emailService,
         AuthApiService authService,FileService fileService,
         IWebHostEnvironment environment,
         IConfiguration configuration,
-        ILogger<PurchaseRequestService> logger) {
+        ILogger<PurchaseRequestService> logger,AppTimeProvider timeProvider) {
         this._requestDataService = requestDataService;
         this._contactDataService = contactDataService;
         this._emailService = emailService;
@@ -44,6 +45,7 @@ public class PurchaseRequestService {
         this._environment = environment;
         this._configuration=configuration;  
         this._logger = logger;
+        this._timeProvider = timeProvider;
     }
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._requestDataService.GetPurchaseRequest(id);
@@ -81,7 +83,7 @@ public class PurchaseRequestService {
             Department = input.Department,
             Vendor = input.Vendor,
             AdditionalComments = input.AdditionalComments,
-            Created = TimeProvider.Now(),
+            Created = this._timeProvider.Now(),
             Quotes = input.Quotes,
             ShippingType = input.ShippingType,
             PurchaseItems = input.PurchaseItems,
@@ -143,9 +145,9 @@ public class PurchaseRequestService {
             Comments = input.Comment ?? "",
         };
         if(input.Action == PurchaseRequestAction.Approve) {
-            request.ApprovedDate = TimeProvider.Now();
+            request.ApprovedDate = this._timeProvider.Now();
         } else {
-            request.RejectedDate = TimeProvider.Now();
+            request.RejectedDate = this._timeProvider.Now();
         }
         
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
@@ -249,9 +251,5 @@ public class PurchaseRequestService {
     
     public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
         return await this._requestDataService.GetPurchaseRequests(username,role);
-    }
-    
-    public async Task<List<PurchaseRequest>> GetUserPurchaseRequests(Expression<Func<PurchaseRequest,bool>> filter) {
-        return await this._requestDataService.GetUserPurchaseRequests(filter);
     }
 }

@@ -1,9 +1,6 @@
 ﻿@using Domain.Authentication
 @using Infrastructure.Services
-@using Webapp.Services
 @using Webapp.Services.Authentication
-@using Webapp.Components.AppComponents.Chat
-@using TimeProvider = Infrastructure.Services.TimeProvider
 @using Webapp.Data
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
@@ -176,7 +173,7 @@
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" class="rz-mt-8 rz-mb-2">
                 <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.P" class="rz-m-0">Themes</RadzenText>
             </RadzenStack>
-            <RadzenListBox TValue="string" TextProperty="Text" ValueProperty="Value" Data="@Themes.Free" 
+            <RadzenListBox TValue="string" TextProperty="Text" ValueProperty="Value" Data="@this._availableThemes" 
                            Value="@_themeService.Theme" Change="@ChangeTheme" 
                            Style="width: 100%; max-width: 400px; height: 50%; --rz-dropdown-item-padding: 10px 16px 16px; --rz-listbox-padding: 0;" 
                            InputAttributes="@(new Dictionary<string, object>() { { "aria-label", "select theme" } })">
@@ -205,10 +202,12 @@
     bool _headerVisible = true;
     bool rendered;
     List<ChatMessage> messages;
+    private IEnumerable<Theme> _availableThemes = [];
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._navigationManager.LocationChanged += OnLocationChanged;
+        this._availableThemes = Themes.Free.Where(e => e.Text.Contains("Dark"));
     }
 
     void SidebarToggleClick() {
@@ -264,7 +263,7 @@
         return ValueTask.CompletedTask;
     }
 
-    internal static RenderFragment RenderTheme(Theme theme, bool showTitle = true) {
+    private static RenderFragment RenderTheme(Theme theme, bool showTitle = true) {
         return __builder => {
             <text>
                 @if (showTitle) {

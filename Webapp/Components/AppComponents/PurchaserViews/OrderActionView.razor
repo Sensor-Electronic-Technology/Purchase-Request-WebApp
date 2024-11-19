@@ -1,7 +1,6 @@
 ﻿@using Domain.PurchaseRequests.Dto
-@using Domain.PurchaseRequests.TypeConstants
+@using Infrastructure.Services
 @using Webapp.Data
-@using TimeProvider = Infrastructure.Services.TimeProvider
 @inherits UserActionComponent
 <style>
     .rz-panel-titlebar {
@@ -33,6 +32,7 @@
 
 
 @code {
+    [Inject] private AppTimeProvider _timeProvider { get; set; }
     private bool _isCollapsed = false;
     private PurchaseOrderDto _purchaseOrderDto=new();
     private byte[]? _emailDocument;
@@ -40,7 +40,7 @@
     protected override Task OnInitializedAsync() {
         if (this.PurchaseRequest == null) return base.OnInitializedAsync();
         this._purchaseOrderDto = this.PurchaseRequest.ToPurchaseOrderDto();
-        this._purchaseOrderDto.Date = TimeProvider.Now();
+        this._purchaseOrderDto.Date = this._timeProvider.Now();
         return base.OnInitializedAsync();
     }
 

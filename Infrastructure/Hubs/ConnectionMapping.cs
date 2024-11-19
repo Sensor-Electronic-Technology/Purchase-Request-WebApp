@@ -4,16 +4,11 @@ public class ConnectionMapping<T> where T : class{
     private readonly Dictionary<T,HashSet<string>> _connections = new Dictionary<T, HashSet<string>>();
     private Lock _connectionsLock = new Lock();
     
-    public int Count {
-        get {
-            return _connections.Count;
-        }
-    }
-    
+    public int Count => _connections.Count;
+
     public void Add(T key, string connectionId) {
         using (this._connectionsLock.EnterScope()) {
-            HashSet<string> connections;
-            if (!this._connections.TryGetValue(key, out connections)) {
+            if (!this._connections.TryGetValue(key, out HashSet<string> connections)) {
                 connections=new HashSet<string>();
                 this._connections.Add(key, connections);
             }

@@ -1,13 +1,6 @@
 ﻿using Ardalis.SmartEnum;
 namespace Webapp.Data;
 
-/*public enum FileDisplayType {
-    PDF,
-    IMAGE,
-    DOC,
-    OTHER,
-}*/
-
 public class FileDisplayType:SmartEnum<FileDisplayType,string> {
     public static readonly FileDisplayType PDF=new(nameof(PDF),"PDF",[".pdf"]);
     public static readonly FileDisplayType IMAGE=new(nameof(IMAGE),"Image",[".jpg",".jpeg",".png"]);

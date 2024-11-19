@@ -1,0 +1,233 @@
+﻿@*@using Domain.PurchaseRequests.Model
+@using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Data
+
+<RadzenCard class="info-area">
+    <RadzenCard class="area-header">
+        <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
+            <RadzenIcon Icon="contact_mail" class="rz-me-1"/><b>Purchase Items</b>
+        </RadzenText>
+        <RadzenText Text="User List"
+                    TextAlign="TextAlign.Center"
+                    TextStyle="TextStyle.Subtitle1"/>
+    </RadzenCard>
+    <RadzenStack Gap="20">
+        <RadzenFieldset Text="Page Count" Style="align-self: start">
+            <RadzenStack>
+                <RadzenSelectBar TValue="int"
+                                 Size="ButtonSize.Small"
+                                 @bind-Value="@this._pageCount">
+                    <Items>
+                        <RadzenSelectBarItem Value="10" Text="10"/>
+                        <RadzenSelectBarItem Value="20" Text="20"/>
+                        <RadzenSelectBarItem Value="30" Text="30"/>
+                        <RadzenSelectBarItem Value="40" Text="40"/>
+                    </Items>
+                </RadzenSelectBar>
+            </RadzenStack>
+        </RadzenFieldset>
+
+        <RadzenDataGrid @ref="_vendorsGrid"
+                        TItem="UserAccountDto"
+                        AllowAlternatingRows="false"
+                        AllowFiltering="true"
+                        AllowSorting="false"
+                        GridLines="DataGridGridLines.Both"
+                        AllowColumnResize="true"
+                        Density="Density.Compact"
+                        PageSize="@this._pageCount"
+                        AllowPaging="true"
+                        EditMode="@editMode"
+                        Data="@this._vendors"
+                        RowUpdate="@OnUpdateRow"
+                        RowCreate="@OnCreateRow"
+                        Sort="@Reset"
+                        Page="@Reset"
+                        Filter="@Reset"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        Style="overflow: scroll !important;">
+            <HeaderTemplate>
+                <RadzenButton ButtonStyle="ButtonStyle.Success"
+                              Icon="add_circle"
+                              Text="Add New Purchase Item"
+                              Click="@this.ShowDialog"
+                              Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())"/>
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Name)" Title="Name">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="@vendor.Name"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Email)" Title="Email">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="@vendor.Email"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Attention)" Title="Contact">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="@vendor.Attention"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Phone)" Title="Phone #">
+                    <EditTemplate Context="vendor">
+                        <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]"
+                                    Placeholder="(000) 000-0000"
+                                    Name="Phone"
+                                    @bind-Value="@vendor.Phone"
+                                    Style="width: 100%;" aria-label="Phone"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Fax)" Title="Fax #">
+                    <EditTemplate Context="vendor">
+                        <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]"
+                                    Placeholder="(000) 000-0000"
+                                    Name="Phone"
+                                    @bind-Value="@vendor.Fax"
+                                    Style="width: 100%;" aria-label="Phone"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.StreetAddress)" Title="Street Address">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="vendor.StreetAddress"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.City)" Title="City">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="vendor.City"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.State)" Title="State">
+                    <EditTemplate Context="vendor">
+                        <RadzenTextBox @bind-Value="vendor.State"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Vendor.Zip)" Title="Zip">
+                    <EditTemplate Context="vendor">
+                        <RadzenMask CharacterPattern="[0-9]"
+                                    Placeholder="29209"
+                                    Name="Zipcode"
+                                    @bind-Value="@vendor.Zip"
+                                    Style="width: 100%;" aria-label="Zipcode"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Filterable="false" Sortable="false"
+                                      TextAlign="TextAlign.Right" Frozen="true"
+                                      Width="150px"
+                                      FrozenPosition="FrozenColumnPosition.Right">
+                    <Template Context="vendorItem">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
+                                      Variant="Variant.Flat" Size="ButtonSize.Medium"
+                                      Click="@(args => EditRow(vendorItem))" @onclick:stopPropagation="true"/>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                      Variant="Variant.Flat" Shade="Shade.Lighter"
+                                      Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                      Click="@(args => DeleteRow(vendorItem))" @onclick:stopPropagation="true"/>
+                    </Template>
+                    <EditTemplate Context="vendorItem">
+                        <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
+                                      Variant="Variant.Flat" Size="ButtonSize.Medium"
+                                      Click="@((args) => SaveRow(vendorItem))" aria-label="Save">
+                        </RadzenButton>
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
+                                      Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                      Click="@((args) => CancelEdit(vendorItem))" aria-label="Cancel"/>
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                      Variant="Variant.Flat" Shade="Shade.Lighter"
+                                      Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                      Click="@(args => DeleteRow(vendorItem))" aria-label="Delete"/>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+
+</RadzenCard>
+
+
+
+
+
+@code {
+    [Inject] public ContactDataService _contactDataService { get; set; }
+    [Inject] public DialogService _dialogService { get; set; }
+    RadzenDataGrid<Vendor> _vendorsGrid;
+    private List<Vendor> _vendors = [];
+    List<Vendor> itemsToInsert = [];
+    List<Vendor> itemsToUpdate = [];
+    DataGridEditMode editMode = DataGridEditMode.Single;
+    private int _pageCount=10;
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._vendors = await this._contactDataService.GetVendors();
+    }
+
+    void Reset() {
+        itemsToInsert.Clear();
+        itemsToUpdate.Clear();
+    }
+
+    void Reset(Vendor vendor) {
+        itemsToInsert.Remove(vendor);
+        itemsToUpdate.Remove(vendor);
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task EditRow(Vendor vendor) {
+        if (itemsToInsert.Count > 0) {
+            Reset();
+        }
+        itemsToUpdate.Add(vendor);
+        await _vendorsGrid.EditRow(vendor);
+    }
+
+    void OnUpdateRow(Vendor vendor) {
+        Reset(vendor);
+    }
+
+    async Task SaveRow(Vendor vendor) {
+        await _vendorsGrid.UpdateRow(vendor);
+        await this._contactDataService.Update(vendor);
+    }
+
+    void CancelEdit(Vendor vendor) {
+        this.Reset(vendor);
+        this._vendorsGrid.CancelEditRow(vendor);
+    }
+
+    async Task DeleteRow(Vendor vendor) {
+        this.Reset(vendor);
+        if(this._vendors.Contains(vendor)) {
+            this._vendors.Remove(vendor);
+            await this._vendorsGrid.Reload();
+        } else {
+            this._vendorsGrid.CancelEditRow(vendor);
+        }
+    }
+
+    async Task ShowDialog() {
+        await this._dialogService.OpenAsync<VendorView>("New Vendor",
+            new Dictionary<string, object> {
+            { "Mode", EditMode.NEW },
+            {"Width", "900px"},
+            {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+            },new DialogOptions() {
+            Width = "fit-content",
+            });
+    }
+
+    async Task VendorUpdatedHandler(Vendor vendor) {
+        this._vendors=await this._contactDataService.GetVendors();
+        await this._vendorsGrid.Reload();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void OnCreateRow(Vendor vendor) {
+        this._vendors.Add(vendor);
+        itemsToInsert.Remove(vendor);
+    }
+}*@

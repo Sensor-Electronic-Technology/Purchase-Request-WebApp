@@ -1,4 +1,5 @@
-﻿using DevExpress.Blazor.RichEdit.SpellCheck;
+﻿using System.Collections.Concurrent;
+using DevExpress.Blazor.RichEdit.SpellCheck;
 using MongoDB.Bson;
 
 namespace Webapp.Services;
@@ -16,11 +17,7 @@ public class PrEditingTracker {
 
     public Dictionary<string,string> EditingList {
         get=>this._editingList;
-        set {
-            if(value!=this._editingList) {
-                this._editingList = value;
-            }
-        }
+        set => this._editingList = value;
     }
 
     public string? IsAvailable(string id) {
@@ -38,6 +35,7 @@ public class PrEditingTracker {
              var id=this.EditingList.FirstOrDefault(e=>e.Value==username).Key;
              if (!string.IsNullOrEmpty(id)) {
                  this.EditingList.Remove(id);
+                 this.OnTimeout?.Invoke(username,id);
                  this.OnRemoveFromEditingList?.Invoke(id);
              }
         }

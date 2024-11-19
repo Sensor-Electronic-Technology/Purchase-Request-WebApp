@@ -15,6 +15,7 @@ public static class DependencyInjection {
         services.AddScoped<AvatarDataService>();
         services.AddScoped<PoNumberService>();
         services.AddScoped<ChatRoomDataService>();
+        services.AddSingleton<AppTimeProvider>();
         return services;
     }
 }

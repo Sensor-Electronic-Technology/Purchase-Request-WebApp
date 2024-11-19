@@ -112,11 +112,9 @@ public static class DependencyInjection {
         builder.Services.AddInfrastructure();
         builder.Services.AddSetiFileClient();
         builder.Services.AddScoped<SpinnerService>();
-        builder.Services.AddSingleton<RefreshNotifier>();
         builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
                                                                     ?? "mongodb://172.20.3.41:27017"));
         builder.Services.AddSingleton<PrEditingTracker>();
-        builder.Services.AddSingleton<SessionStorageService>();
         builder.Services.AddScoped<ProtectedSessionStorage>();
         builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
         builder.Services.AddScoped<UserService>();

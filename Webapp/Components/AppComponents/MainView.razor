@@ -106,7 +106,6 @@
     [Inject] private UserService _userService { get; set; }
     [Inject] private PrEditingTracker EditingTracker { get; set; }
     [Inject] private ILogger<MainView> _logger { get; set; }
-    [Inject] private SessionStorageService _localStorage { get; set; }
     [Inject] private NavigationManager _navigationManager { get; set; }
     [Inject] private MessagingClient _messagingClient { get; set; }
     
@@ -246,7 +245,7 @@
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
                 break;
         }
-        await InvokeAsync(StateHasChanged);
+        //await InvokeAsync(StateHasChanged);
     }
 
     private async Task ModifyHandler() {
@@ -256,8 +255,6 @@
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.MODIFY);
                 this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
-                //this._localStorage.SetItem(this._userAccount._id,this._selectedRequest._id.ToString());
-                await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
@@ -273,7 +270,6 @@
                 if (this._actionRequest != null) {
                     this._actionRequest._id = ObjectId.GenerateNewId(); 
                     this.TransitionTab(PrUserAction.REPEAT);
-                    await InvokeAsync(StateHasChanged);
                 } else {
                     this._notificationService.Notify(NotificationSeverity.Error,"Error","Request not found");
                 }
@@ -284,7 +280,6 @@
             if (this._selectedRequest != null) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.REPEAT);
-                await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");
             }
@@ -298,7 +293,6 @@
                 if (this._actionRequest != null) {
                     this._actionRequest._id = ObjectId.GenerateNewId(); 
                     this.TransitionTab(PrUserAction.CHECKIN);
-                    await InvokeAsync(StateHasChanged);
                 } else {
                     this._notificationService.Notify(NotificationSeverity.Error,"Error","Request not found");
                 }
@@ -307,9 +301,16 @@
             }
         } else {
             if (this._selectedRequest != null) {
-                this._actionRequest = this._selectedRequest;
-                this.TransitionTab(PrUserAction.CHECKIN);
-                await InvokeAsync(StateHasChanged);
+                var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
+                if (string.IsNullOrEmpty(user)) {
+                    this._actionRequest = this._selectedRequest;
+                    this.TransitionTab(PrUserAction.CHECKIN);
+                    this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                } else {
+                    this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
+                                                                                        " editing this request. " +
+                                                                                        "Please try again later.");
+                }
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","No request selected");
             }
@@ -323,7 +324,7 @@
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.CANCEL);
                 this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
-                await InvokeAsync(StateHasChanged);
+                //await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
@@ -339,7 +340,6 @@
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.APPROVE);
                 this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
-                await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
                                                                                     " editing this request. " +
@@ -357,7 +357,6 @@
                 this._actionRequest.PurchaseOrder = order;
                 this.TransitionTab(PrUserAction.ORDER);
                 this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
-                await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
                                                                                     " editing this request. " +
@@ -380,27 +379,32 @@
         if(this._userProfile._id == username) {
             if(this._actionRequest != null && this._actionRequest._id.ToString() == id) {
                 this._selectedIndex = 0;
-                this.Reset();
-                InvokeAsync(StateHasChanged);
+                this.Reset(false);
             }
         }
     }
     
     private void TabIndexChangedHandler(int tabIndex) {
-        this._selectedIndex = tabIndex;
         if(tabIndex == 0 || tabIndex == 1) {
             if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
                 this._navigationManager.NavigateTo("/",true);
             } else {
-                this.Reset();
+                if (this._selectedIndex == 2) {
+                    this.Reset(true);
+                } else {
+                    this.Reset();
+                }
             }
         }
+        this._selectedIndex = tabIndex;
     }
     
-    private void Reset() {
+    private void Reset(bool invoke=false) {
         this._isEditing = false;
         if(this._selectedRequest != null) {
-            this.EditingTracker.FinishEditing(this._selectedRequest._id.ToString());
+            if (invoke) {
+                this.EditingTracker.FinishEditing(this._selectedRequest._id.ToString());
+            }
             this._selectedRequest = null;
         }
         this._actionRequest = null;
@@ -420,7 +424,7 @@
 
     private async Task Load() {
         this._selectedIndex = 0;
-        this.Reset();
+        this.Reset(true);
         this._userProfile = this._userService.GetSessionUserProfile();
         if(this._userProfile != null) {
             await this.HubSetup();
@@ -437,16 +441,9 @@
                     PrStatus.Rejected => pr.RejectedDate.ToString("MM/dd/yy"),
                     _ => "00-00-00",
                 };
-                                
-                
                 return new PurchaseRequestStatus(pr._id.ToString(), pr.Title ?? "No Title", pr.Status, complete, dateStr);
             }).ToList();
-            foreach (var request in this._purchaseRequests) {
-                
-            }
-            Console.WriteLine($"User: {this._userProfile._id} has {_purchaseRequests.Count} requests");
         }
-        await InvokeAsync(StateHasChanged);
     }
     
     public ValueTask DisposeAsync() {

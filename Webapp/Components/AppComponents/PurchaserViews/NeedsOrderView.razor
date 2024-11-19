@@ -3,10 +3,12 @@
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using Webapp.Data
-@using TimeProvider = Infrastructure.Services.TimeProvider
-@using Webapp.Services.Authentication
 @using Infrastructure.Services
-
+<style>
+    .rz-formfield-content {
+        padding: 0.6em !important;
+    }
+</style>
 @if (this.PurchaseRequest == null && this._canPerformAction) {
     <p>Loading...</p>
 } else {
@@ -14,7 +16,7 @@
                  SelectedIndexChanged="SelectedStepChangedHandler">
         <Steps>
             <RadzenStepsItem Text="Order Form" NextText="Internal Email">
-                <RadzenCard class="info-area" Style="max-height: 600px; overflow: scroll">
+                <RadzenCard class="info-area" Style="max-height: 900px; overflow: scroll">
                     <RadzenStack Gap="15">
                         <RadzenCard class="area-header">
                             <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
@@ -25,9 +27,9 @@
                                         TextStyle="TextStyle.Subtitle1"/>
                         </RadzenCard>
                         <RadzenStack Orientation="Orientation.Vertical">
-                                <RadzenFormField Text="Vendor" class="align-self-center" Style="width:350px">
-                                    <RadzenTextBox Placeholder="Vendor Name" @bind-Value="@this.PurchaseOrderDto.Vendor.Name"/>
-                                </RadzenFormField>
+                            <RadzenFormField Text="Vendor" class="align-self-center" Style="width:350px;">
+                                <RadzenTextBox Placeholder="Vendor Name" Value="@this.PurchaseOrderDto?.Vendor.Name" ReadOnly="true"/>
+                            </RadzenFormField>
                             <RadzenStack Orientation="Orientation.Horizontal"
                                          JustifyContent="JustifyContent.Center">
                                 <RadzenFieldset Text="Select Payment">
@@ -75,7 +77,6 @@
                                 </RadzenFieldset>
                             </RadzenStack>
                         </RadzenStack>
-                        
                         <PurchaseItemsTable Mode="EditMode.EDIT"
                                             ShowHeader="false"
                                             @bind-PurchaseItems="@this.PurchaseOrderDto.Items"/>
@@ -210,6 +211,7 @@
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Inject] private PoNumberService _poNumberService { get; set; }
+    [Inject] private AppTimeProvider _timeProvider { get; set; }
     //[Inject] private UserService _userService { get; set; }
 
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } = new();
@@ -450,7 +452,7 @@
             if(step==this._lastStep) {
                 this.GenerateOrderAlerts();
                 if (!this._poNumberGenerated) {
-                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,this._timeProvider.Now().Year, this.PurchaseRequest._id);
                     if (!string.IsNullOrEmpty(poNumber._id)) {
                         this.PurchaseOrderDto.PoNumber = poNumber._id;
                         this._poNumberGenerated = true;
@@ -462,7 +464,7 @@
             if (step == this._lastStep && this._selectedStep != this._lastStep) {
                 this.GenerateOrderAlerts();
                 if (!this._poNumberGenerated) {
-                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,TimeProvider.Now().Year, this.PurchaseRequest._id);
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,this._timeProvider.Now().Year, this.PurchaseRequest._id);
                     if (!string.IsNullOrEmpty(poNumber._id)) {
                         this.PurchaseOrderDto.PoNumber = poNumber._id;
                         this._poNumberGenerated = true;

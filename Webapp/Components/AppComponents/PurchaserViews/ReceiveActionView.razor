@@ -1,8 +1,8 @@
 ﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
+@using Infrastructure.Services
 @using Webapp.Data
-@using TimeProvider = Infrastructure.Services.TimeProvider
 @inherits UserActionComponent
 
 <RadzenCard class="info-area">
@@ -105,6 +105,7 @@
 
 @code {
     [Inject] private ILogger<ReceiveActionView> _logger { get; set; }
+    [Inject] private AppTimeProvider _timeProvider { get; set; }
     private DxRichEdit? _richEdit;
     private bool _emailsLoaded = false;
     private bool _docLoaded = false;
@@ -200,7 +201,7 @@
         if (this.PurchaseRequest != null) {
             if (this.PurchaseRequest.Status==PrStatus.Ordered) {
                 this._receiveRequestInput.ItemDelivery = this.PurchaseRequest.PurchaseItems.Select(e => 
-                        new ItemDeliveryStatus() { Item = e.ProductName, Received = false, Location = "",ReceivedDate = TimeProvider.Now()})
+                        new ItemDeliveryStatus() { Item = e.ProductName, Received = false, Location = "",ReceivedDate =this._timeProvider.Now()})
                     .ToList();
             }else if (this.PurchaseRequest.Status == PrStatus.Delivered) {
                 this._receiveRequestInput.ItemDelivery = this.PurchaseRequest.CheckInResult?.ItemDelivery ?? [];

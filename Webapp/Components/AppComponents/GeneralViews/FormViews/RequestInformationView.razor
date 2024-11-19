@@ -16,16 +16,13 @@
         <RadzenRow>
             <RadzenColumn Size="5">
                 <RadzenStack Orientation="Orientation.Vertical"
-                             AlignItems="AlignItems.Center">
+                             AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="width: 100%">
                     @if (this.Mode == EditMode.VIEW) {
-                        <RadzenFormField Text="Approver">
-                            <RadzenText Text="@this.SelectedApprover"
-                                        TextAlign="TextAlign.Center"
-                                        Style="width: 300px; height: fit-content;"
-                                        TextStyle="TextStyle.H6"/>
+                        <RadzenFormField Text="Approver" class="rz-p-2" Style="width: 100%">
+                            <RadzenTextBox Value="@this.SelectedApprover" />
                         </RadzenFormField>
                     } else {
-                        <RadzenFieldset Text="Select Approver">
+                        <RadzenFieldset Text="Select Approver" >
                             <RadzenDropDown TValue="string"
                                             Data="@this.ApproverSelectList"
                                             Value="@this.SelectedApprover"
@@ -37,8 +34,7 @@
                         <RadzenText TextStyle="TextStyle.Subtitle1"
                                     Text="Note** Do not mark urgent unless the the order needs to be ordered immediately "/>
                     }
-
-                    <RadzenFormField Text="Priority(Click)">
+                    <RadzenFormField Text="Priority(Click)" class="rz-p-2" Style="width: 100%">
                         <RadzenToggleButton Text="@(this.IsUrgent ? "Urgent" : "Normal")"
                                             Icon="alarm_off"
                                             Value="@this.IsUrgent"
@@ -49,7 +45,7 @@
                                             ToggleShade="Shade.Dark"
                                             ToggleButtonStyle="ButtonStyle.Danger"
                                             Disabled="@(this.Mode == EditMode.VIEW)"
-                                            Style="width: 300px; height:80px; font-size: 22px !important;"/>
+                                            Style="width: 100%; max-width: 300px; height:80px; font-size: 22px !important; align-self: center;"/>
                     </RadzenFormField>
                 </RadzenStack>
             </RadzenColumn>
