@@ -8,7 +8,7 @@
     <p class="text-center">No purchase request selected</p>
 } else {
     <RadzenCard>
-        <RadzenTabs>
+        <RadzenTabs @bind-SelectedIndex="@this._parentTabIndex">
             <Tabs>
                 <RadzenTabsItem Text="Info" class="rz-ripple tab-color-1">
                     <RadzenTabs RenderMode="TabRenderMode.Server"
@@ -43,12 +43,13 @@
                                                         <DeliveredView PurchaseRequest="@this.PurchaseRequest"/>
                                                     </RadzenTabsItem>
                                                     <RadzenTabsItem Text="Request Info.">
-                                                        <RequestInformationView Description="@this.PurchaseRequest.Description"
-                                                                                Name="@this.PurchaseRequest.Requester?.Name"
-                                                                                Title="@this.PurchaseRequest.Title"
-                                                                                IsUrgent="@this.PurchaseRequest.Urgent"
-                                                                                SelectedApprover="@this.PurchaseRequest.Approver.Name"
-                                                                                Mode="EditMode.VIEW"/>
+                                                        <RequestInformationView
+                                                            Description="@this.PurchaseRequest.Description"
+                                                            Name="@this.PurchaseRequest.Requester?.Name"
+                                                            Title="@this.PurchaseRequest.Title"
+                                                            IsUrgent="@this.PurchaseRequest.Urgent"
+                                                            SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                            Mode="EditMode.VIEW"/>
                                                     </RadzenTabsItem>
                                                 </Tabs>
                                             </RadzenTabs>
@@ -106,7 +107,7 @@
                     <RadzenTabs>
                         <Tabs>
                             <RadzenTabsItem Text="Purchase Request" class="rz-ripple tab-color-4">
-                                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequest.ToInput()"/>
+                                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequest?.ToInput()"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Purchase Order" class="rz-ripple tab-color-5"
                                             Visible="@(this.PurchaseRequest.Status >= PrStatus.Ordered && this.PurchaseRequest.Status != PrStatus.Rejected)">
@@ -115,7 +116,6 @@
                         </Tabs>
                     </RadzenTabs>
                 </RadzenTabsItem>
-
             </Tabs>
         </RadzenTabs>
     </RadzenCard>
@@ -125,13 +125,13 @@
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest?> PurchaseRequestChanged { get; set; }
-    [Parameter] public EditMode Mode { get; set; }=EditMode.VIEW;
-    [Parameter] public EventCallback ActionCompleted { get; set; }
-    
+    [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
+
     private List<Department> _departments = [];
     private string _columnWidth = "width: 100%";
     private ObjectId _prId = ObjectId.Empty;
     private int _tabIndex = 0;
+    private int _parentTabIndex = 0;
 
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
@@ -139,22 +139,21 @@
     }
 
     protected override Task OnParametersSetAsync() {
-        this._columnWidth=(this.Mode == EditMode.VIEW) ? "width: 100%" : "width: 50%";
+        this._columnWidth = (this.Mode == EditMode.VIEW) ? "width: 100%" : "width: 50%";
         if (this.PurchaseRequest == null) {
-            this._prId=ObjectId.Empty;
+            this._prId = ObjectId.Empty;
             this._tabIndex = 0;
+            this._parentTabIndex = 0;
         } else {
             if (this.PurchaseRequest._id != this._prId) {
                 this._tabIndex = 0;
-                this._prId=this.PurchaseRequest._id;
-            } 
+                this._parentTabIndex = 0;
+                this._prId = this.PurchaseRequest._id;
+            }
         }
-        
-
-        
         return base.OnParametersSetAsync();
     }
-    
+
     private string GetAlertText() {
         switch (this.PurchaseRequest?.Status) {
             case PrStatus.Approved: {
@@ -177,7 +176,7 @@
             }
         }
     }
-    
+
     private AlertStyle GetAlertStyle() {
         @if (this.PurchaseRequest != null) {
             switch (this.PurchaseRequest.Status) {
@@ -204,4 +203,5 @@
             return AlertStyle.Dark;
         }
     }
+
 }

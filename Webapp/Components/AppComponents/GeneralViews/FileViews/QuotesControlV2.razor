@@ -1,0 +1,172 @@
+﻿@using SetiFileStore.FileClient
+@using Webapp.Services
+@using Webapp.Data
+<style>
+    #ddUpload {
+        left: 0;
+        --rz-upload-button-bar-background-color: transparent;
+        --rz-upload-button-bar-padding: 0;
+    }
+
+    #ddUpload .rz-fileupload-buttonbar .rz-fileupload-choose {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        padding: 100px 0;
+    }
+</style>
+@switch (this.Mode) {
+    case EditMode.NEW: {
+
+        <RadzenCard Variant="Variant.Outlined" class="info-area">
+            <RadzenStack>
+                <RadzenCard Variant="Variant.Text">
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                        Drag and drop files to upload
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                        ** Files cannot be encrypted **
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                        Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                        Maximum file size: 10MB
+                    </RadzenText>
+                </RadzenCard>
+                <RadzenCard Variant="Variant.Outlined">
+                    <RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" 
+                                     JustifyContent="JustifyContent.Center">
+                            <RadzenButton Icon="Add"
+                                          Click="AddFile"
+                                          ButtonStyle="ButtonStyle.Primary"
+                                          Size="ButtonSize.Medium"/>
+                            <RadzenLabel>Add Quote</RadzenLabel>
+                        </RadzenStack>
+                        <RadzenStack>
+                            @{
+                                int count = 0;
+                                @foreach (var file in this._tempFiles) {
+                                    int index = count;
+                                    <RadzenStack>
+                                        <FileInputControl File="@file" Index="@index"
+                                                          RemoveFile="@this.RemoveFileHandler"
+                                                          AddFile="@this.AddFileHandler"/>
+                                    </RadzenStack>
+                                    count++;
+                                }
+                            }
+
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+        break;
+    }
+    case EditMode.EDIT: {
+        <RadzenTabs>
+            <Tabs>
+                <RadzenTabsItem Text="Add Additional Quotes">
+                    <RadzenCard Variant="Variant.Outlined" class="info-area">
+                        <RadzenCard>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                                Drag and drop files to upload
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
+                                ** Files cannot be encrypted **
+                                Here is some more ttest
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                                Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
+                                Maximum file size: 10MB
+                            </RadzenText>
+                        </RadzenCard>
+
+                    </RadzenCard>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Current Quotes">
+                    <QuotesView Quotes="@this.CurrentQuoteIds" DeleteFile="@this.DeleteQuoteHandler" Mode="@this.Mode"/>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+        break;
+    }
+    case EditMode.VIEW: {
+        <QuotesView Quotes="@this.CurrentQuoteIds" Mode="@this.Mode"/>
+        break;
+    }
+}
+
+
+@code {
+    [Inject] public NotificationService _notifyService { get; set; }
+    [Inject] private SpinnerService _spinner { get; set; }
+    [Parameter] public List<FileData> Quotes { get; set; } = [];
+    [Parameter] public EditMode Mode { get; set; }
+    [Parameter] public List<string> CurrentQuoteIds { get; set; }
+    [Parameter] public EventCallback<List<string>> CurrentQuoteIdsChanged { get; set; }
+    [Parameter] public EventCallback<List<FileData>> QuotesChanged { get; set; }
+    
+    private RadzenUpload _upload = new();
+    private List<TempFileData> _tempFiles = [];
+
+    protected override Task OnParametersSetAsync() {
+        if (this.Quotes.Any()) {
+            this._tempFiles=this.Quotes.Select(e => new TempFileData() { Data = e.Data, Filename = e.Name }).ToList();
+        }
+        return base.OnParametersSetAsync();
+    }
+
+    private Task DeleteQuoteHandler(string obj) {
+        this.CurrentQuoteIds.Remove(obj);
+        StateHasChanged();
+        return this.CurrentQuoteIdsChanged.InvokeAsync(this.CurrentQuoteIds);
+    }
+
+    private void AddFile() {
+        if (this._tempFiles.All(e=>e.Data!=null)) {
+            this._tempFiles.Add(new TempFileData());
+        } else {
+            this._notifyService.Notify(NotificationSeverity.Error,"Error","Please complete the current quote before adding another");
+            
+        }
+        //this._tempFiles.Add(new TempFileData());
+    }
+    
+    private Task RemoveFileHandler(int index){
+        if (this._tempFiles.Count == 1) {
+            this._tempFiles.Clear();
+            this.Quotes.Clear();
+        } else {
+            Console.WriteLine($"Removing file at index {index}, " +
+                              $"TempCount: {this._tempFiles.Count}," +
+                              $"QuoteCountL {this.Quotes.Count}");
+            if(this._tempFiles.Count==this.Quotes.Count) {
+                this._tempFiles.RemoveAt(index);
+                this.Quotes.RemoveAt(index);
+            } else {
+                this._tempFiles.RemoveAt(index);
+            }
+        }
+        Console.WriteLine("Quotes:");
+        Console.WriteLine(string.Join(",", this.Quotes.Select(q => q.Name)));
+        Console.WriteLine("Files:");
+        Console.WriteLine(string.Join(",", this._tempFiles.Select(q => q.Filename)));
+        return this.QuotesChanged.InvokeAsync(this.Quotes);
+    }
+
+    private Task AddFileHandler((TempFileData file, int index) fileResult) {
+        this._tempFiles[fileResult.index]=fileResult.file;
+        this.Quotes.Add(new FileData(fileResult.file.Filename,fileResult.file.Data));
+        Console.WriteLine("Quotes:");
+        Console.WriteLine(string.Join(",", this.Quotes.Select(q => q.Name)));
+        Console.WriteLine("Files:");
+        Console.WriteLine(string.Join(",", this._tempFiles.Select(q => q.Filename)));
+        return this.QuotesChanged.InvokeAsync(this.Quotes);
+    }
+
+}

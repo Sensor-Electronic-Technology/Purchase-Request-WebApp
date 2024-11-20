@@ -37,7 +37,8 @@
                             </RadzenText>
                         </RadzenCard>
                         <RadzenCard>
-                            <RadzenDataGrid @ref="@this._dataGrid" TItem="PurchaseRequest"
+                            <RadzenDataGrid @ref="@this._dataGrid" 
+                                            TItem="PurchaseRequest"
                                             Data="@this.PurchaseRequests"
                                             AllowRowSelectOnRowClick="true"
                                             CellContextMenu="@this.ContextMenuHandle"
