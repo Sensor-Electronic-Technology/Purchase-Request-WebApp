@@ -37,9 +37,10 @@
                 <RadzenCard Variant="Variant.Outlined">
                     <RadzenStack>
                         <RadzenStack Orientation="Orientation.Horizontal" 
-                                     JustifyContent="JustifyContent.Center">
+                                     JustifyContent="JustifyContent.Center"
+                                     AlignItems="AlignItems.Center">
                             <RadzenButton Icon="Add"
-                                          Click="AddFile"
+                                          Click="@this.AddFile"
                                           ButtonStyle="ButtonStyle.Primary"
                                           Size="ButtonSize.Medium"/>
                             <RadzenLabel>Add Quote</RadzenLabel>

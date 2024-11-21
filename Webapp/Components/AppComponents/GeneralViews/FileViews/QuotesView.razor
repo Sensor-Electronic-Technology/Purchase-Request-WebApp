@@ -75,7 +75,7 @@
                     @foreach (var file in this._files) {
                     <RadzenTabsItem Text="@file.Name">
                         <ChildContent>
-                            <PdfPreview FileBytes="@file.Data" FileName="@file.Name"/>
+                            <QuotePreview FileBytes="@file.Data" FileName="@file.Name"/>
                         </ChildContent>
                     </RadzenTabsItem>
                     }

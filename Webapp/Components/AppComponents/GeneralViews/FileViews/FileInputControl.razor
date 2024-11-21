@@ -1,32 +1,39 @@
 ﻿@using Webapp.Data
 @if (this.File != null) {
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-        @*<RadzenFileInput TValue="byte[]" 
-                         class="rz-w-50"
-                         @bind-FileName="@this._fileName"
-                         @bind-Value="@this._fileData"
-                         @bind-FileSize="@this._fileSize"
-                         Change="@(args => FileChangeHandler(this._fileData, this._fileName, this._fileSize))"
-                         Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"/>*@
+    <RadzenStack Orientation="Orientation.Horizontal" 
+                 JustifyContent="JustifyContent.Center" 
+                 AlignItems="AlignItems.Center">
         @if (!this._fileSelected) {
             <RadzenUpload @ref="@this._upload" 
                           Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" 
                           Change="@OnChangeHandler" 
                           Auto="false"
-                          class="rz-w-50"
+                          class="rz-w-25"
                           Multiple="false"/>
         } else {
-            <RadzenText Text="@this._fileName" TextAlign="TextAlign.Center"/>
-        }
+            <RadzenCard class="rz-border-radius-6 rz-min-w-25 rz-max-w-50 rz-background-color-info-light rz-p-3">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                    <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center">
+                        <RadzenIcon Icon="@FileDisplayType.FromExtension(Path.GetExtension(this._fileName)).Icon"
+                                    Style="font-weight: 700"/>    @this._fileName
+                    </RadzenText>
+                    <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success" Click="PreviewQuoteHandler"/>
+                </RadzenStack>
 
+            </RadzenCard>
+
+            
+        }
         <RadzenButton Icon="close" Click="@(()=>this.RemoveFile.InvokeAsync(this.Index))"/>
     </RadzenStack>
-
+    
+    @*<QuotePreview FileBytes="" FileName=""></QuotePreview>*@
 }
 
 
 @code {
     [Inject] public NotificationService _notifyService { get; set; }
+    [Inject] public DialogService _dialogService { get; set; }
     [Parameter] public TempFileData? File { get; set; }
     [Parameter] public int Index { get; set; }
     [Parameter] public EventCallback<(TempFileData file,int index)> AddFile { get; set; }
@@ -37,6 +44,8 @@
     private long? _fileSize = 0;
     private RadzenUpload _upload = new();
     bool _fileSelected = false;
+    
+    
 
     protected override Task OnParametersSetAsync() {
         this._fileData = this.File?.Data;
@@ -48,6 +57,18 @@
         
         return base.OnParametersSetAsync();
     }
+    
+    private async Task PreviewQuoteHandler() {
+        await this._dialogService.OpenSideAsync<QuotePreview>("Quote Preview", new Dictionary<string, object>() {
+            { "FileBytes", this._fileData },
+            { "FileName", this._fileName },
+            { "SetMaxHeight", false }
+        },new SideDialogOptions() {
+            Width = "50%",
+            ShowClose = true,
+            ShowTitle = true
+        });
+    }
 
     private Task FileChangeHandler(byte[]? data, string? fileName, long? fileSize) {
         if(data==null || fileName==null || fileSize==null) {
@@ -58,6 +79,12 @@
             this.File.Size=fileSize.Value;
             return this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File,this.Index));
         }
+    }
+
+    private string GetIcon(string filename) {
+        var ext = Path.GetExtension(filename);
+        //
+        return "file";
     }
 
     private async Task OnChangeHandler(UploadChangeEventArgs obj) {
@@ -85,5 +112,7 @@
             await this.RemoveFile.InvokeAsync(this.Index);
         }
     }
+
+
 
 }

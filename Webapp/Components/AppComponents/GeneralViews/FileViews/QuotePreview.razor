@@ -19,7 +19,7 @@
                               class="button-transparent"
                               Image="/images/download-icon.svg"/>
             </RadzenRow>
-            <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="max-height:700px;"/>
+            <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="@this.GetStyle()"/>
         </RadzenStack>
     }else if (FileDisplayType.DOC.Extensions.Contains(extension)) {
         <RadzenStack>
@@ -64,12 +64,18 @@
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Parameter] public byte[]? FileBytes { get; set; }
     [Parameter] public string FileName { get; set; } = string.Empty;
+    [Parameter] public bool SetMaxHeight { get; set; } = true;
     private bool _prNull = true;
     private string _embeddedSrc = string.Empty;
     private FileDisplayType _fileDisplayType = FileDisplayType.OTHER;
     
+    
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
+    }
+
+    public string GetStyle() {
+        return this.SetMaxHeight ? "max-height:700px;" : string.Empty;
     }
 
     protected override async Task OnParametersSetAsync() {
