@@ -17,77 +17,14 @@
 </style>
 @switch (this.Mode) {
     case EditMode.NEW: {
-
-        <RadzenCard Variant="Variant.Outlined" class="info-area">
-            <RadzenStack>
-                <RadzenCard Variant="Variant.Text">
-                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
-                        Drag and drop files to upload
-                    </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
-                        ** Files cannot be encrypted **
-                    </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
-                        Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
-                    </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
-                        Maximum file size: 10MB
-                    </RadzenText>
-                </RadzenCard>
-                <RadzenCard Variant="Variant.Outlined">
-                    <RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" 
-                                     JustifyContent="JustifyContent.Center"
-                                     AlignItems="AlignItems.Center">
-                            <RadzenButton Icon="Add"
-                                          Click="@this.AddFile"
-                                          ButtonStyle="ButtonStyle.Primary"
-                                          Size="ButtonSize.Medium"/>
-                            <RadzenLabel>Add Quote</RadzenLabel>
-                        </RadzenStack>
-                        <RadzenStack>
-                            @{
-                                int count = 0;
-                                @foreach (var file in this._tempFiles) {
-                                    int index = count;
-                                    <RadzenStack>
-                                        <FileInputControl File="@file" Index="@index"
-                                                          RemoveFile="@this.RemoveFileHandler"
-                                                          AddFile="@this.AddFileHandler"/>
-                                    </RadzenStack>
-                                    count++;
-                                }
-                            }
-
-                        </RadzenStack>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenStack>
-        </RadzenCard>
+        <QuoteInput Quotes="@this.Quotes" QuotesChanged="@QuotesChanged"/>
         break;
     }
     case EditMode.EDIT: {
         <RadzenTabs>
             <Tabs>
                 <RadzenTabsItem Text="Add Additional Quotes">
-                    <RadzenCard Variant="Variant.Outlined" class="info-area">
-                        <RadzenCard>
-                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
-                                Drag and drop files to upload
-                            </RadzenText>
-                            <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center">
-                                ** Files cannot be encrypted **
-                                Here is some more ttest
-                            </RadzenText>
-                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
-                                Acceptable file types: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .jpeg, .png
-                            </RadzenText>
-                            <RadzenText TextStyle="TextStyle.Subtitle2" TextAlign="TextAlign.Center">
-                                Maximum file size: 10MB
-                            </RadzenText>
-                        </RadzenCard>
-
-                    </RadzenCard>
+                    <QuoteInput Quotes="@this.Quotes" QuotesChanged="@QuotesChanged"/>  
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Current Quotes">
                     <QuotesView Quotes="@this.CurrentQuoteIds" DeleteFile="@this.DeleteQuoteHandler" Mode="@this.Mode"/>
@@ -135,7 +72,6 @@
             this._notifyService.Notify(NotificationSeverity.Error,"Error","Please complete the current quote before adding another");
             
         }
-        //this._tempFiles.Add(new TempFileData());
     }
     
     private Task RemoveFileHandler(int index){
@@ -143,9 +79,6 @@
             this._tempFiles.Clear();
             this.Quotes.Clear();
         } else {
-            Console.WriteLine($"Removing file at index {index}, " +
-                              $"TempCount: {this._tempFiles.Count}," +
-                              $"QuoteCountL {this.Quotes.Count}");
             if(this._tempFiles.Count==this.Quotes.Count) {
                 this._tempFiles.RemoveAt(index);
                 this.Quotes.RemoveAt(index);
@@ -153,20 +86,14 @@
                 this._tempFiles.RemoveAt(index);
             }
         }
-        Console.WriteLine("Quotes:");
-        Console.WriteLine(string.Join(",", this.Quotes.Select(q => q.Name)));
-        Console.WriteLine("Files:");
-        Console.WriteLine(string.Join(",", this._tempFiles.Select(q => q.Filename)));
         return this.QuotesChanged.InvokeAsync(this.Quotes);
     }
 
     private Task AddFileHandler((TempFileData file, int index) fileResult) {
         this._tempFiles[fileResult.index]=fileResult.file;
-        this.Quotes.Add(new FileData(fileResult.file.Filename,fileResult.file.Data));
-        Console.WriteLine("Quotes:");
-        Console.WriteLine(string.Join(",", this.Quotes.Select(q => q.Name)));
-        Console.WriteLine("Files:");
-        Console.WriteLine(string.Join(",", this._tempFiles.Select(q => q.Filename)));
+        if (fileResult.file is { Filename: not null, Data: not null }) {
+            this.Quotes.Add(new FileData(fileResult.file.Filename, fileResult.file.Data));
+        } 
         return this.QuotesChanged.InvokeAsync(this.Quotes);
     }
 

@@ -19,15 +19,10 @@
                     </RadzenText>
                     <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success" Click="PreviewQuoteHandler"/>
                 </RadzenStack>
-
             </RadzenCard>
-
-            
         }
         <RadzenButton Icon="close" Click="@(()=>this.RemoveFile.InvokeAsync(this.Index))"/>
     </RadzenStack>
-    
-    @*<QuotePreview FileBytes="" FileName=""></QuotePreview>*@
 }
 
 
@@ -45,8 +40,6 @@
     private RadzenUpload _upload = new();
     bool _fileSelected = false;
     
-    
-
     protected override Task OnParametersSetAsync() {
         this._fileData = this.File?.Data;
         this._fileName = this.File?.Filename ?? string.Empty;

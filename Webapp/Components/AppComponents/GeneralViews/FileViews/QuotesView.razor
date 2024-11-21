@@ -57,31 +57,6 @@
                 </RadzenCard>
                 }
             </RadzenStack>
-            @if (this._loading) {
-            <RadzenStack>
-                <RadzenProgressBarCircular ShowValue="false"
-                                           Mode="ProgressBarMode.Indeterminate"
-                                           Size="ProgressBarCircularSize.Large"
-                                           Style="margin: auto; background: transparent; display: block;">
-                </RadzenProgressBarCircular>
-                <RadzenText Text="Loading Quotes"
-                            Style="color: white;
-                             font-size: 20px; 
-                             font-weight: bold;"/>
-            </RadzenStack>
-            } else {
-            <RadzenTabs>
-                <Tabs>
-                    @foreach (var file in this._files) {
-                    <RadzenTabsItem Text="@file.Name">
-                        <ChildContent>
-                            <QuotePreview FileBytes="@file.Data" FileName="@file.Name"/>
-                        </ChildContent>
-                    </RadzenTabsItem>
-                    }
-                </Tabs>
-            </RadzenTabs>
-            }
         </RadzenStack>
     </RadzenCard>
     
@@ -92,6 +67,7 @@
     [Inject] private FileService _fileService { get; set; }
     [Inject] private NavigationManager _navigationManager { get; set; }
     [Inject] private IConfiguration _configuration { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
     [Parameter] public IEnumerable<string>? Quotes { get; set; } = [];
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public EventCallback<string> DeleteFile { get; set; } 
@@ -121,15 +97,16 @@
         if(this._files.FirstOrDefault(e=>e.Name==name)!=null) {
             return;
         }
-        this._loading = true;
-        //await InvokeAsync(StateHasChanged);
-        
-        var fileData = await this._fileService.DownloadFileStream(fileId,"purchase_request");
-        if(fileData!=null) {
-            this._files.Add(fileData);
-        }
-        this._loading = false;
-        //await InvokeAsync(StateHasChanged);
+        await this._dialogService.OpenSideAsync<QuoteSidePanePreview>("Quote Preview", 
+            new Dictionary<string, object> {
+                { "QuoteId", fileId }
+            },new SideDialogOptions() {
+                Width = "50%",
+                ShowClose = true,
+                ShowTitle = true,
+                Position = DialogPosition.Right
+                
+            });
     }
 
     private async Task DeleteFileHandler(string name,string fileId) {

@@ -224,7 +224,7 @@ public class PurchaseRequestService {
             }
             quote.Url = this._configuration["FileServiceUrl"];
             if (!string.IsNullOrWhiteSpace(quote.Url)) {
-                quote.Url=quote.Url.Remove(quote.Url.Length-1);
+                quote.Url=quote.Url.Remove(quote.Url.Length);
                 quote.Url+=HttpConstants.FileDownloadInlinePath
                     .Replace("{appDomain}","purchase_request")
                     .Replace("{fileId}",quote.FileId);   

@@ -166,7 +166,7 @@
                 </RadzenCard>
             </RadzenColumn>
         </RadzenSplitterPane>
-        <RadzenSplitterPane Size="50%" Collapsed="@this._viewPainCollapsed">
+        <RadzenSplitterPane Size="50%" Collapsed="@this._viewPainCollapsed" class="rz-overflow-scroll" Style="max-height: 800px;">
             <RadzenColumn Size="12" SizeMD="6">
                 <PurchaseRequestView PurchaseRequest="@this.SelectedPurchaseRequest" Mode="@EditMode.VIEW"/>
             </RadzenColumn>

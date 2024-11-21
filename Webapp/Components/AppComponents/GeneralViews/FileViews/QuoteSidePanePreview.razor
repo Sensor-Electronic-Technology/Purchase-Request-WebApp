@@ -1,0 +1,42 @@
+﻿@using SetiFileStore.Domain.Contracts
+@using SetiFileStore.FileClient
+@using Webapp.Data
+
+@if (this._loading) {
+    <RadzenStack AlignItems="AlignItems.Center">
+        <RadzenProgressBarCircular ShowValue="false"
+                                   Mode="ProgressBarMode.Indeterminate"
+                                   Size="ProgressBarCircularSize.Large"
+                                   Style="margin: auto; background: transparent; display: block;">
+        </RadzenProgressBarCircular>
+        <RadzenText Text="Loading Quote"
+                    TextAlign="TextAlign.Center"
+                    Style="color: white;font-size: 20px; font-weight: bold;"/>
+    </RadzenStack>
+} else {
+    @if (this._fileData != null) {
+        <QuotePreview FileBytes="@this._fileData.Data" FileName="@this._fileData.Name" SetMaxHeight="false"/>
+    } else {
+        <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6">Error while loading quote</RadzenText>
+    }
+    
+}
+
+@code {
+    [Inject] private IConfiguration _configuration { get; set; }
+    [Inject] private FileService _fileService { get; set; }
+    [Parameter] public string QuoteId { get; set; }
+    private bool _loading = true;
+    private FileData? _fileData;
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        this._loading = true;
+        this._fileData=await this._fileService.DownloadFileStream(this.QuoteId,"purchase_request");
+        /*this._fileUrl = this._configuration["FileServiceUrl"];
+        this._fileUrl+=HttpConstants.FileDownloadInlinePath
+            .Replace("{appDomain}", "purchase_request")
+            .Replace("{fileId}", this.QuoteId);*/
+        this._loading = false;
+    }
+}
