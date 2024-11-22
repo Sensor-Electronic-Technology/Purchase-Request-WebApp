@@ -26,11 +26,11 @@
                                     <RadzenRequiredValidator Component="VendorName" Text="Vendor name is required"/>
                                 </RadzenColumn>
                             </RadzenRow>
-                            <RadzenRow AlignItems="AlignItems.Center">
-                                <RadzenColumn Size="12" SizeMD="2">
-                                    <RadzenLabel Text="Contact" Component="VendorContact"/>
+                            <RadzenRow AlignItems="AlignItems.Center" class="rz-text-wrap">
+                                <RadzenColumn Size="12" SizeMD="4">
+                                    <RadzenLabel Text="Contact/Website"  Component="VendorContact"/>
                                 </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="10">
+                                <RadzenColumn Size="12" SizeMD="8">
                                     <RadzenTextBox Style="width: 100%;" 
                                                    Name="VendorContact" 
                                                    @bind-Value="@this.Vendor.Attention"
