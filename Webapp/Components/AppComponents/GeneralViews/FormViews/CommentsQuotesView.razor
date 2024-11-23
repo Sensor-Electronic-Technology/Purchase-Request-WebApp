@@ -2,7 +2,7 @@
 @using SetiFileStore.FileClient
 @using Webapp.Data
 
-<RadzenCard class="step-card">
+<RadzenCard >
         <RadzenStack>
             <RadzenCard class="area-header">
                 @if(this.Mode!=EditMode.VIEW){
@@ -18,24 +18,40 @@
                     </RadzenText>
                 }
             </RadzenCard>
-            <RadzenStack Orientation="Orientation.Vertical">
-                <RadzenTabs>
+            @*<RadzenStack Orientation="Orientation.Vertical">*@
+            <RadzenRow>
+                <RadzenColumn Size="4">
+                    <RadzenCard class="info-area rz-p-2 rz-m-2">
+                        <RadzenCard class="area-header">
+                            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6">Additional Comments</RadzenText>
+                        </RadzenCard>
+                        
+                        <RadzenTextArea Placeholder="Additional message appended to the request"
+                                        Value="@this.AdditionalComments"
+                                        ValueChanged="@this.AdditionalCommentsChanged"
+                                        Style="width: 100%; height:100px;"/>
+                    </RadzenCard>
+
+                </RadzenColumn>
+                <RadzenColumn Size="8">
+                    <QuotesControlV2 Quotes="@this.Quotes" Mode="@this.Mode"
+                                     CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
+                                     QuotesChanged="@this.QuotesChanged"
+                                     CurrentQuoteIds="@CurrentQuoteIds"/>
+                </RadzenColumn>
+            </RadzenRow>
+            
+                @*<RadzenTabs>
                     <Tabs>
                         <RadzenTabsItem Text="Additional Comments">
-                            <RadzenTextArea Placeholder="Additional message appended to the request"
-                                            Value="@this.AdditionalComments"
-                                            ValueChanged="@this.AdditionalCommentsChanged"
-                                            Style="width: 100%; height:100px;"/>
+
                         </RadzenTabsItem>
                         <RadzenTabsItem Text="Upload Quotes">
-                            <QuotesControlV2 Quotes="@this.Quotes" Mode="@this.Mode"
-                                           CurrentQuoteIdsChanged="@this.CurrentQuoteIdsChanged"
-                                           QuotesChanged="@this.QuotesChanged"
-                                           CurrentQuoteIds="@CurrentQuoteIds"/>
+
                         </RadzenTabsItem>
                     </Tabs>
-                </RadzenTabs>
-            </RadzenStack>
+                </RadzenTabs>*@
+            @*</RadzenStack>*@
         </RadzenStack>
 </RadzenCard>
 
