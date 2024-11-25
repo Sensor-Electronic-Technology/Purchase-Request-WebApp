@@ -23,9 +23,9 @@
     </RadzenStack>
 }
 <RadzenRow>
-    <RadzenSplitter Orientation="Orientation.Horizontal">
-        <RadzenSplitterPane Size="50%">
-            <RadzenColumn Size="12" SizeMD="6">
+    @*<RadzenSplitter Orientation="Orientation.Horizontal">
+        <RadzenSplitterPane Size="50%">*@
+            @*<RadzenColumn Size="12" SizeMD="6">*@
                 <RadzenCard Style="width: 100%">
                     <RadzenStack>
                         <RadzenCard class="area-header">
@@ -64,7 +64,7 @@
                                 </GroupHeaderTemplate>
                                 <HeaderTemplate>
                                     <RadzenStack Orientation="Orientation.Horizontal">
-                                        <RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Icon="tab_close"/>
+                                        @*<RadzenButton Click="@this.ClearSelectionHandler" Text="Clear Selection" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Icon="tab_close"/>*@
                                         <RadzenButton Click="@this.ClearFilterHandler" Text="Clear Filter(s)" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Icon="clear_all"/>
                                     </RadzenStack>
                                 </HeaderTemplate>
@@ -164,19 +164,20 @@
                         </RadzenCard>
                     </RadzenStack>
                 </RadzenCard>
-            </RadzenColumn>
-        </RadzenSplitterPane>
+            @*</RadzenColumn>*@
+        @*</RadzenSplitterPane>
         <RadzenSplitterPane Size="50%" Collapsed="@this._viewPainCollapsed" class="rz-overflow-scroll" Style="max-height: 800px;">
             <RadzenColumn Size="12" SizeMD="6">
                 <PurchaseRequestView PurchaseRequest="@this.SelectedPurchaseRequest" Mode="@EditMode.VIEW"/>
             </RadzenColumn>
         </RadzenSplitterPane>
-    </RadzenSplitter>
+    </RadzenSplitter>*@
 </RadzenRow>
 
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
     /*[Inject] private UserService _userService { get; set; }*/
+    [Inject] private DialogService _dialogService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
     [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
     [Parameter] public List<PurchaseRequestStatus>? PurchaseReqStatuses { get; set; }
@@ -196,8 +197,17 @@
             this.SelectedPurchaseRequest = obj[0];
             this._selectedPurchaseRequests = obj;
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
-            this._viewPainCollapsed = false;
-            this._queueCollapsed = true;
+            /*this._viewPainCollapsed = false;
+            this._queueCollapsed = true;*/
+            await this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request", 
+                new Dictionary<string, object> {
+                    { "PurchaseRequest", this.SelectedPurchaseRequest }
+                }, new SideDialogOptions() {
+                    Width = "50%",
+                    ShowClose = true,
+                    ShowTitle = true,
+                    CssClass = "rz-background-color-info-light"
+                });
         }
     }
 
@@ -265,7 +275,10 @@
     }
 
     private async Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args, MenuItemEventArgs e) {
-        await this._dataGrid.SelectRow(args.Data);
+        
+        this.SelectedPurchaseRequest = args.Data;
+        await this.SelectedPurchaseRequestChanged.InvokeAsync(args.Data);
+        //await this._dataGrid.SelectRow(args.Data);
         this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)e.Value, "")).Wait();
         this._contextMenuService.Close();
     }
@@ -356,7 +369,6 @@
                             );
                         }
                     }
-
                     break;
                 }
             }
@@ -366,17 +378,26 @@
     private async Task SelectedStatusChangedHandler(string obj) {
         var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == obj);
         if (pr != null) {
-            await this._dataGrid.SelectRow(pr, true);
+            //await this._dataGrid.SelectRow(pr, true);
+            this.SelectedPurchaseRequest = pr;
+            await this.SelectedPurchaseRequestChanged.InvokeAsync(pr);
+            await this._dialogService.OpenSideAsync<PurchaseRequestView>("Purchase Request", 
+                new Dictionary<string, object> {
+                    { "PurchaseRequest", pr }, { "Mode", EditMode.VIEW }
+                }, new SideDialogOptions() {
+                    Width = "50%"
+                });
         }
-
-        await InvokeAsync(StateHasChanged);
+        //await InvokeAsync(StateHasChanged);
         //return Task.CompletedTask;
     }
 
     private async Task QueueUserActionHandler(UserActionEventArg arg) {
         var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == arg.PrId);
         if (pr != null) {
-            await this._dataGrid.SelectRow(pr, true);
+            //await this._dataGrid.SelectRow(pr, true);
+            this.SelectedPurchaseRequest = pr;
+            await this.SelectedPurchaseRequestChanged.InvokeAsync(pr);
             await this.UserAction.InvokeAsync(arg);
         }
     }
@@ -393,5 +414,4 @@
                             Value="@(this._dataGrid.ColumnsCollection.Where(c => c.GetVisible()))"
                             Change=@(args => { var checkedColumns = ((IEnumerable<object>)args).Cast<RadzenDataGridColumn<PurchaseRequest>>(); this._dataGrid.ColumnsCollection.ToList().ForEach(c => c.Visible = checkedColumns.Contains(c)); })/>
         );
-
 }

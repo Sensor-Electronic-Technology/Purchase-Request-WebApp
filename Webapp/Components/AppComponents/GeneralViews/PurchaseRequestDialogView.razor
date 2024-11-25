@@ -1,0 +1,9 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Webapp.Data
+<RadzenCard class="rz-background-color-info-light rz-vh-100">
+    <PurchaseRequestView PurchaseRequest="@this.PurchaseRequest" Mode="@EditMode.VIEW"/>
+</RadzenCard>
+
+@code {
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+}

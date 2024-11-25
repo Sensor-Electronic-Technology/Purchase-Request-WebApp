@@ -37,10 +37,16 @@
                             </RadzenCard>
                             <RadzenFieldset Text="All Items Checked-in?" class="rz-p-1 align-self-center">
                                 <RadzenStack Gap="5" Orientation="Orientation.Horizontal">
-                                    <RadzenCheckBox TValue="bool"
+                                    @*<RadzenCheckBox TValue="bool"
                                                     ReadOnly="true"
                                                     @bind-Value="@this._receiveRequestInput.Complete"/>
-                                    <RadzenText Text="@(this._receiveRequestInput.Complete ? "Full Check-in":"Partial Check-in")"/>
+                                    <RadzenText Text="@(this._receiveRequestInput.Complete ? "Full Check-in":"Partial Check-in")"/>*@
+                                    <RadzenAlert Title="Check-in Status" 
+                                                 Text="@(this._receiveRequestInput.Complete ? "Check-in All":"Partial Check-in")"
+                                                 AlertStyle="@(this._receiveRequestInput.Complete ? AlertStyle.Success:AlertStyle.Info)"
+                                                 AllowClose="false"
+                                                 Size="AlertSize.Small"
+                                                 Style="width: 300px"/>
                                 </RadzenStack>
                             </RadzenFieldset>
                             <RadzenStack Orientation="Orientation.Horizontal"

@@ -107,7 +107,7 @@
                 <VendorSelector @bind-Vendor="@this.PurchaseOrderDto.Vendor" Mode="EditMode.EDIT"/>
             </RadzenStepsItem>
             <RadzenStepsItem Text="Finalize" PreviousText="Internal Email">
-                <RadzenCard Variant="Variant.Outlined" Style="max-height: 700px; overflow: scroll;">
+                <RadzenCard Variant="Variant.Outlined" >
                     <RadzenRow>
                         <RadzenColumn Size="6">
                             <RadzenStack>
@@ -194,6 +194,9 @@
                                     </RadzenTabsItem>
                                     <RadzenTabsItem Text="PO Preview" class="tab-color-2">
                                         <PoPdfPreview PurchaseOrderDto="@this.PurchaseOrderDto"/>
+                                    </RadzenTabsItem>
+                                    <RadzenTabsItem Text="Quotes" class="tab-color-3">
+                                        <QuotesView Quotes="@this.PurchaseRequest.Quotes" Mode="EditMode.VIEW"/>
                                     </RadzenTabsItem>
                                 </Tabs>
                             </RadzenTabs>

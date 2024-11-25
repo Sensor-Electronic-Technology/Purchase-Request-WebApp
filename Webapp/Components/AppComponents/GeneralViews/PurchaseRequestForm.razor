@@ -92,7 +92,7 @@
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
             if (this.Mode == EditMode.NEW) {
-                await this.GeneratePurchaseRequest();
+                //await this.GeneratePurchaseRequest();
                 this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
                 this._purchaseReqInput.RequesterName=this.UserProfile.FirstName+" "+this.UserProfile.LastName;
                 this._purchaseReqInput.RequesterInitials = $"{this.UserProfile.FirstName?[0]}{this.UserProfile.LastName?[0]}";
