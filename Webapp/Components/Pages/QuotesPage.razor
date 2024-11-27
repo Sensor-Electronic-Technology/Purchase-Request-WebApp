@@ -13,7 +13,7 @@
                             TextAlign="TextAlign.Center"/>
                 <RadzenText TextStyle="TextStyle.Body1"
                             TextAlign="TextAlign.Center"
-                            Text="Right click to download, Click to view"/>
+                            Text="Right click quote row to view context menu"/>
             </RadzenStack>
         </RadzenCard>
         <RadzenCard>
@@ -97,15 +97,17 @@
     
     private async Task ContextActionHandler(DataGridCellMouseEventArgs<QuotesDto> args, MenuItemEventArgs e) {
         if ((string)e.Value == "Download") {
+            await this._quotesGrid.SelectRow(args.Data);
             await this._jsRuntime.InvokeAsync<object>("open", args.Data.Url, "_blank");
         }else if ((string)e.Value == "View") {
+            await this._quotesGrid.SelectRow(args.Data);
             await this._dialogService.OpenSideAsync<QuoteSidePanePreview>("Quote Preview", new Dictionary<string, object>() {
                 { "QuoteId", args.Data.FileId },
             },new SideDialogOptions() {
                 Width = "50%",
                 ShowClose = true,
                 ShowTitle = true,
-                Position = DialogPosition.Left
+                Position = DialogPosition.Right
             });
         }
     }

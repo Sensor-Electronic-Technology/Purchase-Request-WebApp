@@ -188,6 +188,7 @@
 </RadzenSplitter>
 
 @code {
+    [Inject] private DialogService _dialogService { get; set; }
     [Inject] private PurchaseRequestDataService _dataService { get; set; }
     [Inject] private ContextMenuService _contextMenuService { get; set; }
     [Inject] private UserService _userService { get; set; }
@@ -213,16 +214,24 @@
         _isLoading = false;
     }
     
-    private Task SelectionChangedHandler(IList<PurchaseRequest> selected) {
+    private async Task SelectionChangedHandler(IList<PurchaseRequest> selected) {
         if(selected.Count > 0) {
-            this._collapsed = false;
+            //this._collapsed = false;
             this._selectedRequest = selected[0];
+            await this._dialogService.OpenSideAsync<PurchaseRequestView>("Purchase Request", 
+                new Dictionary<string, object> {
+                    { "PurchaseRequest", this._selectedRequest }
+                }, new SideDialogOptions() {
+                    Width = "50%",
+                    ShowClose = true,
+                    ShowTitle = true,
+                    CssClass = "rz-background-color-base-900 text-center"
+                });
         } else {
-            this._collapsed = true;
+            //this._collapsed = true;
             this._selectedRequest = null;
         }
         this._selectedRequests = selected;
-        return Task.CompletedTask;
     }
 
     private Task ClearSelectionHandler() {

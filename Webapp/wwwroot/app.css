@@ -49,7 +49,7 @@
 }
 
 .info-area{
-    background-color: var(--rz-info-lighter) !important;
+    background-color: var(--rz-base-900) !important;
     border-radius: var(--rz-border-radius-5) !important;
 }
 
@@ -84,13 +84,6 @@
 .tab-color-5{
     background-color: #462583 !important;
 }
-
-
-
-
-/*html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}*/
 
 a, .btn-link {
     color: #006bb7;

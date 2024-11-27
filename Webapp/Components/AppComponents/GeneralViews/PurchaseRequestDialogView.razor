@@ -1,9 +1,75 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.TypeConstants
+@using Domain.Users
 @using Webapp.Data
-<RadzenCard class="rz-background-color-info-light rz-vh-100">
-    <PurchaseRequestView PurchaseRequest="@this.PurchaseRequest" Mode="@EditMode.VIEW"/>
-</RadzenCard>
+<RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="@AlignItems.Center" class="rz-w-100">
+        <RadzenCard>
+            <RadzenText TextAlign="TextAlign.Center">Request Actions</RadzenText>
+        </RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            @switch (this.Role) {
+                case nameof(PurchaseRequestRole.Requester): {
+                    if (this.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                        <RadzenButton Size="ButtonSize.Medium" Icon="autorenew" Text="Modify Request" Click="@(() =>this.UserActionHandler(PrUserAction.MODIFY))"/>
+                        <RadzenButton Size="ButtonSize.Medium"  Text="Cancel Request" Icon="highlight_off" Click="@(() =>this.UserActionHandler(PrUserAction.CANCEL))"/>
+                    }else if (this.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                        <RadzenButton Size="ButtonSize.Medium"  Text="Repeat Request" Icon="repeat_one" Click="@(() =>this.UserActionHandler(PrUserAction.REPEAT) )"/>
+                    }
+                    break;
+                }
+                case nameof(PurchaseRequestRole.Approver): {
+                    if (this.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                        if (this.PurchaseRequest?.Requester.Username == this.UserProfile._id) {
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Approve/Reject Request" Icon="done_all" Click="@(() =>this.UserActionHandler(PrUserAction.APPROVE))"/>
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Modify Request" Icon="autorenew" Click="@(() =>this.UserActionHandler(PrUserAction.MODIFY))"/>
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Cancel Request" Icon="highlight_off " Click="@(() =>this.UserActionHandler(PrUserAction.CANCEL))"/>
+                        } else {
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Approve/Reject Request" Icon="done_all" Click="@(() =>this.UserActionHandler(PrUserAction.CANCEL))"/>
 
+                        }
+                    }
+                    break;
+                }
+                case nameof(PurchaseRequestRole.Purchaser): {
+                    if (this.Status==PrStatus.Approved) {
+                        if (this.PurchaseRequest?.Requester.Username == this.UserProfile._id) {
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Order Request" Icon="open_in_new" Click="@(() =>this.UserActionHandler(PrUserAction.ORDER))"/>
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Modify Request" Icon="autorenew" Click="@(() =>this.UserActionHandler(PrUserAction.MODIFY))"/>
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Cancel Request" Icon="highlight_off" Click="@(() =>this.UserActionHandler(PrUserAction.CANCEL))"/>
+                        } else {
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Order Request" Icon="open_in_new" Click="@(() =>this.UserActionHandler(PrUserAction.ORDER))"/>
+
+                        }
+                    }else if (this.Status == PrStatus.Ordered) {
+                        <RadzenButton Size="ButtonSize.Medium"  Text="Check-in Request" Icon="input" Click="@(() =>this.UserActionHandler(PrUserAction.CHECKIN))"/>
+                    }else if (this.Status == PrStatus.Delivered) {
+                        if (this.PurchaseRequest?.CheckInResult is { Complete: false }) {
+                            <RadzenButton Size="ButtonSize.Medium"  Text="Check-in Request" Icon="input" Click="@(() =>this.UserActionHandler(PrUserAction.CHECKIN))"/>
+                        }
+                    }
+                    break;
+                }
+            }
+        </RadzenStack>
+    </RadzenStack>
+    <PurchaseRequestView PurchaseRequest="@this.PurchaseRequest" Mode="@EditMode.VIEW"/>
+
+</RadzenStack>
+    
+    
 @code {
+    [Inject] DialogService _dialogService { get; set; }
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+    [Parameter] public string Role { get; set; }
+    [Parameter] public PrStatus Status { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
+    [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
+
+
+    private async Task UserActionHandler(PrUserAction action) {
+        this._dialogService.CloseSide();
+        await this.UserAction.InvokeAsync(new UserActionEventArg(action, this.PurchaseRequest._id.ToString()));
+    }
 }
