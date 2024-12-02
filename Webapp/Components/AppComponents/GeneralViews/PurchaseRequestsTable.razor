@@ -11,8 +11,9 @@
 @if (this.PurchaseReqStatuses != null) {
     <RequestQueueView PurchaseReqStatuses="@this.PurchaseReqStatuses"
                       Collapsed="@this._queueCollapsed"
-                      UserAction="QueueUserActionHandler"
-                      SelectedIdChanged="@SelectedStatusChangedHandler"/>
+                      UserAction="@this.UserActionHandler"
+                      UserProfile="@this.UserProfile"
+                      SelectedIdChanged="@this.SelectedStatusChangedHandler"/>
 } else {
     <RadzenStack>
         <RadzenProgressBarCircular ShowValue="false"
@@ -35,7 +36,7 @@
                 </RadzenText>
             </RadzenCard>
             <RadzenCard>
-                <RadzenDataGrid @ref="@this._dataGrid" 
+                <RadzenDataGrid @ref="@this._dataGrid"
                                 TItem="PurchaseRequest"
                                 Data="@this.PurchaseRequests"
                                 AllowRowSelectOnRowClick="true"
@@ -53,12 +54,13 @@
                                 LogicalFilterOperator="LogicalFilterOperator.And"
                                 FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                 GridLines="DataGridGridLines.Both"
-                                ValueChanged="@this.SelectedChangedHandler">
+                                ValueChanged="@this.SelectedChangedHandler"
+                                @onclick:stopPropagation="true">
                     <GroupHeaderTemplate>
                         <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
                                      AlertStyle="@(this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus), context.Data.Key.ToString())))"
                                      AllowClose="false"
-                                     Size="AlertSize.ExtraSmall"/>
+                                     Size="AlertSize.ExtraSmall" />
                     </GroupHeaderTemplate>
                     <HeaderTemplate>
                         <RadzenStack Orientation="Orientation.Horizontal">
@@ -116,7 +118,7 @@
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Property="ReceivedDate" Title="Received Date" Visible="true">
                             <Template Context="request">
-                                @if (request.Status==PrStatus.Delivered) {
+                                @if (request.Status == PrStatus.Delivered) {
                                     @request.ReceivedDate.ToString("MM/dd/yy")
                                 } else {
                                     <span></span>
@@ -165,15 +167,18 @@
 
 @code {
     [Inject] private ContextMenuService _contextMenuService { get; set; }
-    /*[Inject] private UserService _userService { get; set; }*/
     [Inject] private DialogService _dialogService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
+    [Inject] private ILogger<PurchaseRequestsTable> _logger { get; set; }
+    
     [Parameter] public List<PurchaseRequest> PurchaseRequests { get; set; }
     [Parameter] public List<PurchaseRequestStatus>? PurchaseReqStatuses { get; set; }
     [Parameter] public PurchaseRequest? SelectedPurchaseRequest { get; set; }
     [Parameter] public EventCallback<PurchaseRequest> SelectedPurchaseRequestChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     [Parameter] public UserProfile UserProfile { get; set; }
+    [Parameter] public bool DialogOpen { get; set; }
+    [Parameter] public EventCallback<bool> DialogOpenChanged { get; set; }
 
     private IList<PurchaseRequest>? _selectedPurchaseRequests;
     private RadzenDataGrid<PurchaseRequest> _dataGrid;
@@ -184,21 +189,41 @@
     private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
         if (obj.Count > 0) {
             this.SelectedPurchaseRequest = obj[0];
-            this._selectedPurchaseRequests = obj;
             await SelectedPurchaseRequestChanged.InvokeAsync(obj[0]);
-            /*this._viewPainCollapsed = false;
-            this._queueCollapsed = true;*/
+            this._selectedPurchaseRequests = obj;
+            //Purposly not awaiting. It appears with the datagrid select you cannot switch rows when you await here. 
+            try {
+                _ = this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request",
+                    new Dictionary<string, object> { { "PurchaseRequest", this.SelectedPurchaseRequest }, { "UserProfile", this.UserProfile }, { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) } }, new SideDialogOptions() {
+                        Width = "50%",
+                        ShowClose = true,
+                        ShowTitle = true,
+                        ShowMask = false,
+                        CssClass = "rz-background-color-base-900 text-center"
+                    });
+            } catch (Exception e) {
+                this._logger.LogError(e, "Error opening Purchase Request Dialog");
+            }
+        }
+    }
+    
+    private async Task SelectedStatusChangedHandler(string obj) {
+        var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == obj);
+        if (pr != null) {
+            this.SelectedPurchaseRequest = pr;
+            await this.SelectedPurchaseRequestChanged.InvokeAsync(pr);
+            //Okay to await here, I think this is because of how the event callbacks are handler.
+            //the event callback on the selected row must not operate on a seperate thread??
             await this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request", 
                 new Dictionary<string, object> {
                     { "PurchaseRequest", this.SelectedPurchaseRequest },
-                    {"UserProfile", this.UserProfile},
-                    { "Role", this.UserProfile.Role },
-                    { "Status", this.SelectedPurchaseRequest.Status },
-                    { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.QueueUserActionHandler) }
+                    { "UserProfile", this.UserProfile },
+                    { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) }
                 }, new SideDialogOptions() {
                     Width = "50%",
                     ShowClose = true,
                     ShowTitle = true,
+                    ShowMask = false,
                     CssClass = "rz-background-color-base-900 text-center"
                 });
         }
@@ -251,15 +276,6 @@
             }
         }
     }
-
-    private async Task ClearSelectionHandler() {
-        this._selectedPurchaseRequests = null;
-        this.SelectedPurchaseRequest = null;
-        await SelectedPurchaseRequestChanged.InvokeAsync(null);
-        this._viewPainCollapsed = true;
-        this._queueCollapsed = false;
-
-    }
     
     private async Task ClearFilterHandler() {
         foreach (var col in this._dataGrid.ColumnsCollection) {
@@ -271,7 +287,6 @@
         this.SelectedPurchaseRequest = args.Data;
         await this.SelectedPurchaseRequestChanged.InvokeAsync(args.Data);
         await this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)e.Value, ""));
-        //this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)e.Value, "")).Wait();
         this._contextMenuService.Close();
     }
 
@@ -279,8 +294,9 @@
         if (PurchaseRequestRole.TryFromName(this.UserProfile.Role, out PurchaseRequestRole requestRole)) {
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
+                    List<ContextMenuItem> menuList;
                     if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
-                        List<ContextMenuItem> menuList = [
+                         menuList= [
                             new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
                             new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                         ];
@@ -288,72 +304,56 @@
                                 this.ContextActionHandler(args, e).Wait();
                             }
                         );
-                    }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered) {
-                        List<ContextMenuItem> menuList = [
+                    }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                        menuList = [
                             new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                         ];
-                            this._contextMenuService.Open(args, menuList, (e) => {
-                                    this.ContextActionHandler(args, e).Wait();
-                                }
+                        this._contextMenuService.Open(args, menuList, (e) => {
+                                this.ContextActionHandler(args, e).Wait();
+                            }
                         );
                     }
 
                     break;
                 }
                 case nameof(PurchaseRequestRole.Approver): {
-                    if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
-                        List<ContextMenuItem> menuList;
-                        if (args.Data.Requester.Username == this.UserProfile._id) {
-                             menuList= [
+                    List<ContextMenuItem> menuList;
+                    if(args.Data.Requester.Username==this.UserProfile._id) {
+                        if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                            menuList = [
                                 new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" },
                                 new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
                                 new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                             ];
-                        } else {
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
                             menuList = [
-                                new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" }
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                             ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
                         }
-                        this._contextMenuService.Open(args, menuList, (e) => {
-                                this.ContextActionHandler(args, e).Wait();
-                            }
-                        );
-                    }
-
-                    break;
-                }
-                case nameof(PurchaseRequestRole.Purchaser): {
-                    if (args.Data.Status == PrStatus.Approved) {
-                        List<ContextMenuItem> menuList;
-                        if (args.Data.Requester.Username == this.UserProfile._id) {
-                            menuList= [
-                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
-                                new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
-                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
-                            ];
-                        } else {
+                    }else if (args.Data.Approver.Username == this.UserProfile._id) {
+                        if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
                             menuList = [
-                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "open_in_new" },
-                               // new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                                new ContextMenuItem() { 
+                                    Text = "Approve/Reject Request", 
+                                    Value = PrUserAction.APPROVE, 
+                                    Icon = "done_all" 
+                                }
                             ];
-                        }
-
-                        this._contextMenuService.Open(args, menuList, (e) => {
-                                this.ContextActionHandler(args, e).Wait();
-                            }
-                        );
-                    }else if (args.Data.Status == PrStatus.Ordered) {
-                        List<ContextMenuItem> menuList = [
-                            new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
-                        ];
-                        this._contextMenuService.Open(args, menuList, (e) => {
-                                this.ContextActionHandler(args, e).Wait();
-                            }
-                        );
-                    }else if (args.Data.Status == PrStatus.Delivered) {
-                        if(args.Data.CheckInResult is { Complete: false }) {
-                            List<ContextMenuItem> menuList = [
-                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        } else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();
@@ -363,29 +363,105 @@
                     }
                     break;
                 }
+                case nameof(PurchaseRequestRole.Purchaser): {
+                    List<ContextMenuItem> menuList;
+                    if (args.Data.Requester.Username == this.UserProfile._id) {
+                        switch (args.Data.Status) {
+                            case PrStatus.NeedsApproval: {
+                                menuList = [
+                                    new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+                                    new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                                ];
+                                this._contextMenuService.Open(args, menuList, (e) => {
+                                        this.ContextActionHandler(args, e).Wait();
+                                    }
+                                );
+                                break;
+                            }
+                            case PrStatus.Approved: {
+                                menuList = [
+                                    new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "shopping_cart_checkout" },
+                                    new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+                                    new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                                ];
+                                this._contextMenuService.Open(args, menuList, (e) => {
+                                        this.ContextActionHandler(args, e).Wait();
+                                    }
+                                );
+                                break;
+                            }
+                            case PrStatus.Ordered: {
+                                menuList = [
+                                    new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                                ];
+                                this._contextMenuService.Open(args, menuList, (e) => {
+                                        this.ContextActionHandler(args, e).Wait();
+                                    }
+                                );
+                                break;
+                            }
+                            case PrStatus.Delivered: {
+                                menuList = [
+                                    new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                                ];
+                                if(args.Data.CheckInResult is { Complete: false }) {
+                                    menuList.Add(new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" });
+                                }
+                                this._contextMenuService.Open(args, menuList, (e) => {
+                                        this.ContextActionHandler(args, e).Wait();
+                                    }
+                                );
+                                break;
+                            }
+                            case PrStatus.Rejected: {
+                                menuList = [
+                                    new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                                ];
+                                this._contextMenuService.Open(args, menuList, (e) => {
+                                        this.ContextActionHandler(args, e).Wait();
+                                    }
+                                );
+                                break;
+                            }
+                        }
+                    } else {
+                        if (args.Data.Status == PrStatus.Approved) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Order Request", Value = PrUserAction.ORDER, Icon = "shopping_cart_checkout" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        } else if (args.Data.Status == PrStatus.Ordered) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if (args.Data.Status == PrStatus.Delivered) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                            ];
+                            if(args.Data.CheckInResult is { Complete: false }) {
+                                menuList.Add(new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" });
+                            }
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        } 
+                    }
+                    break;
+                }
             }
+            this._dialogService.CloseSide();
         }
     }
 
-    private async Task SelectedStatusChangedHandler(string obj) {
-        var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == obj);
-        if (pr != null) {
-            //await this._dataGrid.SelectRow(pr, true);
-            this.SelectedPurchaseRequest = pr;
-            await this.SelectedPurchaseRequestChanged.InvokeAsync(pr);
-            await this._dialogService.OpenSideAsync<PurchaseRequestView>("Purchase Request", 
-                new Dictionary<string, object> {
-                    { "PurchaseRequest", pr }, { "Mode", EditMode.VIEW }
-                }, new SideDialogOptions() {
-                    Width = "50%",
-                    ShowClose = true,
-                    ShowTitle = true,
-                    CssClass = "rz-background-color-base-900 text-center"
-                });
-        }
-    }
-
-    private async Task QueueUserActionHandler(UserActionEventArg arg) {
+    private async Task UserActionHandler(UserActionEventArg arg) {
         var pr = this.PurchaseRequests.FirstOrDefault(pr => pr._id.ToString() == arg.PrId);
         if (pr != null) {
             //await this._dataGrid.SelectRow(pr, true);

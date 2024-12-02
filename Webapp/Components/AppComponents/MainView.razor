@@ -11,7 +11,7 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
-
+<div onclick="@(()=>this._dialogService.CloseSide())">
 <RadzenTabs class="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" 
             SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
@@ -98,7 +98,7 @@
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
-
+</div>
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
@@ -169,6 +169,10 @@
                 duration:5000);
         }
         
+    }
+
+    private void ClickDivHandler() {
+        //if(this._dialogService)
     }
 
     protected override async Task OnParametersSetAsync() {
@@ -245,7 +249,6 @@
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Invalid action");
                 break;
         }
-        //await InvokeAsync(StateHasChanged);
     }
 
     private async Task ModifyHandler() {
@@ -317,23 +320,23 @@
         }
     }
     
-    private async Task CancelRequestHandler() {
+    private Task CancelRequestHandler() {
         if (this._selectedRequest != null) {
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.CANCEL);
                 this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
-                //await InvokeAsync(StateHasChanged);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
                                                                                     "Please try again later.");
             }
         }
+        return Task.CompletedTask;
     }
     
-    private async Task ApproveRequestHandler() {
+    private Task ApproveRequestHandler() {
         if (this._selectedRequest != null) {
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
@@ -346,9 +349,10 @@
                                                                                     "Please try again later.");
             }
         }
+        return Task.CompletedTask;
     }
     
-    private async Task OrderRequestHandler() {
+    private Task OrderRequestHandler() {
         if (this._selectedRequest != null) {
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
@@ -363,6 +367,7 @@
                                                                                     "Please try again later.");
             }
         }
+        return Task.CompletedTask;
     }
 
     private async Task CompletedHandler(string id) {
@@ -441,7 +446,9 @@
                     PrStatus.Rejected => pr.RejectedDate.ToString("MM/dd/yy"),
                     _ => "00-00-00",
                 };
-                return new PurchaseRequestStatus(pr._id.ToString(), pr.Title ?? "No Title", pr.Status, complete, dateStr);
+                return new PurchaseRequestStatus(pr._id.ToString(), pr.Title ?? "No Title", 
+                    pr.Status, complete, dateStr,
+                    pr.Requester.Username ?? "", pr.Approver.Username ?? "");
             }).ToList();
         }
     }

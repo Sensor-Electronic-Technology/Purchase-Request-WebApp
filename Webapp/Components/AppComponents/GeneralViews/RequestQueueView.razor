@@ -1,13 +1,14 @@
 ﻿@using Domain.Authentication
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.TypeConstants
+@using Domain.Users
 @using Webapp.Services.Authentication
 @using Webapp.Data
 
 <style>
     .rz-panel-titlebar {
         flex-direction: row-reverse;
-        justify-content:left;
+        justify-content: left;
     }
 
 </style>
@@ -16,7 +17,8 @@
              CollapseTitle="Press to expand">
     <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-            <RadzenIcon Icon="filter_list" class="rz-me-1"/><b>Queue</b>
+            <RadzenIcon Icon="filter_list" class="rz-me-1"/>
+            <b>Queue</b>
         </RadzenText>
     </HeaderTemplate>
     <ChildContent>
@@ -27,37 +29,44 @@
                                  ItemSelector="@this.ItemSelector">
             <ChildContent>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-p-1">
-                    <RadzenDropZone Value="PrStatus.NeedsApproval" class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4 dropzone">
+                    <RadzenDropZone Value="PrStatus.NeedsApproval"
+                                    class="rz-display-flex rz-flex-column rz-background-color-warning-lighter rz-border-warning-light rz-border-radius-2 rz-p-4 dropzone">
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-warning-lighter dropzone-header">
-                            <RadzenText Text="@($"Needs Approval: {this._needApprovalCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                            <RadzenText Text="@($"Needs Approval: {this._needApprovalCount}")" TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Approved"
-                                    class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4 dropzone" Style="padding-bottom: 0; padding-right: 0;">
+                                    class="rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4 dropzone"
+                                    Style="padding-bottom: 0; padding-right: 0;">
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-info-lighter dropzone-header">
-                            <RadzenText Text="@($"Approved: {this._approvedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                            <RadzenText Text="@($"Approved: {this._approvedCount}")" TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Ordered"
                                     class="rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4 dropzone">
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-success-lighter dropzone-header">
-                            <RadzenText Text="@($"Ordered: {this._orderedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                            <RadzenText Text="@($"Ordered: {this._orderedCount}")" TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Delivered"
                                     class="rz-display-flex rz-flex-column rz-background-color-secondary-lighter rz-border-secondary-light rz-border-radius-2 rz-p-4 dropzone">
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-secondary-lighter dropzone-header">
-                            <RadzenText Text="@($"Delivered: {this._deliveredCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                            <RadzenText Text="@($"Delivered: {this._deliveredCount}")" TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                     </RadzenDropZone>
 
                     <RadzenDropZone Value="PrStatus.Rejected"
                                     class="rz-display-flex rz-flex-column rz-background-color-danger-lighter rz-border-danger-light rz-border-radius-2 rz-p-4 dropzone">
                         <RadzenCard class="rz-m-0 rz-p-1 rz-background-color-danger-lighter dropzone-header">
-                            <RadzenText Text="@($"Rejected: {this._rejectedCount}")" TextStyle="TextStyle.H6" TextAlign="TextAlign.Center" />
+                            <RadzenText Text="@($"Rejected: {this._rejectedCount}")" TextStyle="TextStyle.H6"
+                                        TextAlign="TextAlign.Center"/>
                         </RadzenCard>
                     </RadzenDropZone>
                 </RadzenStack>
@@ -70,32 +79,96 @@
                                    class="rz-radius-6"
                                    Style="width: 100%">
                     <ChildContent>
-                        @switch (this._role) {
+                        @switch (this.UserProfile.Role) {
                             case nameof(PurchaseRequestRole.Requester): {
-                                @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
-                                    <RadzenSplitButtonItem Text="Modify" Icon="autorenew" Value="@nameof(PrUserAction.MODIFY)"/>
-                                    <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
+                                if (status.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                                    <RadzenSplitButtonItem Text="Modify" Icon="autorenew"
+                                                           Value="@nameof(PrUserAction.MODIFY)"/>
+                                    <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                           Value="@nameof(PrUserAction.CANCEL)"/>
+                                } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                    <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                           Value="@nameof(PrUserAction.REPEAT)"/>
                                 }
 
                                 break;
                             }
                             case nameof(PurchaseRequestRole.Approver): {
-                                @if (status.Status == PrStatus.NeedsApproval || status.Status == PrStatus.Approved) {
-                                    <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all" Value="@nameof(PrUserAction.APPROVE)"/>
+                                if (status.RequesterId == this.UserProfile._id) {
+                                    if (status.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                                        <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all"
+                                                               Value="@nameof(PrUserAction.APPROVE)"/>
+                                        <RadzenSplitButtonItem Text="Modify" Icon="autorenew"
+                                                               Value="@nameof(PrUserAction.MODIFY)"/>
+                                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                               Value="@nameof(PrUserAction.CANCEL)"/>
+                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                        <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                               Value="@nameof(PrUserAction.REPEAT)"/>
+                                    }
+                                } else if (status.ApproverId == this.UserProfile._id) {
+                                    if (status.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                                        <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all"
+                                                               Value="@nameof(PrUserAction.APPROVE)"/>
+                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                        <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                               Value="@nameof(PrUserAction.REPEAT)"/>
+                                    }
                                 }
 
                                 break;
                             }
                             case nameof(PurchaseRequestRole.Purchaser): {
-                                @if (status.Status == PrStatus.Approved) {
-                                    <RadzenSplitButtonItem Icon="input" Text="Order Request" Value="@nameof(PrUserAction.ORDER)"/>
-                                    <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off" Value="@nameof(PrUserAction.CANCEL)"/>
-                                } else if (status.Status == PrStatus.Ordered) {
-                                    <RadzenSplitButtonItem Text="Check-in Order" Icon="input" Value="@nameof(PrUserAction.CHECKIN)"/>
-                                } else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
-                                    <RadzenSplitButtonItem Text="Check-in Order" Icon="input" Value="@nameof(PrUserAction.CHECKIN)"/>
+                                if (status.RequesterId == this.UserProfile._id) {
+                                    switch (status.Status) {
+                                        case PrStatus.NeedsApproval: {
+                                            <RadzenSplitButtonItem Text="Modify" Icon="autorenew"
+                                                                   Value="@nameof(PrUserAction.MODIFY)"/>
+                                            <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                                   Value="@nameof(PrUserAction.CANCEL)"/>
+                                            break;
+                                        }
+                                        case PrStatus.Approved: {
+                                            <RadzenSplitButtonItem Icon="shopping_cart_checkout" Text="Order Request"
+                                                                   Value="@nameof(PrUserAction.ORDER)"/>
+                                            <RadzenSplitButtonItem Text="Modify" Icon="autorenew"
+                                                                   Value="@nameof(PrUserAction.MODIFY)"/>
+                                            <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                                   Value="@nameof(PrUserAction.CANCEL)"/>
+                                            break;
+                                        }
+                                        case PrStatus.Ordered: {
+                                            <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
+                                                                   Value="@nameof(PrUserAction.CHECKIN)"/>
+                                            break;
+                                        }
+                                        case PrStatus.Delivered: {
+                                            <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                                   Value="@nameof(PrUserAction.REPEAT)"/>
+                                            if (!status.IsComplete) {
+                                                <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
+                                                                       Value="@nameof(PrUserAction.CHECKIN)"/>
+                                            }
+                                            break;
+                                        }
+                                        case PrStatus.Rejected: {
+                                            <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                                   Value="@nameof(PrUserAction.REPEAT)"/>
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    if (status.Status == PrStatus.Approved) {
+                                        <RadzenSplitButtonItem Icon="shopping_cart_checkout" Text="Order Request"
+                                                               Value="@nameof(PrUserAction.ORDER)"/>
+                                    } else if (status.Status == PrStatus.Ordered) {
+                                        <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
+                                                               Value="@nameof(PrUserAction.CHECKIN)"/>
+                                    } else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
+                                        <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
+                                                               Value="@nameof(PrUserAction.CHECKIN)"/>
+                                    }
                                 }
-
                                 break;
                             }
                         }
@@ -109,12 +182,12 @@
 
 
 @code {
-    [Inject] private UserService _userService { get; set; }
+    [Parameter] public UserProfile UserProfile { get; set; }
     [Parameter] public List<PurchaseRequestStatus> PurchaseReqStatuses { get; set; } = [];
     [Parameter] public EventCallback<string> SelectedIdChanged { get; set; }
     [Parameter] public EventCallback<UserActionEventArg> UserAction { get; set; }
     [Parameter] public bool Collapsed { get; set; }
-    
+
     private string _role = "";
     private int _needApprovalCount = 0;
     private int _approvedCount = 0;
@@ -123,12 +196,6 @@
     private int _rejectedCount = 0;
 
     Func<PurchaseRequestStatus, RadzenDropZone<PurchaseRequestStatus>, bool> ItemSelector = (item, zone) => item.Status == (PrStatus)zone.Value;
-
-    protected override void OnInitialized() {
-        this._role = this._userService.GetUserRole();
-
-        base.OnInitialized();
-    }
 
     protected override Task OnParametersSetAsync() {
         this._needApprovalCount = this.PurchaseReqStatuses.Count(x => x.Status == PrStatus.NeedsApproval);
@@ -148,9 +215,9 @@
     }
 
     private string GetButtonText(PurchaseRequestStatus status) {
-        return status is {Status:PrStatus.Delivered, IsComplete:false} ? $"{status.DateStr}:{status.Name} (Incomplete)" : $"{status.Name} {status.DateStr}";
+        return status is { Status: PrStatus.Delivered, IsComplete: false } ? $"{status.DateStr}:{status.Name} (Incomplete)" : $"{status.Name} {status.DateStr}";
     }
-    
+
     void OnItemRender(RadzenDropZoneItemRenderEventArgs<PurchaseRequestStatus> args) {
         args.Attributes["draggable"] = "false";
         args.Attributes["style"] = "padding-right:.1rem; padding-left:.1rem; padding-top:.1rem; padding-bottom:.1rem;";
