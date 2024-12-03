@@ -5,9 +5,9 @@
 <RadzenCard class="info-area">
     <RadzenCard class="area-header">
         <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
-            <RadzenIcon Icon="contact_mail" class="rz-me-1"/><b>Purchase Items</b>
+            <RadzenIcon Icon="contact_mail" class="rz-me-1"/><b>Vendors</b>
         </RadzenText>
-        <RadzenText Text="Vendor List"
+        <RadzenText Text="Add or Edit Vendors"
                     TextAlign="TextAlign.Center"
                     TextStyle="TextStyle.Subtitle1"/>
     </RadzenCard>
@@ -46,11 +46,11 @@
                         Page="@Reset"
                         Filter="@Reset"
                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                        Style="overflow: scroll !important;">
+                        Style="max-height: 900px;overflow: scroll !important;">
             <HeaderTemplate>
                 <RadzenButton ButtonStyle="ButtonStyle.Success"
                               Icon="add_circle"
-                              Text="Add New Purchase Item"
+                              Text="Add Vendor"
                               Click="@this.ShowDialog"
                               Disabled="@(editMode == DataGridEditMode.Single && itemsToInsert.Any())"/>
             </HeaderTemplate>
@@ -121,10 +121,10 @@
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
                                       Variant="Variant.Flat" Size="ButtonSize.Medium"
                                       Click="@(args => EditRow(vendorItem))" @onclick:stopPropagation="true"/>
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                        @*<RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
                                       Variant="Variant.Flat" Shade="Shade.Lighter"
                                       Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                      Click="@(args => DeleteRow(vendorItem))" @onclick:stopPropagation="true"/>
+                                      Click="@(args => DeleteRow(vendorItem))" @onclick:stopPropagation="true"/>*@
                     </Template>
                     <EditTemplate Context="vendorItem">
                         <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
@@ -135,10 +135,10 @@
                                       Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
                                       Click="@((args) => CancelEdit(vendorItem))" aria-label="Cancel"/>
 
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                        @*<RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
                                       Variant="Variant.Flat" Shade="Shade.Lighter"
                                       Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                      Click="@(args => DeleteRow(vendorItem))" aria-label="Delete"/>
+                                      Click="@(args => DeleteRow(vendorItem))" aria-label="Delete"/>*@
                     </EditTemplate>
                 </RadzenDataGridColumn>
             </Columns>

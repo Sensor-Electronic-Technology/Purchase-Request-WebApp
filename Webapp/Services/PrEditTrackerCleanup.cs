@@ -25,36 +25,44 @@ public class PrEditTrackerCleanup:IHostedService, IDisposable {
         return Task.CompletedTask;
     }
     private void AddTimer(string id) {
-        using (this._lock.EnterScope()) {
-            if (this._timers.ContainsKey(id)) {
-                this._timers[id].Dispose();
-                this._editingTracker.Timeout(id);
-                if (this._timers.Remove(id)) {
-                    this._logger.LogInformation("Removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
-                } else {
-                    this._logger.LogError("Failed to add timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+        try {
+            using (this._lock.EnterScope()) {
+                if (this._timers.ContainsKey(id)) {
+                    this._timers[id].Dispose();
+                    this._editingTracker.Timeout(id);
+                    if (this._timers.Remove(id)) {
+                        this._logger.LogInformation("Removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+                    } else {
+                        this._logger.LogError("Failed to remove timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+                    }
                 }
+                this._timers[id]=this._appTimeProvider.CreateTimer(state => {
+                    this._editingTracker.Timeout(id);
+                    this.RemoveTimer(id);
+                },id,TimeSpan.FromSeconds(this.TimeoutSeconds),TimeSpan.FromSeconds(0));
+                this._logger.LogInformation("Added timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
             }
-            this._timers[id]=this._appTimeProvider.CreateTimer(state => {
-                this._editingTracker.Timeout(id);
-                this.RemoveTimer(id);
-            },id,TimeSpan.FromSeconds(this.TimeoutSeconds),TimeSpan.FromSeconds(0));
-            this._logger.LogInformation("Added timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+        }catch(Exception e) {
+            this._logger.LogError(e,"Error adding timer for {Id}",id);
         }
     }
     
     private void RemoveTimer(string id) {
-        using (this._lock.EnterScope()) {
-            if(this._timers.TryGetValue(id,out var timer)) {
-                timer.Dispose();
-                if (!this._timers.Remove(id)) {
-                    this._logger.LogError("Failed to removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count); 
+        try {
+            using (this._lock.EnterScope()) {
+                if(this._timers.TryGetValue(id,out var timer)) {
+                    timer.Dispose();
+                    if (!this._timers.Remove(id)) {
+                        this._logger.LogError("Failed to removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count); 
+                    } else {
+                        this._logger.LogInformation("Removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+                    }
                 } else {
-                    this._logger.LogInformation("Removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);
+                    this._logger.LogError("Failed to removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);            
                 }
-            } else {
-                this._logger.LogError("Failed to removed timer for {Id}, Tracking: {TCount}", id,this._timers.Count);            
             }
+        }catch(Exception e) {
+            this._logger.LogError(e,"Error removing timer for {Id}",id);
         }
     }
     

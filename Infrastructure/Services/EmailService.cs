@@ -28,30 +28,6 @@ public class EmailService {
         
     }
 
-    public async Task SendEmail(EmailType type,PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
-        switch (type) {
-            case nameof(EmailType.NeedsApproval): {
-                //await this.SendRequestEmail(prInput,to,toCC);
-                break;
-            }
-            case nameof(EmailType.NeedsPurchase): {
-                break;
-            }
-            case nameof(EmailType.Received): {
-                break;
-            }
-            case nameof(EmailType.Rejected): {
-                break;
-            }
-            case nameof(EmailType.Ordered): {
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-
     public async Task SendRequestEmail(byte[] htmlBody,PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
@@ -71,7 +47,6 @@ public class EmailService {
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            /*html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");*/
             html = html.Replace("{prLink}",$"<a href=\"{prInput.PrUrl}\">Request Link</a>");
             var builder = new BodyBuilder { 
                 HtmlBody = html
@@ -108,7 +83,6 @@ public class EmailService {
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            /*html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");*/
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };

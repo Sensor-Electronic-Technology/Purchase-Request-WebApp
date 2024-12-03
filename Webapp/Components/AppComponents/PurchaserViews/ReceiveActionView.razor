@@ -220,9 +220,7 @@
                 Username = this.UserProfile._id
             };
             await this.UpdateMailMerge();
-            this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
-            this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
-            this._emailList.Add(this._receiveRequestInput.Receiver?.Email ?? "");
+            this._emailList = [this.PurchaseRequest.Requester?.Email ?? "", this.PurchaseRequest.Approver?.Email ?? "", this._receiveRequestInput.Receiver?.Email ?? ""];
             this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
         }
         

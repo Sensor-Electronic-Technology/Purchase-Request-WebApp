@@ -203,11 +203,10 @@
         }];
         if (this.PurchaseRequest != null) {
             var purchasers = await this._authApiService.GetPurchasers();
-            this._emailList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
+            /*this._emailList = purchasers.Where(f => string.IsNullOrEmpty(f.Email) == false)
                 .Select(e=>e.Email)
-                .ToList();
-            this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");
-            this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
+                .ToList();*/
+            this._emailList = ["space@s-et.com",this.PurchaseRequest.Requester?.Email ?? "",this.PurchaseRequest.Approver?.Email ?? ""];
             this._ccList.AddRange(this.PurchaseRequest.EmailCopyList);
         }
         this._emailsLoaded = true;

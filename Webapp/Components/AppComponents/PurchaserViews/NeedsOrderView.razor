@@ -20,9 +20,9 @@
                     <RadzenStack Gap="15">
                         <RadzenCard class="area-header">
                             <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H6" class="rz-m-0">
-                                <RadzenIcon Icon="package_2" class="rz-me-1"/><b>Purchasing Input</b>
+                                <RadzenIcon Icon="package_2" class="rz-me-1"/><b>Order Form</b>
                             </RadzenText>
-                            <RadzenText Text="Enter payment terms, verify purchase items and verify shipping"
+                            <RadzenText Text="Enter payment terms, purchase type, item type,verify purchase items and verify shipping"
                                         TextAlign="TextAlign.Center"
                                         TextStyle="TextStyle.Subtitle1"/>
                         </RadzenCard>
@@ -316,7 +316,7 @@
             PrAction = $"Request Ordered",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
-            Requester = this.PurchaseOrderDto?.Requester.Name ?? "",
+            Requester = this.PurchaseOrderDto?.Requester?.Name ?? "",
             ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
             CommentsTitle = "Order Comments",
         }];
@@ -329,7 +329,7 @@
                 Email = UserProfile.Email
             };
             this._emailList.Add(this.PurchaseOrderDto.Requester?.Email ?? "");
-            this._emailList.Add(this.PurchaseRequest.Approver?.Email ?? "");
+            this._emailList.Add(this.PurchaseRequest?.Approver?.Email ?? "");
             this._ccList.AddRange(this.PurchaseOrderDto.EmailCopyList);
             this._canPerformAction = true;
         } else {
