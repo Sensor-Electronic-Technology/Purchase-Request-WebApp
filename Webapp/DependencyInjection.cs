@@ -84,7 +84,7 @@ public static class DependencyInjection {
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddCircuitOptions(options => options.DetailedErrors = true)
-            .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
+            .AddHubOptions(options => options.MaximumReceiveMessageSize = 15 * 1024 * 1024);
 
         builder.Services.AddRadzenCookieThemeService(options => {
             options.Name = "app-theme"; // The name of the cookie
