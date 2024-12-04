@@ -15,9 +15,13 @@
                 <RadzenStack Orientation="Orientation.Vertical"
                              AlignItems="AlignItems.Center">
                     <RadzenFieldset Text="Edit?">
-                            <RadzenSwitch @bind-Value="@_switchValue"
-                                          Change="@(args => OnChange(args, "Switch"))" Name="EditEnable"/>
-                            <RadzenLabel Text="@this._label" Component="EditEnable" class="rz-ms-2"/>
+                        <RadzenSwitch @bind-Value="@_switchValue"
+                                      Change="@(args => OnChange(args, "Switch"))"
+                                      Name="EditEnable"/>
+                        
+                        <RadzenLabel Text="@this._label" 
+                                     Component="EditEnable" 
+                                     class="rz-ms-2"/>
                     </RadzenFieldset>
                     <ProfileView @bind-UserProfile="@this._userProfile"
                                  OnSubmit="@this.Submit" IsEditMode="@this._switchValue"/>

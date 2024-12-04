@@ -21,6 +21,153 @@
         <Content Update="wwwroot\Procedure - Purchase Request.pdf">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
+        <Content Update="wwwroot\images\avatars\actor-chaplin-comedy-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\addicted-draw-love-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\afro-avatar-male-2-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\afro-avatar-male-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\afro-boy-child-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\afro-female-person-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\alien-avatar-space-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\animal-avatar-bear-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\animal-avatar-mutton-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\anime-away-face-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\apple-avatar-illness-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\artist-avatar-marilyn-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-avocado-food-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-bad-breaking-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-batman-comics-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-boy-kid-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-boy-male-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-bug-insect-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-cacti-cactus-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-child-girl-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-cloud-crying-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-coffee-cup-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-dead-monster-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-einstein-professor-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-elderly-grandma-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-female-girl-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-female-portrait-2-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-female-portrait-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-geisha-japanese-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-hindi-indian-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-joker-squad-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-lazybones-sloth-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-male-man-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-male-ozzy-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-man-muslim-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-man-person-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-muslim-paranja-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-nun-sister-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\avatar-person-pilot-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\baby-child-kid-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\beard-hipster-male-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\builder-helmet-worker-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\child-girl-kid-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\christmas-clous-santa-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\fighter-luchador-man-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\friday-halloween-jason-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\indian-male-man-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\indian-man-sikh-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\images\avatars\male-man-old-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>

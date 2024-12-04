@@ -30,7 +30,7 @@ public class AvatarDataService {
     public IEnumerable<string> GetAvatars() {
         var directory = Directory.GetCurrentDirectory() + "/wwwroot/images/avatars/";
         if (!Directory.Exists(directory)) yield break;
-        var fileNames=Directory.GetFiles(directory);
+        var fileNames=Directory.GetFiles(directory).Where(x=>x.EndsWith(".png")||x.EndsWith(".jpg")||x.EndsWith(".jpeg")||x.EndsWith(".svg"));
         foreach(var fileName in fileNames) {
             yield return $"images/avatars/{Path.GetFileName(fileName)}";
         }
@@ -40,10 +40,12 @@ public class AvatarDataService {
         var directory = Directory.GetCurrentDirectory() + "/wwwroot/avatars/";
         if (Directory.Exists(directory)) {
             Random random = new Random();
-            var fileNames=Directory.GetFiles(directory);
-            if (fileNames.Length == 0) return default;
-            return $"/wwwroot/avatars/{Path.GetFileName(fileNames[random.Next(fileNames.Length)])}";
-            //random.Next()
+            var fileNames=Directory.GetFiles(directory).Where(x=>x.EndsWith(".png")||x.EndsWith(".jpg")||x.EndsWith(".jpeg")||x.EndsWith(".svg")).ToList();
+            if (fileNames != null && fileNames.Any()) {
+                return $"/wwwroot/avatars/{Path.GetFileName(fileNames[random.Next(fileNames.Count())])}";
+            } else {
+                return default;
+            }
         }
         return default;
     }
