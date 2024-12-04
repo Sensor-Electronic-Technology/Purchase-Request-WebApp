@@ -24,7 +24,8 @@
                     <RadzenButton Icon="Add"
                                   Click="@this.AddFile"
                                   ButtonStyle="ButtonStyle.Primary"
-                                  Size="ButtonSize.Medium"/>
+                                  Size="ButtonSize.Medium" 
+                                  @onclick:stopPropagation="true"/>
                     <RadzenLabel>Add Quote</RadzenLabel>
                 </RadzenStack>
                 <RadzenStack>

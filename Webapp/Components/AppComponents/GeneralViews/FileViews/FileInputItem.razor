@@ -9,7 +9,7 @@
                           Change="@OnChangeHandler" 
                           Auto="false"
                           class="rz-w-25"
-                          Multiple="false"/>
+                          Multiple="false" @onclick:stopPropagation="true"/>
         } else {
             <RadzenCard class="rz-border-radius-6 rz-min-w-50 rz-max-w-75 rz-background-color-info-light rz-p-3">
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
@@ -17,11 +17,11 @@
                         <RadzenIcon Icon="@FileDisplayType.FromExtension(Path.GetExtension(this._fileName)).Icon"
                                     Style="font-weight: 700"/>    @this._fileName
                     </RadzenText>
-                    <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success" Click="PreviewQuoteHandler"/>
+                    <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success" Click="PreviewQuoteHandler" @onclick:stopPropagation="true"/>
                 </RadzenStack>
             </RadzenCard>
         }
-        <RadzenButton Icon="close" Click="@(()=>this.RemoveFile.InvokeAsync(this.Index))"/>
+        <RadzenButton Icon="close" Click="@(()=>this.RemoveFile.InvokeAsync(this.Index))" @onclick:stopPropagation="true"/>
     </RadzenStack>
 }
 

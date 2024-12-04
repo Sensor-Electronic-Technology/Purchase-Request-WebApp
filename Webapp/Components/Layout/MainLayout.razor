@@ -105,6 +105,10 @@
                                              MouseEnter="@((args) => ShowTooltip(args, "Vendors"))"/>
                     </Authorized>
                 </AuthorizeView>
+                <RadzenPanelMenuItem Text="Help"
+                                     MouseEnter="@((args) => ShowTooltip(args, "Help"))"
+                                     Icon="help"
+                                     Path="/help"/>
                 @if (!this._headerVisible) {
                     <RadzenPanelMenuItem Text="Top Bar" Icon="home" MouseEnter="@((args) => ShowTooltip(args, "Top Bar Menu"))">
                         <RadzenPanelMenuItem Text="Show Header"

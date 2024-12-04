@@ -17,7 +17,8 @@
                 <RadzenButton Text="Download" Click="DownloadHandler"
                               Size="ButtonSize.Small"
                               class="button-transparent"
-                              Image="/images/download-icon.svg"/>
+                              Image="/images/download-icon.svg"
+                              @onclick:stopPropagation="true"/>
             </RadzenRow>
             <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="@this.GetStyle()"/>
         </RadzenStack>
@@ -42,7 +43,8 @@
                 <RadzenButton Text="Download" Click="DownloadHandler"
                               Size="ButtonSize.Small"
                               class="button-transparent"
-                              Image="/images/download-icon.svg"/>
+                              Image="/images/download-icon.svg"
+                              @onclick:stopPropagation="true"/>
             </RadzenRow>
             <RadzenImage Path="@($"data:image/jpeg;base64,{Convert.ToBase64String(this.FileBytes)}")" AlternateText="quote" />
         </RadzenStack>
@@ -54,7 +56,8 @@
             <RadzenButton Text="Download" Click="DownloadHandler"
                           Size="ButtonSize.Small"
                           class="button-transparent"
-                          Image="/images/download-icon.svg"/>
+                          Image="/images/download-icon.svg"
+                          @onclick:stopPropagation="true"/>
         </RadzenStack>
     }
 }

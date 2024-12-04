@@ -27,24 +27,20 @@
                                               Icon="save"
                                               Click="@this.SaveClicked"
                                               Disabled="@(!this.CanSave || !this.DocLoaded)"
-                                              Style="width: 180px; height: 50px;"/>
+                                              Style="width: 180px; height: 50px;"
+                                              @onclick:stopPropagation="true"/>
                                 <RadzenButton Text="@(this.Mode == EditMode.EDIT ? "Cancel Update" : "Cancel Create")"
                                               ButtonStyle="ButtonStyle.Danger"
                                               Click="@this.CancelClicked"
                                               Icon="cancel"
-                                              Style="width: 180px; height: 50px;"/>
+                                              Style="width: 180px; height: 50px;"
+                                              @onclick:stopPropagation="true"/>
                             </RadzenStack>
                         </RadzenFieldset>
                     </RadzenRow>
                     <AlertListView UserActionAlerts="@this.RequestAlerts"/>
-                    @*<RadzenFieldset Text="Email Recipients">
-                        <RadzenText TextStyle="TextStyle.H6" Text="Emails will be sent to the following users:"/>
-                        <RadzenText Text="@String.Join(" , ", this._emailList)" TextStyle="TextStyle.Subtitle1"/>
-                    </RadzenFieldset>*@
-                    @*<EmailPickList CcList="@this.PurchaseRequestInput.EmailCcList"
-                                   CcListChanged="@EmailListChangedHandler"
-                                   IsCollapsed="false"/>*@
-                    <EmailRecipientView EmailList="@this._emailList" @bind-EmailCcList="@this.PurchaseRequestInput.EmailCcList"/>
+                    <EmailRecipientView EmailList="@this._emailList" 
+                                        @bind-EmailCcList="@this.PurchaseRequestInput.EmailCcList"/>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="6">
@@ -129,7 +125,7 @@
 
     protected override Task OnParametersSetAsync() {
         this.MailMerge = [new RequestMailMerge() {
-            PrAction = this.Mode!=EditMode.EDIT ? "Approval Requested - Modified":"Approved Requested",
+            PrAction = this.Mode!=EditMode.EDIT ? "Approved Requested":"Approval Requested - Modified",
             Title = this.PurchaseRequestInput?.Title ?? "",
             Approver = this.PurchaseRequestInput?.ApproverName ?? "",
             Requester = this.PurchaseRequestInput?.RequesterName ?? "",
