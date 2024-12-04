@@ -18,9 +18,6 @@
       </Content>
         <ContainerLabel Include="com.centurylinklabs.watchtower.enable" Value="true" />
         <ContainerPort Include="80" Type="tcp" />
-        <Content Update="wwwroot\Procedure - Purchase Request.pdf">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
         <Content Update="wwwroot\images\avatars\actor-chaplin-comedy-svgrepo-com.svg">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
@@ -166,6 +163,9 @@
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <Content Update="wwwroot\images\avatars\male-man-old-svgrepo-com.svg">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\Procedure - Purchase Request.pdf">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
