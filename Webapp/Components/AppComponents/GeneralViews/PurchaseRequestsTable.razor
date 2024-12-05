@@ -194,7 +194,11 @@
             //Purposly not awaiting. It appears with the datagrid select you cannot switch rows when you await here. 
             try {
                 _ = this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request",
-                    new Dictionary<string, object> { { "PurchaseRequest", this.SelectedPurchaseRequest }, { "UserProfile", this.UserProfile }, { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) } }, new SideDialogOptions() {
+                    new Dictionary<string, object> {
+                        { "PurchaseRequest", this.SelectedPurchaseRequest }, 
+                        { "UserProfile", this.UserProfile }, 
+                        { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) }
+                    }, new SideDialogOptions() {
                         Width = "50%",
                         ShowClose = true,
                         ShowTitle = true,

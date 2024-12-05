@@ -49,8 +49,10 @@
                                 }
                             } else if (this.PurchaseRequest?.Approver.Username == this.UserProfile._id) {
                                 if (this.PurchaseRequest?.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
-                                    <RadzenButton Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Info" Text="Approve/Reject" Icon="done_all"
-                                                  Value="@nameof(PrUserAction.APPROVE)"/>
+                                    <RadzenButton Size="ButtonSize.Medium" 
+                                                  ButtonStyle="ButtonStyle.Info" 
+                                                  Text="Approve/Reject" Icon="done_all"
+                                                  Click="@(() => this.UserActionHandler(PrUserAction.APPROVE))"/>
                                 } else if (this.PurchaseRequest?.Status is PrStatus.Ordered or PrStatus.Delivered) {
                                     <RadzenButton Text="Repeat Request" ButtonStyle="ButtonStyle.Info"
                                                   Icon="repeat_one"

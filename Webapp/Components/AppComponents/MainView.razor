@@ -11,7 +11,8 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
-<div onclick="@(()=>this._dialogService.CloseSide())">
+@*<div onclick="@(()=>this._dialogService.CloseSide())">*@
+<div>
 <RadzenTabs class="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" 
             SelectedIndexChanged="TabIndexChangedHandler">
     <Tabs>
@@ -169,10 +170,6 @@
                 duration:5000);
         }
         
-    }
-
-    private void ClickDivHandler() {
-        //if(this._dialogService)
     }
 
     protected override async Task OnParametersSetAsync() {

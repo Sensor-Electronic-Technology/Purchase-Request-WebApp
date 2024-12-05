@@ -39,19 +39,6 @@
                             </RadzenRow>
                             <RadzenRow AlignItems="AlignItems.Center">
                                 <RadzenColumn Size="12" SizeMD="2">
-                                    <RadzenLabel Text="Email" Component="VendorEmail"/>
-                                </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenTextBox Style="width: 100%;"
-                                                   @bind-Value="@this.Vendor.Email"
-                                                   ReadOnly="@this.IsReadOnly()"
-                                                   Name="VendorEmail"/>
-                                    <RadzenEmailValidator 
-                                        Component="VendorEmail" Text="Invalid email format" Popup="false"/>
-                                </RadzenColumn>
-                            </RadzenRow>
-                            <RadzenRow AlignItems="AlignItems.Center">
-                                <RadzenColumn Size="12" SizeMD="2">
                                     <RadzenLabel Text="Phone" Component="VendorPhone"/>
                                 </RadzenColumn>
                                 <RadzenColumn Size="12" SizeMD="10">
@@ -139,6 +126,18 @@
                         </RadzenStack>
                     </RadzenFieldset>
                 </RadzenColumn>
+                <RadzenRow JustifyContent="JustifyContent.Center" Gap="5" RowGap="5" class="rz-w-100">
+                    <RadzenCard Variant="Variant.Text" class="rz-p-1 rz-m-1">
+                        <RadzenText TextAlign="TextAlign.Center">Email</RadzenText>
+                        <RadzenText TextAlign="TextAlign.Center">Seperatre emails with a comma</RadzenText>
+                    </RadzenCard>
+                    <RadzenTextBox Style="width: 100%;"
+                                   @bind-Value="@this.Vendor.Email"
+                                   ReadOnly="@this.IsReadOnly()"
+                                   Name="VendorEmail"
+                                   Placeholder="Email1, Email2, Email3"
+                                   class="rz-w-100"/>
+                </RadzenRow>
             </RadzenRow>
             <RadzenFieldset Text="Save/Cancel" Visible="@(!this.IsReadOnly())">
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
