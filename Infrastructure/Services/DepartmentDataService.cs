@@ -30,4 +30,10 @@ public class DepartmentDataService {
         return await this._departmentCollection.Find(_=>true).ToListAsync();
     }
     
+    public async Task<Department> FindDepartmentById(string name) {
+        return await this._departmentCollection
+            .Find(d=>d.Name == name)
+            .FirstOrDefaultAsync();
+    }
+    
 }

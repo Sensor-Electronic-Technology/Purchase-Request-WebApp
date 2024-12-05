@@ -1,19 +1,19 @@
 ﻿@page "/user_profile"
 @using Domain.Users
 @using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.AuthViews
 @inject UserService UserService
 <PageTitle>User Profile</PageTitle>
 <AuthorizeView>
     <Authorized>
-        <RadzenRow JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+        <RadzenRow JustifyContent="JustifyContent.Center">
             @if (this._userProfile == null) {
                 <RadzenText Text="Internal Error: No Profile Available"
                             TextStyle="TextStyle.H5"/>
             } else {
-                <RadzenStack Orientation="Orientation.Vertical"
-                             AlignItems="AlignItems.Center">
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
                     <RadzenFieldset Text="Edit?">
                         <RadzenSwitch @bind-Value="@_switchValue"
                                       Change="@(args => OnChange(args, "Switch"))"
@@ -24,6 +24,7 @@
                                      class="rz-ms-2"/>
                     </RadzenFieldset>
                     <ProfileView @bind-UserProfile="@this._userProfile"
+                                 ApproverSelectList="@this._approverSelectList"
                                  OnSubmit="@this.Submit" IsEditMode="@this._switchValue"/>
                 </RadzenStack>
             }
@@ -38,15 +39,21 @@
     [CascadingParameter]
     private Task<AuthenticationState> authenticationState { get; set; }
     [Inject] private AvatarDataService _avatarDataService { get; set; }
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     
+    private List<UserAccountDto> _approvers = [];
+    private List<string> _approverSelectList = [];
     private UserProfile? _userProfile;
     private bool _switchValue=false;
     private string _label="Enable";
+    
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._userProfile = this.UserService.GetSessionUserProfile();
         if (this._userProfile != null) {
+            this._approvers=await this._purchaseRequestService.GetApprovers();
+            this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
             if (string.IsNullOrEmpty(this._userProfile.AvatarPath)) {
                 this._userProfile.AvatarPath=this._avatarDataService.GetRandomAvatar();
                 await this.UserService.UpdateProfile(this._userProfile);

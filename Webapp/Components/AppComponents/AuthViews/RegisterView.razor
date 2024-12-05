@@ -11,8 +11,8 @@
              OnSubmit="@this.Submit"/>
 
 @code {
-    private UserProfile _userProfile=new();
     [Parameter] public UserSessionDto? UserSession { get; set; }
+    private UserProfile _userProfile=new();
     
     protected override Task OnParametersSetAsync() {
         if (this.UserSession != null) {

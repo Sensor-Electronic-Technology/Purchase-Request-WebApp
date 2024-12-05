@@ -35,15 +35,6 @@
     private async Task OnLogin(LoginArgs args) {
         var session =await this.AuthApiService.Login(args.Username, args.Password, args.RememberMe);
         if(session==null) {
-            /*await this._dialogService.Alert("Invalid login credentials, please try again", "Login Failed", 
-                new AlertOptions() {
-                OkButtonText = "Okay",
-                CloseDialogOnEsc = true,
-                CloseDialogOnOverlayClick = true,
-                ShowClose = true,
-                ContentCssClass = "rz-background-color-danger-light",
-                CssClass = "rz-background-color-danger-light"
-            });*/
             await this._dialogService.OpenAsync("", ds =>
                     @<RadzenAlert Title="Login Failed" Text="Invalid login credentials, please try again" 
                                   AlertStyle="AlertStyle.Danger" 
@@ -71,7 +62,20 @@
             }
             
         }else {
-            await this.DialogService.OpenAsync<RegisterView>("Register", new Dictionary<string, object> { { "UserSession", session } });
+            await this.DialogService.OpenAsync<RegisterView>("Register", 
+                new Dictionary<string, object> {
+                    { "UserSession", session } 
+                }, new DialogOptions() {
+                    Width = "800px",
+                    Height = "auto",
+                    ShowClose = false,
+                    ShowTitle = false,
+                    Style = "min-height:auto;min-width:auto;width:auto",
+                    ContentCssClass = "rz-p-0 rz-m-0",
+                    CssClass = "rz-p-0 rz-m-0",
+                    CloseDialogOnEsc = true,
+                    CloseDialogOnOverlayClick = true,
+                });
             if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
                 this.navManager.NavigateTo($"/action/{this.Id}/{this.Action}", true);
             } else {

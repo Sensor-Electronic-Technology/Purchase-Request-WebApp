@@ -1,5 +1,6 @@
 ﻿@using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
+@using Domain.PurchaseRequests.Pdf
 @using Domain.PurchaseRequests.TypeConstants
 @using Domain.Users
 @using SetiFileStore.FileClient
@@ -8,7 +9,9 @@
 @using SETiAuth.Domain.Shared.Authentication
 @using Webapp.Data
 @using Webapp.Services
+@using QuestPDF.Fluent
 @inherits UserActionComponent
+
 
 <RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem;">
     <RadzenStack>
@@ -26,7 +29,7 @@
                             <RequestInformationView ApproverSelectList="@this._approverSelectList"
                                                     Name="@(this.UserProfile.FirstName + " " + this.UserProfile.LastName)"
                                                     SelectedApprover="@this._selectedApprover"
-                                                    SelectedApproverChanged="SelectedApproverChangedHandler"
+                                                    SelectedApproverChanged="@this.SelectedApproverChangedHandler"
                                                     @bind-Title="@this._purchaseReqInput.Title"
                                                     @bind-Description="@this._purchaseReqInput.Description"
                                                     @bind-IsUrgent="@this._purchaseReqInput.Urgent"
@@ -91,29 +94,19 @@
         this._approvers = await this._purchaseRequestService.GetApprovers();
         this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
         this._departments = await this._purchaseRequestService.GetDepartments();
-            if (this.Mode == EditMode.NEW) {
-                //await this.GeneratePurchaseRequest();
-                this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
-                this._purchaseReqInput.RequesterName=this.UserProfile.FirstName+" "+this.UserProfile.LastName;
-                this._purchaseReqInput.RequesterInitials = $"{this.UserProfile.FirstName?[0]}{this.UserProfile.LastName?[0]}";
-                this._purchaseReqInput.RequesterEmail=this.UserProfile.Email;
-                
+        if (this.Mode == EditMode.NEW) {
+            this._purchaseReqInput = await this._purchaseRequestService.CreatePrInput(this.UserProfile);
+            var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
+            this._selectedApprover = approverAccount?.FirstName;
+        } else {
+            if (!this.RepeatEdit) {
+                this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
+                var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
+                this._selectedApprover = approverAccount?.FirstName;
             } else {
-                if (!this.RepeatEdit) {
-                    this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
-                    var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
-                    this._selectedApprover = approverAccount?.FirstName;
-                } else {
-                    this._purchaseReqInput = this.PurchaseRequest?.ToInput() ?? new PurchaseRequestInput();
-                    this._purchaseReqInput.RequesterUsername=this.UserProfile._id;
-                    this._purchaseReqInput.RequesterName=this.UserProfile.FirstName+" "+this.UserProfile.LastName;
-                    this._purchaseReqInput.RequesterInitials = $"{this.UserProfile.FirstName?[0]}{this.UserProfile.LastName?[0]}";
-                    this._purchaseReqInput.RequesterEmail=this.UserProfile.Email;
-                    this._purchaseReqInput.ApproverName = string.Empty;
-                    this._purchaseReqInput.ApproverEmail = string.Empty;
-                    this._purchaseReqInput.ApproverId = string.Empty;
-                }
+                this._purchaseReqInput = this.PurchaseRequest?.Repeat(this.UserProfile) ?? new PurchaseRequestInput();
             }
+        }
     }
     
     private async Task UploadFiles() {
@@ -177,6 +170,8 @@
         }
 
         this._purchaseReqInput = this._finalizeDataInput;
+        var document = new PurchaseRequestDocument(this._purchaseReqInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
+        this._purchaseReqInput.TempFile=document.GeneratePdf();
         bool success = false;
         if (this.Mode == EditMode.NEW) {
             if(!this._spinnerService.IsVisible) {
@@ -227,12 +222,6 @@
         this._quotes.Clear();
         var id = this._purchaseReqInput.Id.HasValue ? string.Empty:(this._purchaseReqInput.Id?.ToString() ?? "");
         await this.ActionCompleted.InvokeAsync(id);
-    }
-    
-    private async Task LoadData() {
-        this._approvers = await this._purchaseRequestService.GetApprovers();
-        this._approverSelectList = this._approvers.Select(e => e.FirstName).ToList();
-        this._departments = await this._purchaseRequestService.GetDepartments();
     }
     
     private async Task SelectedStepChangedHandler(int obj) {
@@ -334,10 +323,8 @@
         return Task.CompletedTask;
     }
 
-    Task GeneratePurchaseRequest() {
-        this._purchaseReqInput=this._purchaseRequestService.CreatePrInput(
-            this.UserProfile?.FirstName + " " + this.UserProfile?.LastName,
-            this.UserProfile?.Email,this.UserProfile?._id,$"{this.UserProfile.FirstName?[0]},{this.UserProfile.LastName?[0]}");
+    async Task GeneratePurchaseRequest() {
+        this._purchaseReqInput=await this._purchaseRequestService.CreatePrInput(this.UserProfile);
 
         List<PurchaseItem> items = new();
         items.Add(new PurchaseItem() {
@@ -363,8 +350,6 @@
         this._selectedApprover = approverAccount?.FirstName;
         this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
         this._purchaseReqInput.ApproverEmail=approverAccount?.Email;
-
-        return Task.CompletedTask;
     }
 
     private void SelectedApproverChangedHandler(string approver) {

@@ -19,7 +19,8 @@
                 <RadzenFieldset Text="Department and Shipping">
                     <RadzenStack Orientation="Orientation.Vertical">
                         <DepartmentSelector Department="@this.Department"
-                                            DepartmentChanged="@DepartmentChanged"/>
+                                            DepartmentChanged="@DepartmentChanged"
+                                            Mode="@this.Mode"/>
                         <ShippingSelector ShippingType="@this.ShippingType"
                                           ShippingTypeChanged="@this.ShippingTypeChanged"/>
                     </RadzenStack>

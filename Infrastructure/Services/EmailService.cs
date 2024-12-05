@@ -208,7 +208,7 @@ public class EmailService {
         }
     }
     
-    public async Task SendTestEmail(byte[] htmlBody,List<string> to, List<string> toCC) {
+    public async Task SendTestEmail(string to) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -217,25 +217,11 @@ public class EmailService {
                 this._emailSettings.ServerSettings?.Port ?? 25, false);
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Purchase Request", FromAddress));
-            foreach (var recipient in to) {
-                message.To.Add(new MailboxAddress(recipient, recipient));
-            }
-            foreach (var recipient in toCC) {
-                message.Cc.Add(new MailboxAddress(recipient, recipient));
-            }
+            message.To.Add(new MailboxAddress(to, to));
             message.Subject = $"Test-Purchase Request";
-            
-            using var stream = new MemoryStream(htmlBody);
-            using var reader = new StreamReader(stream);
-            var html = await reader.ReadToEndAsync();
-            html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
-            var builder = new BodyBuilder { 
-                HtmlBody = html
+            var builder = new BodyBuilder {
+                HtmlBody = "<h1>Test Email</h1>"
             };
-            /*builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
-            foreach (var attachment in prInput.Attachments) { 
-                builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", attachment.Data);
-            }*/
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {

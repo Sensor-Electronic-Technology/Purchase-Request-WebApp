@@ -1,4 +1,7 @@
-﻿@using Domain.Users
+﻿@using Domain.PurchaseRequests.Model
+@using Webapp.Data
+@using Infrastructure.Services
+@using Domain.Users
 
 <style>
     .button-style{
@@ -8,18 +11,18 @@
         font-size: 16px;
     }
 </style>
-<RadzenCard>
+<RadzenCard Style="width: 800px;">
     <RadzenStack>
         <RadzenCard class="rz-background-color-primary">
             <RadzenStack Orientation="Orientation.Vertical" >
-                <RadzenText Text="User Information"/>
-                <RadzenText Visible="@IsEditMode" TextStyle="TextStyle.Body1">Enter your first name and email then press continue</RadzenText>
+                <RadzenText Text="User Information" TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1"/>
+                <RadzenText Visible="@IsEditMode" TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">Modify information then press continue</RadzenText>
             </RadzenStack>
         </RadzenCard>
         <RadzenCard class="rz-background-color-info-lighter">
             <RadzenStack Orientation="Orientation.Vertical" 
                          JustifyContent="JustifyContent.Center" Gap="10">
-                <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
                     <RadzenStack Orientation="Orientation.Horizontal">
                         @if (this.IsEditMode) {
                             <AvatarSelector ImagePath="@this.UserProfile.AvatarPath" 
@@ -30,11 +33,11 @@
                         }
                         <RadzenFormField Text="Username">
                             <RadzenTextBox Value="@this.UserProfile._id"
-                                           ReadOnly="true"/>
+                                           ReadOnly="true" class="rz-w-100"/>
                         </RadzenFormField>
                     </RadzenStack>
 
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceEvenly">
+                    <RadzenStack Orientation="Orientation.Horizontal">
                         <RadzenFormField Text="Email">
                             <RadzenTextBox Value="@this.UserProfile.Email"
                                            ValueChanged="@this.EmailChangedHandler"
@@ -45,19 +48,19 @@
                                       ButtonStyle="ButtonStyle.Info"/>
                     </RadzenStack>
                 </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
                     <RadzenFormField Text="First Name">
                         <RadzenTextBox Value="@this.UserProfile.FirstName"
                                        ValueChanged="@this.FirstNameChangedHandler"
                                        ReadOnly="@(!IsEditMode)"
-                                       Style="font-size: 18px; width: 150px;"/>
+                                       Style="font-size: 18px; width: 25%;"/>
 
                     </RadzenFormField>
                     <RadzenFormField Text="First Name">
                         <RadzenTextBox Value="@this.UserProfile.LastName"
                                        ValueChanged="@this.LastNameChangedHandler"
                                        ReadOnly="@(!IsEditMode)"
-                                       Style="font-size: 18px; width: 150px;"/>
+                                       Style="font-size: 18px; width: 25%;"/>
 
                     </RadzenFormField>
                 </RadzenStack>
@@ -70,12 +73,54 @@
             </RadzenStack>
         </RadzenCard>
     </RadzenStack>
+    <RadzenCard>
+        <RadzenStack>
+            <RadzenCard class="rz-background-color-primary">
+                <RadzenStack Orientation="Orientation.Vertical" >
+                    <RadzenText Text="User Defaults" TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1"/>
+                    <RadzenText Visible="@IsEditMode" TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">Select defaults then press continue</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenStack>
+        <RadzenCard class="rz-p-1 rz-m-1">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+                <RadzenFieldset Text="Approver">
+                    <ApproverSelector Mode="@(this.IsEditMode ? EditMode.EDIT : EditMode.VIEW)"
+                                      SelectedApprover="@this.UserProfile.Defaults?.ApproverUsername"
+                                      SelectedApproverChanged="@SelectedApproverChangedHandler"/>
+                </RadzenFieldset>
+
+                <RadzenFieldset Text="Department">
+                    <DepartmentSelector Department="@this._selectedDepartment"
+                                        Mode="@(this.IsEditMode ? EditMode.EDIT : EditMode.VIEW)"
+                                        DepartmentChanged="@this.DepartmentChangedHandler"/>
+                </RadzenFieldset>
+
+            </RadzenStack>
+        </RadzenCard>
+
+    </RadzenCard>
 </RadzenCard>
 @code {
+    [Inject] private DepartmentDataService _departmentDataService { get; set; }
+    [Inject] private EmailService _emailService { get; set; }
     [Parameter] public UserProfile UserProfile { get; set; }
     [Parameter] public EventCallback<UserProfile> UserProfileChanged { get; set; }
     [Parameter] public EventCallback OnSubmit { get; set; }
     [Parameter] public bool IsEditMode { get; set; } = true;
+    [Parameter] public List<string> ApproverSelectList { get; set; }
+    
+    
+
+    private string? _selectedApprover { get; set; }
+    private Department? _selectedDepartment { get; set; }
+
+    protected override async Task OnInitializedAsync() {
+        await base.OnInitializedAsync();
+        if (!string.IsNullOrEmpty(this.UserProfile.Defaults?.Department)) {
+            this._selectedDepartment=await this._departmentDataService.FindDepartmentById(this.UserProfile.Defaults.Department);
+        }
+    }
 
     private async Task FirstNameChangedHandler(string? email) {
         this.UserProfile.FirstName = email;
@@ -87,18 +132,35 @@
         await this.UserProfileChanged.InvokeAsync(this.UserProfile);
     }
     
-    private async Task EmailChangedHandler(string? name) {
+    private async Task EmailChangedHandler(string name) {
         this.UserProfile.Email = name;
         await this.UserProfileChanged.InvokeAsync(this.UserProfile);
     }
 
-    private Task SendTestEmailHandler() {
-        return Task.CompletedTask;
+    private async Task SendTestEmailHandler() {
+        if (!string.IsNullOrEmpty(this.UserProfile.Email)) {
+            await this._emailService.SendTestEmail(this.UserProfile.Email);
+        }
+        
     }
 
-    private async Task ImagePathChangedHandler(string imagePath) {
+    private async Task ImagePathChangedHandler(string? imagePath) {
         this.UserProfile.AvatarPath = imagePath;
         await this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+
+    private void DepartmentChangedHandler(Department? department) {
+        this._selectedDepartment = department;
+        this.UserProfile.Defaults ??= new UserProfileDefaults();
+        this.UserProfile.Defaults.Department = department?.Name ?? "";
+        this.UserProfileChanged.InvokeAsync(this.UserProfile);
+    }
+    
+    private void SelectedApproverChangedHandler(string? approver) {
+        this._selectedApprover = approver;
+        this.UserProfile.Defaults ??= new UserProfileDefaults();
+        this.UserProfile.Defaults.ApproverUsername = approver;
+        this.UserProfileChanged.InvokeAsync(this.UserProfile);
     }
 
 }

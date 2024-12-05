@@ -4,6 +4,7 @@ using Domain.PurchaseRequests.Dto.ActionInputs;
 using Domain.PurchaseRequests.Model;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
+using Domain.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,16 +51,29 @@ public class PurchaseRequestService {
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._requestDataService.GetPurchaseRequest(id);
     }
-    public PurchaseRequestInput CreatePrInput(string name,string email,string username,string initials) {
+    public async Task<PurchaseRequestInput> CreatePrInput(UserProfile requester) {
         var input= new PurchaseRequestInput() {
-            RequesterName = name,
-            RequesterEmail = email,
-            RequesterUsername = username,
-            RequesterInitials = initials,
             Id=ObjectId.GenerateNewId(),
+            RequesterName = requester.FirstName + " " + requester.LastName,
+            RequesterEmail = requester.Email,
+            RequesterUsername = requester._id,
+            RequesterInitials = requester.FirstName?.Substring(0,1) ?? "" + requester.LastName?.Substring(0,1) ?? "",
             PurchaseItems = new List<PurchaseItem>(),
             Quotes = new List<string>(),
+            Attachments = new List<FileInput>(),
+            EmailCcList = new List<string>(),
+            Department =await this._departmentDataService.FindDepartmentById(requester.Defaults?.Department ?? ""),
+            ShippingType = ShippingTypes.Ground.Name
         };
+        if(!string.IsNullOrEmpty(requester.Defaults?.ApproverUsername)) {
+            var approver=await this._authApiService.GetApprover(requester.Defaults.ApproverUsername);
+            if (approver != null) {
+                input.ApproverName = approver.FirstName + " " + approver.LastName;
+                input.ApproverEmail = approver.Email;
+                input.ApproverId = approver.Username;
+            }
+        }
+
         input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         return input;
     }

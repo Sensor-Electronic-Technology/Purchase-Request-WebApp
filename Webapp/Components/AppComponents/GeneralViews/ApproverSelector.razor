@@ -1,0 +1,59 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Infrastructure.Services
+@using SETiAuth.Domain.Shared.Authentication
+@using Webapp.Data
+
+
+@if (this.Mode == EditMode.VIEW) {
+    if (this.SelectedApprover != null) {
+        <RadzenFormField Text="Approver" class="rz-p-2">
+            <RadzenTextBox Value="@($"{this._selectedApprover?.FirstName ?? ""} {this._selectedApprover?.LastName ?? ""}")" />
+        </RadzenFormField>
+    } else {
+        <RadzenFormField Text="Approver" class="rz-p-2 rz-w-100" >
+            <RadzenTextBox>No Approver Selected</RadzenTextBox>
+        </RadzenFormField>
+    }
+} else {
+    <RadzenFormField Text="Approver" Style="text-align: center">
+        <RadzenDropDown TValue="UserAccountDto"
+                        Data="@this._approvers"
+                        Value="@this._selectedApprover"
+                        ValueChanged="@ApproverChangedHandler"
+                        TextProperty="FirstName"
+                        Placeholder="Select an approver"
+                        AllowClear="true"
+                        class="item-selector"/>
+    </RadzenFormField>
+
+}
+
+@code {
+    [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
+    [Parameter] public string? SelectedApprover { get; set; }
+    [Parameter] public UserAccountDto? SelectedApproverAccount { get; set; }
+    [Parameter] public EventCallback<UserAccountDto> SelectedApproverAccountChanged { get; set; }
+    [Parameter] public EventCallback<string?> SelectedApproverChanged { get; set; }
+    [Parameter] public EditMode Mode { get; set; } = EditMode.EDIT;
+    
+    private List<UserAccountDto> _approvers { get; set; } = new();
+    private UserAccountDto? _selectedApprover { get; set; }
+    
+    protected override async Task OnInitializedAsync() { 
+        await base.OnInitializedAsync();
+        this._approvers = await this._purchaseRequestService.GetApprovers();
+        if (this.SelectedApproverAccount != null) {
+            this._selectedApprover = this.SelectedApproverAccount;
+        }else if (!string.IsNullOrEmpty(this.SelectedApprover)) {
+            this._selectedApprover = this._approvers.FirstOrDefault(e => e.Username == this.SelectedApprover);
+        }
+    }
+    
+    private async Task ApproverChangedHandler(UserAccountDto? approver) {
+        this._selectedApprover = approver;
+        this.SelectedApprover=approver?.Username;
+        this.SelectedApproverAccount = approver;
+        await this.SelectedApproverAccountChanged.InvokeAsync(this.SelectedApproverAccount);
+        await this.SelectedApproverChanged.InvokeAsync(this.SelectedApprover);
+    }
+}

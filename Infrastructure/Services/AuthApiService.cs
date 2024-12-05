@@ -31,9 +31,17 @@ public class AuthApiService {
             return null;
         }
     }
+    
+    public async Task<UserAccountDto?> GetApprover(string username) {
+        Console.WriteLine($"AuthDomain: {this._configuration["AuthDomain"]}");
+        var response=this._client.PostAsJsonAsync(HttpClientConstants.GetUsersEndpoint,
+            new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = PurchaseRequestRole.Approver.Name });
+        var usersResponse=await response.Result.Content.ReadFromJsonAsync<GetUsersResponse>();
+        return usersResponse?.Users?.FirstOrDefault(x => x.Username == username);
+    }
 
     public async Task<List<UserAccountDto>> GetApprovers() {
-        Console.WriteLine($"AuthDomain: {this._configuration["AuthDomain"]}");
+        //Console.WriteLine($"AuthDomain: {this._configuration["AuthDomain"]}");
         var response=this._client.PostAsJsonAsync(HttpClientConstants.GetUsersEndpoint,
             new GetUsersRequest() { AuthDomain = this._configuration["AuthDomain"], Role = PurchaseRequestRole.Approver.Name });
         var usersResponse=await response.Result.Content.ReadFromJsonAsync<GetUsersResponse>();

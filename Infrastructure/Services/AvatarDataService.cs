@@ -37,12 +37,12 @@ public class AvatarDataService {
     }
 
     public string? GetRandomAvatar() {
-        var directory = Directory.GetCurrentDirectory() + "/wwwroot/avatars/";
+        var directory = Directory.GetCurrentDirectory() + "/wwwroot/images/avatars/";
         if (Directory.Exists(directory)) {
             Random random = new Random();
             var fileNames=Directory.GetFiles(directory).Where(x=>x.EndsWith(".png")||x.EndsWith(".jpg")||x.EndsWith(".jpeg")||x.EndsWith(".svg")).ToList();
             if (fileNames != null && fileNames.Any()) {
-                return $"/wwwroot/avatars/{Path.GetFileName(fileNames[random.Next(fileNames.Count())])}";
+                return $"/wwwroot/avatars/{Path.GetFileName(fileNames[random.Next(minValue:0,fileNames.Count()-1)])}";
             } else {
                 return default;
             }

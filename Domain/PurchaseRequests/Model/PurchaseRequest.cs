@@ -1,6 +1,7 @@
 ﻿using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Dto.ActionInputs;
 using Domain.PurchaseRequests.TypeConstants;
+using Domain.Users;
 using MongoDB.Bson;
 
 namespace Domain.PurchaseRequests.Model;
@@ -39,6 +40,7 @@ public class PurchaseRequest {
             RequesterUsername = this.Requester?.Username,
             RequesterName = this.Requester?.Name,
             RequesterEmail = this.Requester?.Email,
+            RequesterInitials = this.Requester?.Initials,
             ApproverName = this.Approver?.Name,
             ApproverEmail = this.Approver?.Email,
             ApproverId = this.Approver?.Username,
@@ -59,6 +61,27 @@ public class PurchaseRequest {
             OrderedDate = this.OrderedDate,
             ReceivedDate = this.ReceivedDate,
             Status = this.Status
+        };
+    }
+    
+    public PurchaseRequestInput Repeat(UserProfile user) {
+        return new PurchaseRequestInput {
+            Id = _id,
+            RequesterUsername = user._id,
+            RequesterName = $"{user.FirstName} {user.LastName}",
+            RequesterEmail = user.Email,
+            RequesterInitials = $"{user.FirstName?[0]}{user.LastName?[0]}",
+            ApproverName = string.Empty,
+            ApproverEmail = string.Empty,
+            ApproverId = string.Empty,
+            ShippingType = this.ShippingType,
+            Department = this.Department,
+            Vendor = this.Vendor,
+            PurchaseItems = this.PurchaseItems,
+            Urgent = this.Urgent,
+            Quotes = this.Quotes,
+            EmailCcList = this.EmailCopyList,
+            Status = PrStatus.NeedsApproval
         };
     }
 

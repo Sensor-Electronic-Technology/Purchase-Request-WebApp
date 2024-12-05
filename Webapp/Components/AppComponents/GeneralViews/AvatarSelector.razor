@@ -14,9 +14,9 @@
 @code {
     [Inject] private AvatarDataService _avatarDataService { get; set; }
     [Parameter] public string? ImagePath { get; set; }
-    [Parameter] public EventCallback<string> ImagePathChanged { get; set; }
+    [Parameter] public EventCallback<string?> ImagePathChanged { get; set; }
 
-    private async Task ImageChangedHandler(string obj) {
+    private async Task ImageChangedHandler(string? obj) {
         this.ImagePath = obj;
         await this.ImagePathChanged.InvokeAsync(obj);
     }

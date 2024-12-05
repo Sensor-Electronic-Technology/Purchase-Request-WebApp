@@ -3,19 +3,27 @@
 @using Infrastructure.Services
 @using Webapp.Data
 
-<RadzenFormField Text="Department" Style="text-align: center">
-    <RadzenDropDown TValue="Department"
-                    Data="@this._departments"
-                    Value="@this.Department"
-                    ValueChanged="@this.DepartmentChangedHandler"
-                    Placeholder="Select a department"
-                    TextProperty="Name"
-                    AllowClear="true"/>
-</RadzenFormField>
-
-
-
-
+@if(this.Mode == EditMode.VIEW) {
+    if(this.Department != null) {
+        <RadzenFormField Text="Department" class="rz-p-2">
+            <RadzenTextBox Value="@this.Department.Name" />
+        </RadzenFormField>
+    } else {
+        <RadzenFormField Text="Department" class="rz-p-2 rz-w-100" >
+            <RadzenTextBox>No Department Selected</RadzenTextBox>
+        </RadzenFormField>
+    }
+} else {
+    <RadzenFormField Text="Department" Style="text-align: center">
+        <RadzenDropDown TValue="Department"
+                        Data="@this._departments"
+                        Value="@this.Department"
+                        ValueChanged="@this.DepartmentChangedHandler"
+                        Placeholder="Select a department"
+                        TextProperty="Name"
+                        AllowClear="true"/>
+    </RadzenFormField>
+}
 
 @code {
     [Inject] private DepartmentDataService _departmentDataService { get; set; }
