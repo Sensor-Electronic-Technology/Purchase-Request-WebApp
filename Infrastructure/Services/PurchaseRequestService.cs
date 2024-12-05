@@ -184,7 +184,7 @@ public class PurchaseRequestService {
 
         List<string> to;
         if (includePurchaser) {
-            to = [request.Purchaser.Email,request.Approver.Email];
+            to = [request.Purchaser?.Email ?? "",request.Approver.Email];
         } else {
             to = [request.Approver.Email];
         }
@@ -193,15 +193,26 @@ public class PurchaseRequestService {
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
-        var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
-        if (!deleted) return false;
-        foreach (var quote in input.FileIds) {
-            await this._fileService.DeleteFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
+        if(request.Status == PrStatus.Ordered) {
+            request.Status = PrStatus.Rejected;
+            request.RejectedDate = this._timeProvider.Now();
+            await this._requestDataService.UpdateOne(request);
+            await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [], input.Title ?? "Unknown",
+                to,
+                cc);
+            return true;
+        } else {
+            var deleted = await this._requestDataService.DeletePurchaseRequest(input.Id);
+            if (!deleted) return false;
+            foreach (var quote in input.FileIds) {
+                await this._fileService.DeleteFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
+            }
+            await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [], input.Title ?? "Unknown",
+                to,
+                cc);
+            return true;
         }
-        await this._emailService.SendCancellationEmail(input.EmailTemplate ?? [], input.Title ?? "Unknown",
-            to,
-            cc);
-        return true;
+
     }
     public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
         bool approved = input.Action==PurchaseRequestAction.Approve ? true : false;

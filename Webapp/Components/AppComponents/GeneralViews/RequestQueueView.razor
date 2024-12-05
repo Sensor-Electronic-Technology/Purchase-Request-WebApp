@@ -86,7 +86,7 @@
                                                            Value="@nameof(PrUserAction.MODIFY)"/>
                                     <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
                                                            Value="@nameof(PrUserAction.CANCEL)"/>
-                                } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
                                     <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
                                                            Value="@nameof(PrUserAction.REPEAT)"/>
                                 }
@@ -102,7 +102,7 @@
                                                                Value="@nameof(PrUserAction.MODIFY)"/>
                                         <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
                                                                Value="@nameof(PrUserAction.CANCEL)"/>
-                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
                                         <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
                                                                Value="@nameof(PrUserAction.REPEAT)"/>
                                     }
@@ -110,7 +110,7 @@
                                     if (status.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
                                         <RadzenSplitButtonItem Text="Approve/Reject" Icon="done_all"
                                                                Value="@nameof(PrUserAction.APPROVE)"/>
-                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                                    } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
                                         <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
                                                                Value="@nameof(PrUserAction.REPEAT)"/>
                                     }
@@ -140,6 +140,8 @@
                                         case PrStatus.Ordered: {
                                             <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
                                                                    Value="@nameof(PrUserAction.CHECKIN)"/>
+                                            <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                                   Value="@nameof(PrUserAction.CANCEL)"/>
                                             break;
                                         }
                                         case PrStatus.Delivered: {
@@ -164,6 +166,8 @@
                                     } else if (status.Status == PrStatus.Ordered) {
                                         <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
                                                                Value="@nameof(PrUserAction.CHECKIN)"/>
+                                        <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
+                                                               Value="@nameof(PrUserAction.CANCEL)"/>
                                     } else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
                                         <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
                                                                Value="@nameof(PrUserAction.CHECKIN)"/>

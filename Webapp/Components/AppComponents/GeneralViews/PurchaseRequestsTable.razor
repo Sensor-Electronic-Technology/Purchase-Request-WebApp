@@ -396,7 +396,8 @@
                             }
                             case PrStatus.Ordered: {
                                 menuList = [
-                                    new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                                    new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" },
+                                    new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                                 ];
                                 this._contextMenuService.Open(args, menuList, (e) => {
                                         this.ContextActionHandler(args, e).Wait();
@@ -439,7 +440,8 @@
                             );
                         } else if (args.Data.Status == PrStatus.Ordered) {
                             menuList = [
-                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" }
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
                                     this.ContextActionHandler(args, e).Wait();
