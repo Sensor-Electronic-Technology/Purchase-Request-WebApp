@@ -126,7 +126,7 @@
 
     protected override Task OnParametersSetAsync() {
         this.MailMerge = [new RequestMailMerge() {
-            PrAction = this.Mode!=EditMode.EDIT ? "Approved Requested":"Approval Requested - Modified",
+            PrAction = this.Mode!=EditMode.EDIT ? "Approval Requested":"Approval Requested - Modified",
             Title = this.PurchaseRequestInput?.Title ?? "",
             Approver = this.PurchaseRequestInput?.ApproverName ?? "",
             Requester = this.PurchaseRequestInput?.RequesterName ?? "",
@@ -152,13 +152,6 @@
             return this.RepeatEdit ? "Cancel Repeat" : "Cancel Update";
         }
     }
-    
-    /*private async Task SaveClickedHandler() {
-        var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
-        this.PurchaseRequestInput.TempFile=document.GeneratePdf();
-        await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
-        await this.SaveClicked.InvokeAsync();
-    }*/
 
     private async Task DocumentLoadedHandler(Document obj) {
         if(this.PurchaseRequestInput == null) {

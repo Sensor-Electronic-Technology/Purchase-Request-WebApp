@@ -249,8 +249,8 @@
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
-                this.TransitionTab(PrUserAction.MODIFY);
                 this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
+                this.TransitionTab(PrUserAction.MODIFY);
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +

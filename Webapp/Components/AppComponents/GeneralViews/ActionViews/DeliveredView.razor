@@ -1,0 +1,43 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Webapp.Data
+
+@if (this.PurchaseRequest?.CheckInResult != null) {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Check-In Details">
+                <RadzenCard>
+                    <RadzenCard class="area-header">
+                        <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">Item Delivery Status</RadzenText>
+                        <RadzenText TextAlign="TextAlign.Center">@($"Received By:{this.PurchaseRequest?.Receiver?.Name}")</RadzenText>
+                    </RadzenCard>
+                    <RadzenDataGrid TItem="ItemDeliveryStatus"
+                                    Data="@this.PurchaseRequest?.CheckInResult?.ItemDelivery"
+                                    Density="Density.Default">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Item)" Title="Item" Width="40%"/>
+                            <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Location)" Title="Location" Width="40%"/>
+                            <RadzenDataGridColumn Property="@nameof(ItemDeliveryStatus.Received)" Title="Received" Width="10%">
+                                <Template Context="data">
+                                    <RadzenText>@(data.Received ? "Received":"Incoming")</RadzenText>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Request Info.">
+                <RequestInformationView
+                    Description="@this.PurchaseRequest.Description"
+                    Name="@this.PurchaseRequest.Requester?.Name"
+                    Title="@this.PurchaseRequest.Title"
+                    IsUrgent="@this.PurchaseRequest.Urgent"
+                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                    Mode="EditMode.VIEW"/>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+}
+
+@code {
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+}

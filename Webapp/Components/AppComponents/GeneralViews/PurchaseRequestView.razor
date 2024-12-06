@@ -22,44 +22,36 @@
                                                         TextStyle="TextStyle.H6"
                                                         TextAlign="TextAlign.Center"/>
                                         </RadzenCard>
-                                        <RadzenAlert Title="@this.GetAlertText()"
+                                        <RadzenAlert Title="@this.GetAlertTitle()"
+                                                     Text="@this.GetAlertText()"
                                                      AlertStyle="@this.GetAlertStyle()"
-                                                     Size="AlertSize.Small"
-                                                     AllowClose="false" Style="font-size: 14px !important;"/>
-                                        @if (this.PurchaseRequest.Status == PrStatus.Rejected) {
-                                            @if (this.PurchaseRequest.ApprovalResult != null) {
-                                                <RadzenFieldset Text="Rejection Comments">
-                                                    <RadzenText TextAlign="TextAlign.Center"
-                                                                Text="@this.PurchaseRequest.ApprovalResult.Comments"
-                                                                TextStyle="TextStyle.H6"
-                                                                Style="width: 300px; height: fit-content;"/>
-                                                </RadzenFieldset>
+                                                     AllowClose="false" Size="AlertSize.ExtraSmall"/>
+                                        @switch (this.PurchaseRequest.Status) {
+                                            case PrStatus.NeedsApproval: {
+                                                <RequestInformationView Description="@this.PurchaseRequest.Description"
+                                                                        Name="@this.PurchaseRequest.Requester?.Name"
+                                                                        Title="@this.PurchaseRequest.Title"
+                                                                        IsUrgent="@this.PurchaseRequest.Urgent"
+                                                                        SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                                                                        Mode="EditMode.VIEW"/>
+                                                break;
                                             }
-                                        }
-                                        @if (this.PurchaseRequest.Status == PrStatus.Delivered) {
-                                            <RadzenTabs>
-                                                <Tabs>
-                                                    <RadzenTabsItem Text="Check-In Details">
-                                                        <DeliveredView PurchaseRequest="@this.PurchaseRequest"/>
-                                                    </RadzenTabsItem>
-                                                    <RadzenTabsItem Text="Request Info.">
-                                                        <RequestInformationView
-                                                            Description="@this.PurchaseRequest.Description"
-                                                            Name="@this.PurchaseRequest.Requester?.Name"
-                                                            Title="@this.PurchaseRequest.Title"
-                                                            IsUrgent="@this.PurchaseRequest.Urgent"
-                                                            SelectedApprover="@this.PurchaseRequest.Approver.Name"
-                                                            Mode="EditMode.VIEW"/>
-                                                    </RadzenTabsItem>
-                                                </Tabs>
-                                            </RadzenTabs>
-                                        } else {
-                                            <RequestInformationView Description="@this.PurchaseRequest.Description"
-                                                                    Name="@this.PurchaseRequest.Requester?.Name"
-                                                                    Title="@this.PurchaseRequest.Title"
-                                                                    IsUrgent="@this.PurchaseRequest.Urgent"
-                                                                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
-                                                                    Mode="EditMode.VIEW"/>
+                                            case PrStatus.Approved: {
+                                                <ApprovedRejectedView PurchaseRequest="@this.PurchaseRequest"/>
+                                                break;
+                                            }
+                                            case PrStatus.Ordered: {
+                                                <OrderedView PurchaseRequest="@this.PurchaseRequest"/>
+                                                break;
+                                            }
+                                            case PrStatus.Delivered: {
+                                                <DeliveredView PurchaseRequest="@this.PurchaseRequest"/>
+                                                break;
+                                            }
+                                            case PrStatus.Rejected: {
+                                                <ApprovedRejectedView PurchaseRequest="@this.PurchaseRequest"/>
+                                                break;
+                                            }
                                         }
                                     </RadzenStack>
                                 </RadzenCard>
@@ -158,13 +150,13 @@
         return base.OnParametersSetAsync();
     }
 
-    private string GetAlertText() {
+    private string GetAlertTitle() {
         switch (this.PurchaseRequest?.Status) {
             case PrStatus.Approved: {
-                return "Status: Approved, Pending Order";
+                return $"Status: Approved, Pending Order";
             }
             case PrStatus.NeedsApproval: {
-                return "Status: Pending Approval";
+                return $"Status: Pending Approval";
             }
             case PrStatus.Ordered: {
                 return "Status: Ordered";
@@ -174,6 +166,28 @@
             }
             case PrStatus.Rejected: {
                 return "Status: Rejected";
+            }
+            default: {
+                return "Unknown";
+            }
+        }
+    }
+    private string GetAlertText() {
+        switch (this.PurchaseRequest?.Status) {
+            case PrStatus.Approved: {
+                return $"Approved: {this.PurchaseRequest?.ApprovedDate.ToShortDateString()}";
+            }
+            case PrStatus.NeedsApproval: {
+                return $"Created Date: {this.PurchaseRequest?.Created.ToShortDateString()}";
+            }
+            case PrStatus.Ordered: {
+                return $"Ordered Date: {this.PurchaseRequest?.OrderedDate.ToShortDateString()}";
+            }
+            case PrStatus.Delivered: {
+                return $"Delivered Date: {this.PurchaseRequest?.ReceivedDate.ToShortDateString()}";
+            }
+            case PrStatus.Rejected: {
+                return $"Rejected Date: {this.PurchaseRequest?.RejectedDate.ToShortDateString()}";
             }
             default: {
                 return "Unknown";

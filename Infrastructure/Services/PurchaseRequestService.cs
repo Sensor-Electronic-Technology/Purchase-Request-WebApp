@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using MongoDB.Driver.Linq;
 using QuestPDF.Fluent;
 using SETiAuth.Domain.Shared.Authentication;
 using SetiFileStore.Domain.Contracts;
@@ -127,7 +128,6 @@ public class PurchaseRequestService {
         this._logger.LogInformation("Purchase request created successfully {RequestId}",input.Title);
         return true;
     }
-
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
         Console.WriteLine($"Updating Purchase Request {input.Id}");
         if(!input.Id.HasValue) {
@@ -143,8 +143,18 @@ public class PurchaseRequestService {
             this._logger.LogError("Error updating purchase request, Approver or Requester were missing emails");
             return false;
         }
+        
         List<string> to = [input.ApproverEmail];
         List<string> cc = [input.RequesterEmail];
+        
+        if(input.Status == PrStatus.Approved) {
+            var purchaserList =await this._authApiService.GetPurchasers();
+            var purchasers= purchaserList?.Where(e=>e.Email!="itsupport@s-et.com").Select(e => e.Email).ToList();
+            if(purchasers!=null || purchasers?.Count>0) {
+                to.AddRange(purchasers);
+            }
+        }
+        
         if (input.EmailCcList?.Any() == true) {
             cc.AddRange(input.EmailCcList);
         }
@@ -175,7 +185,7 @@ public class PurchaseRequestService {
             this._logger.LogError("Error cancelling purchase request, request not found");
             return false;
         }
-
+        
         if (request.Purchaser != null) {
             if (string.IsNullOrEmpty(request.Requester.Email)){
                 this._logger.LogError("Error updating purchase request, Requester was missing email");
@@ -189,13 +199,15 @@ public class PurchaseRequestService {
         }
 
         List<string> to;
+        to = [request.Requester.Email];
+        List<string> cc=[request.Approver.Email];
         if (includePurchaser) {
-            to = [request.Purchaser?.Email ?? "",request.Approver.Email];
-        } else {
-            to = [request.Approver.Email];
+            var purchaserList =await this._authApiService.GetPurchasers();
+            var purchasers= purchaserList?.Where(e=>e.Email!="itsupport@s-et.com").Select(e => e.Email).ToList();
+            if(purchasers!=null || purchasers?.Count>0) {
+                cc.AddRange(purchasers);
+            }
         }
-
-        List<string> cc=[request.Requester.Email];
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
@@ -218,25 +230,36 @@ public class PurchaseRequestService {
                 cc);
             return true;
         }
-
     }
     public async Task<bool> ApproveRejectPurchaseRequest(ApproveRequestInput input,PurchaseRequest request) {
+        if (string.IsNullOrEmpty(request.Requester.Email) || string.IsNullOrEmpty(request.Approver.Email)) {
+            this._logger.LogError("Error approving/rejecting purchase request, Approver or Requester were missing emails");
+            return false;
+        }
+        
         bool approved = input.Action==PurchaseRequestAction.Approve ? true : false;
         request.ApprovalResult = new ApprovalResult() {
             Approved = approved, 
             Comments = input.Comment ?? ""
         };
+        List<string> to;
+        List<string> cc;
         if(input.Action == PurchaseRequestAction.Approve) {
             request.ApprovedDate = this._timeProvider.Now();
+            var purchaserList =await this._authApiService.GetPurchasers();
+            var purchasers= purchaserList.Where(e=>e.Email!="itsupport@s-et.com").Select(e => e.Email).ToList();
+            if(purchasers==null || purchasers.Count==0) {
+                to = [request.Requester.Email];
+            } else {
+                to = purchasers;
+            }
+            cc = [request.Requester.Email,request.Approver.Email];
         } else {
             request.RejectedDate = this._timeProvider.Now();
+            to = [request.Requester.Email];
+            cc = [request.Approver.Email];
         }
-        if (string.IsNullOrEmpty(request.Requester.Email) || string.IsNullOrEmpty(request.Approver.Email)) {
-            this._logger.LogError("Error approving/rejecting purchase request, Approver or Requester were missing emails");
-            return false;
-        }
-        List<string> to = ["space@s-et.com"];
-        List<string> cc = [request.Requester.Email,request.Approver.Email];
+        
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
@@ -276,19 +299,10 @@ public class PurchaseRequestService {
             return false;
         }
         List<string> to = [request.Requester.Email];
-        List<string> cc = ["space@s-et.com",request.Requester.Email,request.Approver.Email];
+        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Requester.Email,request.Approver.Email];
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
-        
-        /*List<FileData> files = [];
-        foreach (var quote in request.Quotes) {
-            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
-            if (fileData != null) {
-                files.Add(fileData);
-            }
-        }*/
-        
         var document = new PurchaseOrderDocument(request.ToPurchaseOrderDto(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
         await this._emailService.SendOrderEmail(emailDocument,request.Title ?? "Not Titled",
             document.GeneratePdf(),
@@ -303,20 +317,13 @@ public class PurchaseRequestService {
             this._logger.LogError("Error receiving purchase request, request not found");
             return false;
         }
-        
-        /*List<FileData> files = [];
-        foreach (var quote in request.Quotes) {
-            var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
-            if (fileData != null) {
-                files.Add(fileData);
-            }
-        }*/
         if (string.IsNullOrEmpty(request.Requester.Email) || string.IsNullOrEmpty(request.Approver.Email)) {
             this._logger.LogError("Error receiving purchase request, Approver or Requester are missing emails");
             return false;
         }
         List<string> to = [request.Requester.Email];
-        List<string> cc = ["space@s-et.com",request.Approver.Email];
+        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Approver.Email];
+        //List<string> cc = [request.Approver.Email];
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }

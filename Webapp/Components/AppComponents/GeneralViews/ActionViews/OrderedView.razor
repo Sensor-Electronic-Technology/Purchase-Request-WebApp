@@ -1,0 +1,104 @@
+﻿@using Domain.PurchaseRequests.Model
+@using Webapp.Data
+@if (PurchaseRequest?.PurchaseOrder != null) {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Order Details">
+                <RadzenCard>
+                    <RadzenCard class="area-header">
+                        <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1">Purchase Order Info</RadzenText>
+                        <RadzenText TextAlign="TextAlign.Center">@($"Ordered By:{this.PurchaseRequest?.Purchaser?.Name}")</RadzenText>
+                    </RadzenCard>
+                    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                        <RadzenFieldset Text="Po Info">
+                            <RadzenStack Gap="20">
+                                <RadzenRow>
+                                    <RadzenColumn Size="6">
+                                        <RadzenRow AlignItems="AlignItems.Center">
+                                            <RadzenColumn Size="12" SizeMD="4">
+                                                <RadzenLabel Text="Po Number" Component="PoNumber"/>
+                                            </RadzenColumn>
+                                            <RadzenColumn Size="12" SizeMD="8">
+                                                <RadzenTextBox Style="width: 100%;"
+                                                               Name="PoNumber"
+                                                               @bind-Value="@this.PurchaseRequest.PurchaseOrder.PoNumber"
+                                                               ReadOnly="true"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow AlignItems="AlignItems.Center">
+                                            <RadzenColumn Size="12" SizeMD="4">
+                                                <RadzenLabel Text="Ship To" Component="ShipTo"/>
+                                            </RadzenColumn>
+                                            <RadzenColumn Size="12" SizeMD="8">
+                                                <RadzenTextBox Style="width: 100%;"
+                                                               Name="ShipTo"
+                                                               @bind-Value="@this.PurchaseRequest.PurchaseOrder.ShipTo"
+                                                               ReadOnly="true"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow AlignItems="AlignItems.Center">
+                                            <RadzenColumn Size="12" SizeMD="4">
+                                                <RadzenLabel Text="Payment Terms" Component="PaymentTerms"/>
+                                            </RadzenColumn>
+                                            <RadzenColumn Size="12" SizeMD="8">
+                                                <RadzenTextBox Style="width: 100%;"
+                                                               Name="PaymentTerms"
+                                                               @bind-Value="@this.PurchaseRequest.PurchaseOrder.PaymentTerms"
+                                                               ReadOnly="true"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="6">
+                                        <RadzenRow AlignItems="AlignItems.Center">
+                                            <RadzenColumn Size="12" SizeMD="4">
+                                                <RadzenLabel Text="Purchase Type" Component="PurchaseType"/>
+                                            </RadzenColumn>
+                                            <RadzenColumn Size="12" SizeMD="8">
+                                                <RadzenTextBox Style="width: 100%;"
+                                                               Name="PurchaseType"
+                                                               @bind-Value="@this.PurchaseRequest.PurchaseOrder.PurchaseType"
+                                                               ReadOnly="true"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow AlignItems="AlignItems.Center">
+                                            <RadzenColumn Size="12" SizeMD="4">
+                                                <RadzenLabel Text="Item Type" Component="ItemType"/>
+                                            </RadzenColumn>
+                                            <RadzenColumn Size="12" SizeMD="8">
+                                                <RadzenTextBox Style="width: 100%;"
+                                                               Name="ItemType"
+                                                               @bind-Value="@this.PurchaseRequest.PurchaseOrder.ItemType"
+                                                               ReadOnly="true"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow>
+                                    <RadzenFormField Text="Po Comments" Style="width: 100%">
+                                        <RadzenTextArea Placeholder="Additional message appended to the request"
+                                                        Value="@this.PurchaseRequest.PurchaseOrder.PoComments"
+                                                        ReadOnly="true"
+                                                        Style="width: 100%; height:100px; font-size: 18px;"/>
+                                    </RadzenFormField>
+                                </RadzenRow>
+                            </RadzenStack>
+                            
+                        </RadzenFieldset>
+                    </RadzenRow>
+                </RadzenCard>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Request Info.">
+                <RequestInformationView
+                    Description="@this.PurchaseRequest.Description"
+                    Name="@this.PurchaseRequest.Requester?.Name"
+                    Title="@this.PurchaseRequest.Title"
+                    IsUrgent="@this.PurchaseRequest.Urgent"
+                    SelectedApprover="@this.PurchaseRequest.Approver.Name"
+                    Mode="EditMode.VIEW"/>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+}
+@code {
+    [Parameter] public PurchaseRequest? PurchaseRequest { get; set; }
+}
