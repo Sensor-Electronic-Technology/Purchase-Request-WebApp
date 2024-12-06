@@ -241,13 +241,13 @@ public class PurchaseRequestService {
         }
         
         var success=await this._requestDataService.UpdateOne(request);
-        /*List<FileData> files = [];
+        List<FileData> files = [];
         foreach (var quote in request.Quotes) {
             var fileData=await this._fileService.DownloadFile(quote,this._configuration["AppDomain"] ?? "purchase_request");
             if (fileData != null) {
                 files.Add(fileData);
             }
-        }*/
+        }
         if (!success) {
             this._logger.LogError("Error approving/rejecting purchase request, failed to update in database");
             return false;
@@ -256,7 +256,7 @@ public class PurchaseRequestService {
         await this._emailService.SendApprovalEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",approved,
             request.PrUrl ?? "",
             document.GeneratePdf(),
-            [],
+            files,
             to,
             cc);
         return true;
