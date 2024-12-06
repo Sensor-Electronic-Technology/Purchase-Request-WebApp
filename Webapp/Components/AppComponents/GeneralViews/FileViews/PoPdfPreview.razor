@@ -20,6 +20,8 @@
 
     protected override async Task OnParametersSetAsync() {
         await base.OnParametersSetAsync();
+        /*var document = new PurchaseOrderDocument(this.PurchaseOrderDto, Path.Combine($"{this._environment.WebRootPath}", "images/seti_logo.png"));
+        this._fileBytes = document.GeneratePdf();*/
         if (this.PurchaseOrderDto != null) {
             if (this._prNull) {
                 var document = new PurchaseOrderDocument(this.PurchaseOrderDto, Path.Combine($"{this._environment.WebRootPath}", "images/seti_logo.png"));
@@ -30,10 +32,4 @@
             this._prNull = true;
         }
     }
-    
-    /*private async Task DownloadHandler() {
-        await this._downloadService.DownloadFile("PurchaseOrder.pdf", this._fileBytes, "application/pdf");
-        
-    }*/
-
 }

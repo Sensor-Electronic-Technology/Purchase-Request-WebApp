@@ -13,6 +13,7 @@ using System.Text.Json.Nodes;
 using Ardalis.SmartEnum;
 using Infrastructure.Services;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Domain;
 using Domain.Assets;
 using Domain.PurchaseRequests.Dto;
@@ -29,6 +30,7 @@ using QuestPDF.Companion;
 using SetiFileStore.Domain.Contracts;
 using SetiFileStore.Domain.Contracts.Responses;
 using SetiFileStore.FileClient;
+using Department = Domain.PurchaseRequests.Model.Department;
 using TimeProvider = Infrastructure.Services.TimeProvider;
 
 //Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
@@ -90,13 +92,13 @@ foreach (var alert in alerts) {
     Console.WriteLine($"{alert.Item}: {alert.Okay}");
 }*/
 
-Console.WriteLine("137 80 78 71 13 10 26 10");
+/*Console.WriteLine("137 80 78 71 13 10 26 10");
 Console.WriteLine(string.Join(" ","%PNG"u8.ToArray()));
 
 byte[] pngBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
 byte[] pngBytes2 = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 Console.WriteLine(string.Join(" ", pngBytes));
-Console.WriteLine(string.Join(" ", pngBytes2));
+Console.WriteLine(string.Join(" ", pngBytes2));*/
 
 /*var ext = ".docx";
 foreach(var type in FileDisplayType.List) {
@@ -111,6 +113,14 @@ foreach(var type in FileDisplayType.List) {
 } else {
     
 }*/
+
+string? first = "Andrew";
+string? last = "Elmendorf";
+string init=first?.Substring(0,1) ?? "" + last?.Substring(0,1) ?? "";
+Console.WriteLine($"Init: {init}");
+Console.WriteLine($"First Sub(0,1): {first.Substring(0,1)}");
+Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
+
 
 async Task GeneratePurchaseRequests() {
     string path = @"C:\Users\aelmendo\Documents\PurchaseRequestData\PurchaseRequestForm.xlsm";

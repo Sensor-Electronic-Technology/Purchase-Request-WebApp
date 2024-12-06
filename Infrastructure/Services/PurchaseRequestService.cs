@@ -56,9 +56,9 @@ public class PurchaseRequestService {
         var input= new PurchaseRequestInput() {
             Id=ObjectId.GenerateNewId(),
             RequesterName = requester.FirstName + " " + requester.LastName,
+            RequesterInitials = $"{requester.FirstName?.Substring(0, 1) ?? ""}{requester.LastName?.Substring(0, 1) ?? ""}",
             RequesterEmail = requester.Email,
             RequesterUsername = requester._id,
-            RequesterInitials = requester.FirstName?.Substring(0,1) ?? "" + requester.LastName?.Substring(0,1) ?? "",
             PurchaseItems = new List<PurchaseItem>(),
             Quotes = new List<string>(),
             Attachments = new List<FileInput>(),
@@ -299,7 +299,7 @@ public class PurchaseRequestService {
             return false;
         }
         List<string> to = [request.Requester.Email];
-        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Requester.Email,request.Approver.Email];
+        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Approver.Email];
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }

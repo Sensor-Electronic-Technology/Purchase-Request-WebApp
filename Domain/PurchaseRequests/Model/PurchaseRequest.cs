@@ -117,21 +117,21 @@ public class PurchaseRequest {
         return this;
     }
     
-    public PurchaseOrderDto ToPurchaseOrderDto() {
+    public PurchaseOrderDto ToPurchaseOrderDto() { 
         return new PurchaseOrderDto {
             RequestId = this._id,
-            PoNumber = this.PurchaseOrder?.PoNumber ?? "",
-            ShipTo = this.PurchaseOrder?.ShipTo ?? "",
-            PaymentTerms = this.PurchaseOrder?.PaymentTerms ?? "",
             Department = this.Department,
             Description = this.Description,
             Vendor = this.Vendor,
             Requester = this.Requester,
             ShippingMethod = this.ShippingType,
             Items = this.PurchaseItems,
-            Comments = this.PurchaseOrder?.PoComments ?? "",
             EmailCopyList = this.EmailCopyList,
             Date = this.OrderedDate,
+            ShipTo = this.PurchaseOrder?.ShipTo ?? "",
+            PoNumber = this.PurchaseOrder?.PoNumber ?? "",
+            PaymentTerms = this.PurchaseOrder?.PaymentTerms ?? "",
+            Comments = this.PurchaseOrder?.PoComments ?? "",
             FOB = this.PurchaseOrder?.PurchaseType ?? "",
             ItemType = this.PurchaseOrder?.ItemType ?? "",
             Purchaser = this.Purchaser,

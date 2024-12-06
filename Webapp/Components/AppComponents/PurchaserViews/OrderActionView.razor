@@ -50,7 +50,7 @@
     }
 
     protected override async Task SubmitHandler() {
-        if (this._emailDocument != null) {
+        if (this._emailDocument != null && this._emailDocument.Length > 0) {
             this._spinnerService.Show("Submitting Order....");
             var success = await this._purchaseRequestService.OrderPurchaseRequest(this._purchaseOrderDto, this._emailDocument);
             if (success) {

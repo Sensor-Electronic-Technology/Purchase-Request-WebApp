@@ -9,7 +9,7 @@
         padding: 0.6em !important;
     }
 </style>
-@if (this.PurchaseRequest == null && this._canPerformAction) {
+@if (this.PurchaseRequest == null && this._canPerformAction && this.PurchaseOrderDto != null) {
     <p>Loading...</p>
 } else {
     <RadzenSteps SelectedIndex="@this._selectedStep"
@@ -168,14 +168,14 @@
                                     </RadzenStack>
                                 </RadzenFieldset>
                                 <RadzenFormField Text="Comments">
-                                    <RadzenTextArea Value="@this.PurchaseOrderDto.Comments"
+                                    <RadzenTextArea Value="@this.PurchaseOrderDto?.Comments"
                                                     ValueChanged="@CommentsChangedHandler"
                                                     Rows="5"/>
                                 </RadzenFormField>
                             </RadzenStack>
                         </RadzenColumn>
                         <RadzenColumn Size="6">
-                            <RadzenTabs class="rz-w-100">
+                            <RadzenTabs class="rz-w-100" RenderMode="TabRenderMode.Client">
                                 <Tabs>
                                     <RadzenTabsItem Text="EmailPreview" class="tab-color-1">
                                         <DxRichEdit @ref="@this._richEdit"
@@ -184,7 +184,7 @@
                                                     DocumentFormat="DocumentFormat.OpenXml"
                                                     BarMode="BarMode.None"
                                                     ViewType="ViewType.Simple"
-                                                    ReadOnly="false" CssClass="w-100">
+                                                    ReadOnly="false" style="width: 100%">
                                             <MailMergeSettings>
                                                 <DxMailMergeSettings Data="@this.MailMerge"
                                                                      ViewMergedData="true"
@@ -196,7 +196,7 @@
                                         <PoPdfPreview PurchaseOrderDto="@this.PurchaseOrderDto"/>
                                     </RadzenTabsItem>
                                     <RadzenTabsItem Text="Quotes" class="tab-color-3">
-                                        <QuotesView Quotes="@this.PurchaseRequest.Quotes" Mode="EditMode.VIEW"/>
+                                        <QuotesView Quotes="@this.PurchaseRequest?.Quotes" Mode="EditMode.VIEW"/>
                                     </RadzenTabsItem>
                                 </Tabs>
                             </RadzenTabs>
@@ -243,52 +243,57 @@
     private PaymentTerm? _selectedPaymentTerm;
     private bool _poNumberGenerated = false;
     private List<UserActionAlert> _orderAlerts = [];
-    private byte[]? _emailDocument;
+    private byte[]? _emailDocument =[];
     private bool _canPerformAction = true;
     private PurchaseType? _selectedPurchaseType;
     private ItemType? _selectedItemType;
     private bool _canSave = false;
+    private int _selectedTabIndex = 0;
 
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
         this._docLoaded = false;
+        /*this._selectedItemType = ItemType.TryFromValue(this.PurchaseOrderDto?.ItemType ?? "", out var itemType) ? itemType : null;
+        this._selectedPaymentTerm = PaymentTerm.TryFromValue(this.PurchaseOrderDto?.PaymentTerms ?? "", out var paymentTerm) ? paymentTerm : null;
+        this._selectedPurchaseType = PurchaseType.TryFromName(this.PurchaseOrderDto?.PurchaseType ?? "", out var purchaseType) ? purchaseType : null;*/
         await this.Load();
     }
     
     private async Task SubmitHandler() {
-        this.UpdateMailMerge();
-        this._emailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        this._selectedTabIndex = 0;
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
-        /*await Task.Delay(500);*/
         await this.Submit.InvokeAsync(this._emailDocument);
     }
 
     private void UpdateMailMerge() {
-        this.MailMerge = [new ApproveMailMerge() {
+        this.MailMerge=[new ApproveMailMerge() {
             PrAction = "Request Ordered",
-            Title = this.PurchaseRequest.Title ?? "",
-            Approver = this.PurchaseRequest.Approver.Name ?? "",
-            Requester = this.PurchaseOrderDto.Requester.Name ?? "",
-            ApprovalComments = this.PurchaseOrderDto.Comments ?? "",
+            Title = this.PurchaseRequest?.Title ?? "",
+            Approver = this.PurchaseRequest?.Approver.Name ?? "",
+            Requester = this.PurchaseOrderDto?.Requester?.Name ?? "",
+            ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
             CommentsTitle = "Comments",
         }];
     }
     
     private Task PaymentTermChangedHandler(PaymentTerm payment) {
         this._selectedPaymentTerm=payment;
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
         this.PurchaseOrderDto.PaymentTerms = payment;
         return Task.CompletedTask;
     }
     
     private Task PurchaseTypeChangedHandler(PurchaseType purchaseType) {
         this._selectedPurchaseType = purchaseType;
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
         this.PurchaseOrderDto.PurchaseType = purchaseType;
         return Task.CompletedTask;
     }
     
     private Task ItemTypeChangedHandler(ItemType itemType) {
         this._selectedItemType = itemType;
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
         this.PurchaseOrderDto.ItemType = itemType;
         return Task.CompletedTask;
     }
@@ -301,18 +306,21 @@
     
     private async Task EmailListChangedHandler(List<string> ccList) {
         this._ccList = ccList;
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
         this.PurchaseOrderDto.EmailCopyList = ccList;
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
     }
 
     private async Task CommentsChangedHandler(string comment) {
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
         this.PurchaseOrderDto.Comments=comment;
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
+        await InvokeAsync(StateHasChanged);
     }
     
     private async Task Load() {
         this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/ApproveRejectTemplate.docx");
-        this.MailMerge = [new ApproveMailMerge() {
+        this.MailMerge=[new ApproveMailMerge() {
             PrAction = $"Request Ordered",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
@@ -356,9 +364,10 @@
         } else {
             this._toEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
             this._ccEmails=this.PurchaseOrderDto?.Requester?.Email ?? "";
-            this._ccEmails += ",";
+            this._ccEmails += ";";
             this._ccEmails+=this.PurchaseRequest?.Approver?.Email ?? "";
-            this._ccEmails+=this.PurchaseOrderDto?.EmailCopyList.Aggregate("", (current, next) => current + "," + next);
+            this._ccEmails+=";";
+            this._ccEmails+=this.PurchaseOrderDto?.EmailCopyList.Aggregate("", (current, next) => current + ";" + next);
         }
         this._includeInternalEmails=value;
         return Task.CompletedTask;
@@ -454,9 +463,9 @@
             this._selectedStep=step;
             if(step==this._lastStep) {
                 this.GenerateOrderAlerts();
-                if (!this._poNumberGenerated) {
-                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,this._timeProvider.Now().Year, this.PurchaseRequest._id);
-                    if (!string.IsNullOrEmpty(poNumber._id)) {
+                if (!this._poNumberGenerated && this.PurchaseOrderDto != null && this.PurchaseRequest != null) {
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester?.Initials ?? "UN",this._timeProvider.Now().Year, this.PurchaseRequest._id);
+                    if (!string.IsNullOrEmpty(poNumber?._id)) {
                         this.PurchaseOrderDto.PoNumber = poNumber._id;
                         this._poNumberGenerated = true;
                     }
@@ -466,9 +475,9 @@
         } else {
             if (step == this._lastStep && this._selectedStep != this._lastStep) {
                 this.GenerateOrderAlerts();
-                if (!this._poNumberGenerated) {
-                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester.Initials,this._timeProvider.Now().Year, this.PurchaseRequest._id);
-                    if (!string.IsNullOrEmpty(poNumber._id)) {
+                if (!this._poNumberGenerated && this.PurchaseOrderDto != null && this.PurchaseRequest != null) {
+                    var poNumber = await this._poNumberService.GetNextPoNumber(this.PurchaseOrderDto.Requester?.Initials ?? "UN",this._timeProvider.Now().Year, this.PurchaseRequest._id);
+                    if (!string.IsNullOrEmpty(poNumber?._id)) {
                         this.PurchaseOrderDto.PoNumber = poNumber._id;
                         this._poNumberGenerated = true;
                     }
@@ -485,4 +494,11 @@
             this._selectedStep = step;
         }
     }
+
+    /*private void TabChangedHandler(int tabIndex) {
+        if (tabIndex>0) {
+            this._docLoaded = false;
+        }
+    }*/
+
 }

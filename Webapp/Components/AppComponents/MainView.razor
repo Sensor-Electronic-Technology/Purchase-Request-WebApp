@@ -11,7 +11,7 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
-@*<div onclick="@(()=>this._dialogService.CloseSide())">*@
+
 <div>
 <RadzenTabs class="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" 
             SelectedIndexChanged="TabIndexChangedHandler">
@@ -50,6 +50,13 @@
             @if (this._userProfile != null) {
                 @switch (this._userAction) {
                     case PrUserAction.MODIFY:
+                        @*@if (this._actionRequest?.Status == PrStatus.Ordered) {
+                            <OrderActionView PurchaseRequest="@this._actionRequest"
+                                             UserProfile="@this._userProfile"
+                                             ActionCompleted="@this.CompletedHandler"/>
+                        } else {
+
+                        }*@
                         <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
                                              Mode="@EditMode.EDIT"
                                              RepeatEdit="false"
