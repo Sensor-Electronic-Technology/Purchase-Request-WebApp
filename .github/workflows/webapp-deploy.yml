@@ -1,9 +1,9 @@
 name: Webapp Deploy
 on:
-  push:
-    branches: [ "master" ]
-    paths-ignore:
-      - '.github/workflows/webapp-deploy.yml'
+  # push:
+  #   branches: [ "master" ]
+  #   paths-ignore:
+  #     - '.github/workflows/webapp-deploy.yml'
   workflow_dispatch:
 jobs:
   build:
