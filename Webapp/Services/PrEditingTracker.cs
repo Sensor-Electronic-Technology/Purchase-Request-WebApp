@@ -13,8 +13,6 @@ public class PrEditingTracker {
     
     private Lock _lock = new Lock();
 
-    /*private List<string> _editingList = [];*/
-
     public Dictionary<string,string> EditingList {
         get=>this._editingList;
         set => this._editingList = value;
@@ -52,8 +50,8 @@ public class PrEditingTracker {
         using (this._lock.EnterScope()) {
             if (this.EditingList.ContainsKey(id)) {
                 this.EditingList.Remove(id);
+                this.OnRemoveFromEditingList?.Invoke(id);
             }
-            this.OnRemoveFromEditingList?.Invoke(id);
         }
     }
     

@@ -113,7 +113,6 @@
     [Parameter] public string? Id { get; set; }
     [Parameter] public int? Action { get; set; }
     
-    private RadzenDataGrid<PurchaseRequest> _dataGrid;
     private List<PurchaseRequest> _purchaseRequests = [];
     private List<PurchaseRequestStatus> _purchaseReqStatuses = [];
     private PurchaseRequest? _selectedRequest;
@@ -124,9 +123,6 @@
     private string _tabIcon="autorenew";
     private int _selectedIndex = 0;
     private PrUserAction _userAction = PrUserAction.MODIFY;
-
-
-    List<ChatMessage> messages;
     
     private Dictionary<PrUserAction, TabTemplate> _tabTemplates=new() { 
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
@@ -248,19 +244,21 @@
         }
     }
 
-    private async Task ModifyHandler() {
+    private Task ModifyHandler() {
         if (this._selectedRequest != null) {
             var user = this.EditingTracker.IsAvailable(this._selectedRequest._id.ToString());
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.MODIFY);
-                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
                                                                                     "Please try again later.");
             }
         }
+
+        return Task.CompletedTask;
     }
     
     private async Task RepeatHandler() {
@@ -305,7 +303,7 @@
                 if (string.IsNullOrEmpty(user)) {
                     this._actionRequest = this._selectedRequest;
                     this.TransitionTab(PrUserAction.CHECKIN);
-                    this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                    this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
                 } else {
                     this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                         " editing this request. " +
@@ -323,7 +321,7 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.CANCEL);
-                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error","Another user is currently" +
                                                                                     " editing this request. " +
@@ -339,7 +337,7 @@
             if (string.IsNullOrEmpty(user)) {
                 this._actionRequest = this._selectedRequest;
                 this.TransitionTab(PrUserAction.APPROVE);
-                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
                                                                                     " editing this request. " +
@@ -357,7 +355,7 @@
                 var order = new PurchaseOrder { ShipTo = this._actionRequest.Requester.Name };
                 this._actionRequest.PurchaseOrder = order;
                 this.TransitionTab(PrUserAction.ORDER);
-                this.EditingTracker.StartEditing(this._userProfile._id,this._selectedRequest._id.ToString());
+                this.EditingTracker.StartEditing(this._userProfile?._id ?? "",this._selectedRequest._id.ToString());
             } else {
                 this._notificationService.Notify(NotificationSeverity.Error,"Error",$"{user} is currently" +
                                                                                     " editing this request. " +
@@ -378,10 +376,10 @@
     }
     
     private void EditTrackerTimeout(string username,string id) {
-        if(this._userProfile._id == username) {
+        if(this._userProfile?._id == username) {
             if(this._actionRequest != null && this._actionRequest._id.ToString() == id) {
                 this._selectedIndex = 0;
-                this.Reset(false);
+                this.Reset();
             }
         }
     }

@@ -63,7 +63,8 @@ public class PurchaseRequestService {
             Attachments = new List<FileInput>(),
             EmailCcList = new List<string>(),
             Department =await this._departmentDataService.FindDepartmentById(requester.Defaults?.Department ?? ""),
-            ShippingType = ShippingTypes.Ground.Name
+            ShippingType = ShippingTypes.Ground.Name,
+            Created = this._timeProvider.Now()
         };
         if(!string.IsNullOrEmpty(requester.Defaults?.ApproverUsername)) {
             var approver=await this._authApiService.GetApprover(requester.Defaults.ApproverUsername);
@@ -123,12 +124,16 @@ public class PurchaseRequestService {
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [], input,
             to,
             cc);
+        this._logger.LogInformation("Purchase request created successfully {RequestId}",input.Title);
         return true;
     }
 
     public async Task<bool> UpdatePurchaseRequest(PurchaseRequestInput input) {
         Console.WriteLine($"Updating Purchase Request {input.Id}");
-        if(!input.Id.HasValue) return false;
+        if(!input.Id.HasValue) {
+            this._logger.LogError("Error updating purchase request, Id was missing");
+            return false;
+        }
         if (input.Status == PrStatus.NeedsApproval) {
             input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         } else {
@@ -160,6 +165,7 @@ public class PurchaseRequestService {
         await this._emailService.SendRequestEmail(input.EmailTemplate ?? [],input, 
             to,
             cc);
+        this._logger.LogInformation("Purchase request updated successfully {RequestId}",input.Title);
         return true;
     }
     public async Task<bool> CancelPurchaseRequest(CancelRequestInput input) {

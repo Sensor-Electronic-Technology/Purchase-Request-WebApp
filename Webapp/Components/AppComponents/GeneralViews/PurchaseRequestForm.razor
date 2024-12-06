@@ -214,7 +214,7 @@
                 "Error",
                 $"Purchase Request {(this.Mode==EditMode.NEW ? "submission":"update")} failed");
         }
-        var id = this._purchaseReqInput.Id.HasValue ? string.Empty:(this._purchaseReqInput.Id?.ToString() ?? "");
+        var id = this._purchaseReqInput.Id.HasValue ? (this._purchaseReqInput.Id?.ToString() ?? ""):string.Empty;
         await this.ActionCompleted.InvokeAsync(id);
     }
     

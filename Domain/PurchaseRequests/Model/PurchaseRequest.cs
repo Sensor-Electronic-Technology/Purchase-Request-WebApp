@@ -132,6 +132,9 @@ public class PurchaseRequest {
             Comments = this.PurchaseOrder?.PoComments ?? "",
             EmailCopyList = this.EmailCopyList,
             Date = this.OrderedDate,
+            FOB = this.PurchaseOrder?.PurchaseType ?? "",
+            ItemType = this.PurchaseOrder?.ItemType ?? "",
+            Purchaser = this.Purchaser,
         };
     }
 
