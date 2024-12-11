@@ -168,9 +168,14 @@
                                                                Value="@nameof(PrUserAction.CHECKIN)"/>
                                         <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
                                                                Value="@nameof(PrUserAction.CANCEL)"/>
-                                    } else if (status is { Status: PrStatus.Delivered, IsComplete: false }) {
-                                        <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
-                                                               Value="@nameof(PrUserAction.CHECKIN)"/>
+                                    } else if (status is { Status: PrStatus.Delivered }) {
+                                        <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
+                                                               Value="@nameof(PrUserAction.REPEAT)"/>
+                                        if (!status.IsComplete) {
+                                            <RadzenSplitButtonItem Text="Finish Check-in" Icon="input"
+                                                                   Value="@nameof(PrUserAction.CHECKIN)"/>
+                                        }
+
                                     }
                                 }
                                 break;

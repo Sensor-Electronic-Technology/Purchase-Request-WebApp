@@ -31,7 +31,6 @@
                     </RadzenTabsItem>
                 </Tabs>
             </RadzenTabs>
-
         </RadzenTabsItem>
         <RadzenTabsItem Icon="account_balance_wallet" Text="Create New" class="tab-color-2 rz-ripple">
             @if (this._userProfile != null) {
@@ -436,7 +435,7 @@
         if(this._userProfile != null) {
             await this.HubSetup();
             this.EditingTracker.UserTryClear(this._userProfile._id);
-            this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userProfile._id,this._userService.GetUserRole());
+            this._purchaseRequests=await this._purchaseRequestService.GetPurchaseRequests(this._userProfile._id,this._userService.GetUserRole(),this._userProfile.Email);
             this._purchaseRequests = this._purchaseRequests.OrderByDescending(e => e.Status).ToList();
             this._purchaseReqStatuses=this._purchaseRequests.Select(pr => {
                 var complete=pr is { Status: PrStatus.Delivered, CheckInResult.Complete: true };

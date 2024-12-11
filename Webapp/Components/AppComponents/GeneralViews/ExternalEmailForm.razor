@@ -1,0 +1,162 @@
+﻿@using System.Text.RegularExpressions
+@using Domain.PurchaseRequests.Dto
+@using Webapp.Data
+
+<RadzenStack>
+    <RadzenFieldset Text="Email Vendor">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <div class="rz-p-1 rz-text-align-center">
+                <RadzenCheckBox TValue="bool"
+                                Value="@this._sendExternalEmail"
+                                ValueChanged="SendEmailChangedHandler"
+                                Name="SendExternal"/>
+                <RadzenLabel Text="Send Vendor Email?"
+                             Component="SendExternal" class="rz-ms-2"/>
+            </div>
+            @if (this._sendExternalEmail && this.PurchaseOrderDto != null) {
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <RadzenText>Sperate multiple emails with a comma</RadzenText>
+                    <RadzenRow>
+                        <div class="rz-p-1 rz-text-align-center align-self-center">
+                            <RadzenCheckBox TValue="bool"
+                                            Value="@this._includeInternalEmails"
+                                            ValueChanged="@IncludeInternalsChangedHandler"
+                                            Name="IncludeInternal"/>
+                            <RadzenLabel Text="Include Internal Emails?"
+                                         Component="IncludeInternal" class="rz-ms-2"/>
+                        </div>
+                    </RadzenRow>
+                    <RadzenTemplateForm TItem="ExternalEmailModel"
+                                        Data="@this._emailModel"
+                                        Submit="@OpenExternalClickHandler"
+                                        InvalidSubmit="@this.InvalidSubmit">
+                        <RadzenFieldset Text="External Email Form">
+                            <RadzenRow>
+                                <RadzenColumn Size="2" class="text-center">
+                                    <RadzenLabel Text="To Emails" Component="ToEmails"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="10">
+                                    <RadzenTextBox @bind-Value="@this._emailModel.ToEmails"
+                                                   Placeholder="one@email.com,two@email.com"
+                                                   Name="ToEmails" Style="width: 100%;display: block;"/>
+                                    <RadzenRequiredValidator Component="ToEmails" Text="At least one email must be entered"
+                                                             Popup="false"/>
+                                    <RadzenCustomValidator Validator="@(() => this.ValidateEmails(this._emailModel.ToEmails))"
+                                                           Text="Invalid email format"
+                                                           Component="ToEmails"/>
+                                </RadzenColumn>
+
+
+                                <RadzenColumn Size="2" class="text-center">
+                                    <RadzenLabel Text="Cc Emails" Component="CcEmails"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="10">
+                                    <RadzenTextBox @bind-Value="@this._emailModel.CcEmails"
+                                                   Placeholder="one@email.com,two@email.com"
+                                                   Name="CcEmails" Style="width: 100%"/>
+                                    <RadzenCustomValidator Validator="@(() => this.ValidateEmails(this._emailModel.CcEmails))"
+                                                           Text="Invalid email format"
+                                                           Component="CcEmails"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="2" class="text-center">
+                                    <RadzenLabel Text="Subject" Component="Subject"/>
+                                </RadzenColumn>
+                                <RadzenColumn Size="10">
+                                    <RadzenTextBox @bind-Value="@this._emailModel.Subject"
+                                                   Placeholder="Purchase Order"
+                                                   Name="Subject" Style="width: 100%"/>
+                                </RadzenColumn>
+                            </RadzenRow>
+
+                        </RadzenFieldset>
+                        <RadzenRow AlignItems="AlignItems.Center"
+                                   JustifyContent="JustifyContent.Center"
+                                   Style="margin-top: 1rem;">
+                            <RadzenStack AlignItems="AlignItems.Center" Gap="0">
+                                <RadzenButton ButtonType="ButtonType.Submit"
+                                              class="button-transparent">
+                                    <RadzenImage Path="images/mail-to.svg" Style="width: 48px;height: 48px;"/>
+                                </RadzenButton>
+                                <RadzenLabel>Open Outlook</RadzenLabel>
+                            </RadzenStack>
+                        </RadzenRow>
+                    </RadzenTemplateForm>
+                </RadzenStack>
+            }
+        </RadzenStack>
+        
+    </RadzenFieldset>
+   
+</RadzenStack>
+
+
+
+@code {
+    [Inject] private NavigationManager _navigationManager { get; set; }
+    [Inject] private NotificationService _notificationService { get; set; }
+    [Parameter] public PurchaseOrderDto? PurchaseOrderDto { get; set; }
+    [Parameter] public EventCallback<string> ToEmailChanged { get; set; } 
+    [Parameter] public string? ApproverEmail { get; set; }
+    
+    private ExternalEmailModel _emailModel = new();
+    private bool _includeInternalEmails = false;
+    private string _subject = "Purchase Order";
+    private bool _sendExternalEmail = false;
+    
+    private Task IncludeInternalsChangedHandler(bool value) {
+        if(value==false) {
+            this._emailModel.ToEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
+            this._emailModel.CcEmails="";
+        } else {
+            this._emailModel.ToEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
+            this._emailModel.CcEmails=this.PurchaseOrderDto?.Requester?.Email ?? "";
+            this._emailModel.CcEmails += ",";
+            this._emailModel.CcEmails+=this.ApproverEmail ?? "";
+            this._emailModel.CcEmails+=this.PurchaseOrderDto?.EmailCopyList.Aggregate("", (current, next) => current + "," + next);
+        }
+        this._includeInternalEmails=value;
+        return Task.CompletedTask;
+    }
+    
+    bool ValidateEmails(string emails) {
+        if (string.IsNullOrEmpty(emails)) {
+            return true;
+        }
+        foreach(var email in emails.Split(',')) {
+            if (!Regex.IsMatch(email, @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private Task InvalidSubmit() {
+        this._notificationService.Notify(NotificationSeverity.Error,"Input Error(s)","There are errors in the form, please correct them before submitting.");
+        return Task.CompletedTask;
+    }
+    
+    private async Task ToEmailChangedHandler(string value) {
+        this._emailModel.ToEmails=value;
+        await this.ToEmailChanged.InvokeAsync(this._emailModel.ToEmails);
+    }
+    
+    private Task CcEmailChangedHandler(string value) {
+        this._emailModel.CcEmails=value;
+        return Task.CompletedTask;
+    }
+    
+    private Task SendEmailChangedHandler(bool value) {
+        this._emailModel.ToEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
+        this._emailModel.CcEmails = "";
+        this._sendExternalEmail=value;
+        return Task.CompletedTask;
+    }
+
+    private Task OpenExternalClickHandler() {
+        var cc=string.IsNullOrWhiteSpace(this._emailModel.CcEmails) ? "" : this._emailModel.CcEmails.Replace(",",";");
+        var to=string.IsNullOrWhiteSpace(this._emailModel.ToEmails) ? "" : this._emailModel.ToEmails.Replace(",",";");
+        var link = $"mailto:{to}?cc={cc}&subject={Uri.EscapeDataString(this._subject)}";
+        this._navigationManager.NavigateTo(link, true);
+        return Task.CompletedTask;
+    }
+}

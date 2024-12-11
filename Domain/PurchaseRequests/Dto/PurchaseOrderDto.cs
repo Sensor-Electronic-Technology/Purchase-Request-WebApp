@@ -23,5 +23,6 @@ public class PurchaseOrderDto {
     public string? PurchaseType { get; set; }
     public string? ItemType { get; set; }
     public decimal TotalCost=>this.Items.Sum(x=>x.TotalCost);
-    public string? Comments { get; set; }
+    public string? EmailComments { get; set; }
+    public string? PoComments { get; set; }
 }

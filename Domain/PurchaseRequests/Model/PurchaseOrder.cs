@@ -9,4 +9,5 @@ public class PurchaseOrder {
     public string? PurchaseType { get; set; }
     public string? ItemType { get; set; }
     public string? PoComments { get; set; }
+    public string? EmailComments { get; set; }
 }

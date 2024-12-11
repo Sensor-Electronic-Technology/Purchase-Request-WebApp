@@ -143,15 +143,15 @@
                                                   Text="Check-in Order"
                                                   Icon="input"
                                                   Click="@(() => this.UserActionHandler(PrUserAction.CHECKIN))"/>
+                                    <RadzenButton Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Info"
+                                                  Text="Cancel" Icon="highlight_off"
+                                                  Click="@(() => this.UserActionHandler(PrUserAction.CANCEL))"/>
                                 } else if (this.PurchaseRequest is { Status: PrStatus.Delivered }) {
                                     <RadzenButton Text="Repeat Request"
                                                   ButtonStyle="ButtonStyle.Info"
                                                   Size="ButtonSize.Medium"
                                                   Icon="repeat_one"
                                                   Click="@(() => this.UserActionHandler(PrUserAction.REPEAT))"/>
-                                    <RadzenButton Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Info"
-                                                  Text="Cancel" Icon="highlight_off"
-                                                  Click="@(() => this.UserActionHandler(PrUserAction.CANCEL))"/>
                                     if (this.PurchaseRequest?.CheckInResult?.Complete == false) {
                                         <RadzenButton Size="ButtonSize.Medium"
                                                       ButtonStyle="ButtonStyle.Info"

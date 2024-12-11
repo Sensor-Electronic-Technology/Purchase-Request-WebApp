@@ -104,7 +104,12 @@
                 </RadzenStack>
             </RadzenStepsItem>
             <RadzenStepsItem Text="Vendor" NextText="Finalize">
-                <VendorSelector @bind-Vendor="@this.PurchaseOrderDto.Vendor" Mode="EditMode.EDIT"/>
+                <RadzenStack>
+                    <ExternalEmailForm PurchaseOrderDto="@this.PurchaseOrderDto"
+                                       ApproverEmail="@this.PurchaseRequest?.Approver.Email"/>
+                    <VendorSelector @bind-Vendor="@this.PurchaseOrderDto.Vendor" Mode="EditMode.EDIT"/>
+                </RadzenStack>
+                
             </RadzenStepsItem>
             <RadzenStepsItem Text="Finalize" PreviousText="Internal Email">
                 <RadzenCard Variant="Variant.Outlined" >
@@ -112,46 +117,7 @@
                         <RadzenColumn Size="6">
                             <RadzenStack>
                                 <AlertListView UserActionAlerts="@this._orderAlerts"/>
-                                <RadzenFieldset Text="Email Vendor">
-                                    <RadzenStack Orientation="Orientation.Vertical">
-                                        <div class="rz-p-1 rz-text-align-center">
-                                            <RadzenCheckBox TValue="bool"
-                                                            Value="@this._sendExternalEmail"
-                                                            ValueChanged="SendEmailChangedHandler"
-                                                            Name="SendExternal"/>
-                                            <RadzenLabel Text="Send Vendor Email?"
-                                                         Component="SendExternal" class="rz-ms-2"/>
-                                        </div>
-                                        @if (this._sendExternalEmail) {
-                                            <RadzenFieldset Text="Email Setup">
-                                                <RadzenStack>
-                                                    <div class="rz-p-1 rz-text-align-center">
-                                                        <RadzenCheckBox TValue="bool"
-                                                                        Value="@this._includeInternalEmails"
-                                                                        ValueChanged="@IncludeInternalsChangedHandler"
-                                                                        Name="IncludeInternal"/>
-                                                        <RadzenLabel Text="Include Internal Emails?"
-                                                                     Component="IncludeInternal" class="rz-ms-2"/>
-                                                    </div>
-                                                    <RadzenLabel Text="Enter emails with comma separation" Component="ToEmails"/>
-                                                    <RadzenTextBox Value="@this._toEmails" ValueChanged="@ToEmailChangedHandler" Placeholder="one@email.com,two@email.com" Name="ToEmails" Style="width: 100%"/>
-                                                    <RadzenLabel Text="Enter CC emails with coma separation" Component="CCEmails"></RadzenLabel>
-                                                    <RadzenTextBox @bind-Value="@this._ccEmails" Placeholder="one@email.com,two@email.com" Name="CCEmails" Style="width: 100%"/>
-                                                    <RadzenLabel Text="Enter Subject" Component="EmailSubject"></RadzenLabel>
-                                                    <RadzenTextBox @bind-Value="@this._subject" Placeholder="Purchase Order" Name="EmailSubject" Style="width: 100%"/>
-                                                    <RadzenLink Path="@($"mailto:{this._toEmails}?cc={this._ccEmails}&subject={Uri.EscapeDataString(this._subject)}")"
-                                                                class="align-self-center"
-                                                                Style="width: fit-content;">
-                                                        <RadzenStack Orientation="Orientation.Vertical" Gap="0" AlignItems="AlignItems.Center">
-                                                            <RadzenImage Path="images/mail-to.svg" Style="width: 48px;height: 48px;"/>
-                                                            <RadzenText>Click to open Outlook</RadzenText>
-                                                        </RadzenStack>
-                                                    </RadzenLink>
-                                                </RadzenStack>
-                                            </RadzenFieldset>
-                                        }
-                                    </RadzenStack>
-                                </RadzenFieldset>
+
                                 <RadzenFieldset Text="Submit/Cancel">
                                     <RadzenStack Orientation="Orientation.Horizontal"
                                                  AlignItems="AlignItems.Center"
@@ -167,30 +133,37 @@
                                                       Style="width: 150px; height: 60px;"/>
                                     </RadzenStack>
                                 </RadzenFieldset>
-                                <RadzenFormField Text="Comments">
-                                    <RadzenTextArea Value="@this.PurchaseOrderDto?.Comments"
-                                                    ValueChanged="@CommentsChangedHandler"
-                                                    Rows="5"/>
-                                </RadzenFormField>
+                                <DxRichEdit @ref="@this._richEdit"
+                                            @bind-DocumentContent="@this._documentContent"
+                                            DocumentLoaded="@this.DocumentLoadedHandler"
+                                            DocumentFormat="DocumentFormat.OpenXml"
+                                            BarMode="BarMode.None"
+                                            ViewType="ViewType.Simple"
+                                            ReadOnly="false" style="width: 100%;height: 400px;">
+                                    <MailMergeSettings>
+                                        <DxMailMergeSettings Data="@this.MailMerge"
+                                                             ViewMergedData="true"
+                                                             ActiveRecord="1"/>
+                                    </MailMergeSettings>
+                                </DxRichEdit>
                             </RadzenStack>
                         </RadzenColumn>
                         <RadzenColumn Size="6">
-                            <RadzenTabs class="rz-w-100" RenderMode="TabRenderMode.Client">
+                            <RadzenTabs class="rz-w-100" RenderMode="TabRenderMode.Server">
                                 <Tabs>
-                                    <RadzenTabsItem Text="EmailPreview" class="tab-color-1">
-                                        <DxRichEdit @ref="@this._richEdit"
-                                                    @bind-DocumentContent="@this._documentContent"
-                                                    DocumentLoaded="@this.DocumentLoadedHandler"
-                                                    DocumentFormat="DocumentFormat.OpenXml"
-                                                    BarMode="BarMode.None"
-                                                    ViewType="ViewType.Simple"
-                                                    ReadOnly="false" style="width: 100%">
-                                            <MailMergeSettings>
-                                                <DxMailMergeSettings Data="@this.MailMerge"
-                                                                     ViewMergedData="true"
-                                                                     ActiveRecord="1"/>
-                                            </MailMergeSettings>
-                                        </DxRichEdit>
+                                    <RadzenTabsItem Text="Email and Po Comments" class="tab-color-1">
+                                        <RadzenStack>
+                                            <RadzenFormField Text="Email Comments">
+                                                <RadzenTextArea Value="@this.PurchaseOrderDto?.EmailComments"
+                                                                ValueChanged="@EmailCommentsChangedHandler"
+                                                                Rows="5"/>
+                                            </RadzenFormField>
+                                            <RadzenFormField Text="Po Comments">
+                                                <RadzenTextArea Value="@this.PurchaseOrderDto?.PoComments"
+                                                                ValueChanged="@PoCommentsChangedHandler"
+                                                                Rows="5"/>
+                                            </RadzenFormField>
+                                        </RadzenStack>
                                     </RadzenTabsItem>
                                     <RadzenTabsItem Text="PO Preview" class="tab-color-2">
                                         <PoPdfPreview PurchaseOrderDto="@this.PurchaseOrderDto"/>
@@ -215,7 +188,6 @@
     [Inject] private IBlazorDownloadFileService _downloadService { get; set; }
     [Inject] private PoNumberService _poNumberService { get; set; }
     [Inject] private AppTimeProvider _timeProvider { get; set; }
-    //[Inject] private UserService _userService { get; set; }
 
     [Parameter] public PurchaseRequest? PurchaseRequest { get; set; } = new();
     [Parameter] public PurchaseOrderDto? PurchaseOrderDto { get; set; }
@@ -228,18 +200,13 @@
     [Parameter] public EventCallback Cancel { get; set; }
     
     private DxRichEdit _richEdit;
-    private string _toEmails="";
-    private string _ccEmails="";
-    private string _subject="";
-    private List<ApproveMailMerge> MailMerge { get; set; } = [];
+    private List<PoMailMerge> MailMerge { get; set; } = [];
     private List<string> _ccList = [];
     private List<string> _emailList = [];
     private bool _docLoaded;
     private int _lastStep = 3;
     private byte[]? _documentContent;
     private int _selectedStep = 0;
-    private bool _sendExternalEmail = false;
-    private bool _includeInternalEmails = false;
     private PaymentTerm? _selectedPaymentTerm;
     private bool _poNumberGenerated = false;
     private List<UserActionAlert> _orderAlerts = [];
@@ -253,28 +220,35 @@
     
     protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-        this._docLoaded = false;
-        /*this._selectedItemType = ItemType.TryFromValue(this.PurchaseOrderDto?.ItemType ?? "", out var itemType) ? itemType : null;
-        this._selectedPaymentTerm = PaymentTerm.TryFromValue(this.PurchaseOrderDto?.PaymentTerms ?? "", out var paymentTerm) ? paymentTerm : null;
-        this._selectedPurchaseType = PurchaseType.TryFromName(this.PurchaseOrderDto?.PurchaseType ?? "", out var purchaseType) ? purchaseType : null;*/
+        this._docLoaded = false; 
         await this.Load();
     }
-    
+
+    protected override Task OnParametersSetAsync() {
+        if (this.PurchaseOrderDto != null) {
+            this.UpdateMailMerge();
+        }
+        return base.OnParametersSetAsync();
+    }
+
     private async Task SubmitHandler() {
+        this.UpdateMailMerge();
+        this._emailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         this._selectedTabIndex = 0;
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
         await this.Submit.InvokeAsync(this._emailDocument);
     }
 
     private void UpdateMailMerge() {
-        this.MailMerge=[new ApproveMailMerge() {
+        this.MailMerge=[new PoMailMerge() {
             PrAction = "Request Ordered",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseOrderDto?.Requester?.Name ?? "",
-            ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
+            Comments = this.PurchaseOrderDto?.EmailComments ?? "",
             CommentsTitle = "Comments",
         }];
+        StateHasChanged();
     }
     
     private Task PaymentTermChangedHandler(PaymentTerm payment) {
@@ -298,10 +272,9 @@
         return Task.CompletedTask;
     }
     
-    private async Task DocumentLoadedHandler(Document obj) {
-        this.UpdateMailMerge();
+    private  Task DocumentLoadedHandler(Document obj) {
         this._docLoaded = true;
-        this._emailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        return Task.CompletedTask;
     }
     
     private async Task EmailListChangedHandler(List<string> ccList) {
@@ -311,21 +284,28 @@
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
     }
 
-    private async Task CommentsChangedHandler(string comment) {
+    private async Task EmailCommentsChangedHandler(string comment) {
         this.PurchaseOrderDto ??= new PurchaseOrderDto();
-        this.PurchaseOrderDto.Comments=comment;
+        this.PurchaseOrderDto.EmailComments=comment;
+        await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task PoCommentsChangedHandler(string comment) {
+        this.PurchaseOrderDto ??= new PurchaseOrderDto();
+        this.PurchaseOrderDto.PoComments=comment;
         await this.PurchaseOrderDtoChanged.InvokeAsync(this.PurchaseOrderDto);
         await InvokeAsync(StateHasChanged);
     }
     
     private async Task Load() {
-        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/ApproveRejectTemplate.docx");
-        this.MailMerge=[new ApproveMailMerge() {
+        this._documentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/PoEmailTemplate.docx");
+        this.MailMerge=[new PoMailMerge() {
             PrAction = $"Request Ordered",
             Title = this.PurchaseRequest?.Title ?? "",
             Approver = this.PurchaseRequest?.Approver.Name ?? "",
             Requester = this.PurchaseOrderDto?.Requester?.Name ?? "",
-            ApprovalComments = this.PurchaseOrderDto?.Comments ?? "",
+            Comments = this.PurchaseOrderDto?.EmailComments ?? "",
             CommentsTitle = "Order Comments",
         }];
 
@@ -349,44 +329,9 @@
         return Task.CompletedTask;
     }
 
-    private Task SendEmailChangedHandler(bool value) {
-        this._toEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
-        this._ccEmails = "";
-        this._sendExternalEmail=value;
-        this.GenerateOrderAlerts();
-        return Task.CompletedTask;
-    }
-    
-    private Task IncludeInternalsChangedHandler(bool value) {
-        if(value==false) {
-            this._toEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
-            this._ccEmails="";
-        } else {
-            this._toEmails=this.PurchaseOrderDto?.Vendor?.Email ?? "";
-            this._ccEmails=this.PurchaseOrderDto?.Requester?.Email ?? "";
-            this._ccEmails += ";";
-            this._ccEmails+=this.PurchaseRequest?.Approver?.Email ?? "";
-            this._ccEmails+=";";
-            this._ccEmails+=this.PurchaseOrderDto?.EmailCopyList.Aggregate("", (current, next) => current + ";" + next);
-        }
-        this._includeInternalEmails=value;
-        return Task.CompletedTask;
-    }
-
     private void GenerateOrderAlerts() {
         bool okay = true;
         this._orderAlerts.Clear();
-        if (this._sendExternalEmail) {
-            if(string.IsNullOrWhiteSpace(this._toEmails)) {
-                this._orderAlerts.Add(new UserActionAlert() {
-                    Item = "Email Vendor",
-                    Message = "No email address provided for vendor",
-                    Okay = false,
-                    Style = AlertStyle.Danger
-                });
-                okay = false;
-            }
-        }
 
         if (string.IsNullOrWhiteSpace(this.PurchaseOrderDto?.ShippingMethod)) {
             this._orderAlerts.Add(new UserActionAlert() {
@@ -453,11 +398,6 @@
         }
     }
     
-    private void ToEmailChangedHandler(string obj) {
-        this._toEmails=obj;
-        this.GenerateOrderAlerts();
-    }
-    
     private async Task SelectedStepChangedHandler(int step) {
         if (this._selectedStep==0 && step != 0) {
             this._selectedStep=step;
@@ -494,11 +434,4 @@
             this._selectedStep = step;
         }
     }
-
-    /*private void TabChangedHandler(int tabIndex) {
-        if (tabIndex>0) {
-            this._docLoaded = false;
-        }
-    }*/
-
 }

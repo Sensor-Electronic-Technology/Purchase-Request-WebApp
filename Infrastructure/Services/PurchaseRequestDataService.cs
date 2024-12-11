@@ -26,17 +26,17 @@ public class PurchaseRequestDataService {
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).FirstOrDefaultAsync();
     }
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string email) {
         if(PurchaseRequestRole.TryFromName(role, out var prRole)) {
             switch (prRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
-                    return await this.GetRequesterRequests(username).ToListAsync();
+                    return await this.GetRequesterRequests(username,email).ToListAsync();
                 }
                 case nameof(PurchaseRequestRole.Approver): {
-                    return await this.GetApproverRequests(username).ToListAsync();
+                    return await this.GetApproverRequests(username,email).ToListAsync();
                 }
                 case nameof(PurchaseRequestRole.Purchaser): {
-                    return await this.GetPurchaserRequests(username).ToListAsync();
+                    return await this.GetPurchaserRequests(username,email).ToListAsync();
                 }
                 default:
                     return [];
@@ -45,9 +45,9 @@ public class PurchaseRequestDataService {
         return [];
     }
 
-    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequests(string username) {
+    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequests(string username,string email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
-        using var cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username,findOptions);
+        using var cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username || e.EmailCopyList.Contains(email),findOptions);
         while (await cursor.MoveNextAsync()) {
             var batch = cursor.Current;
             foreach (var item in batch) {
@@ -66,7 +66,7 @@ public class PurchaseRequestDataService {
         }
     }
     
-    private async IAsyncEnumerable<PurchaseRequest> GetPurchaserRequests(string username) {
+    private async IAsyncEnumerable<PurchaseRequest> GetPurchaserRequests(string username,string email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
         using var cursor = await this._purchaseRequestCollection.FindAsync(pr => pr.Status>=PrStatus.Approved && pr.Status!=PrStatus.Rejected,findOptions);
         while (await cursor.MoveNextAsync()) {
@@ -88,7 +88,7 @@ public class PurchaseRequestDataService {
         }
     }
     
-    private async IAsyncEnumerable<PurchaseRequest> GetApproverRequests(string username) {
+    private async IAsyncEnumerable<PurchaseRequest> GetApproverRequests(string username,string email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
         using var cursor = await this._purchaseRequestCollection.FindAsync(pr =>pr.Approver.Username == username,findOptions);
         while (await cursor.MoveNextAsync()) {
@@ -135,7 +135,8 @@ public class PurchaseRequestDataService {
             .Set(e => e.PurchaseOrder,
                 new PurchaseOrder() {
                     PoNumber = order.PoNumber,
-                    PoComments = order.Comments,
+                    PoComments = order.PoComments,
+                    EmailComments = order.EmailComments,
                     PaymentTerms = order.PaymentTerms,
                     ShipTo = order.ShipTo,
                     PurchaseType=order.PurchaseType,

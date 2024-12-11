@@ -95,9 +95,6 @@ public class PurchaseOrderDocument : IDocument {
             
             column.Item().Element(ComposeOrderInfoTable);
             column.Item().Element(ComposePurchaseItemTable);
-            
-            /*var totalPrice = _model.Items.Sum(x => x.UnitCost * x.Quantity);
-        column.Item().PaddingRight(5).AlignRight().Text($"Total: {totalPrice:C}").SemiBold();*/
             column.Item().PaddingTop(10).Element(ComposeComments);
         });
     }
@@ -106,7 +103,7 @@ public class PurchaseOrderDocument : IDocument {
         container.ShowEntire().Padding(5).Column(column => {
             column.Spacing(5);
             column.Item().Background(Colors.Grey.Lighten3).Text("Comments or Special Instructions").FontSize(14).SemiBold();
-            column.Item().Border(1).MinHeight(100).Padding(5).Text(this._model.Comments);
+            column.Item().Border(1).MinHeight(100).Padding(5).Text(this._model.PoComments);
         });
     }
 
@@ -170,10 +167,8 @@ public class PurchaseOrderDocument : IDocument {
             foreach (var item in _model.Items) {
                 table.Cell().Element(CellStyle).AlignCenter().Text($"{item.Quantity}");
                 table.Cell().Element(CellStyle).AlignLeft().PaddingLeft(5).Text(item.ProductName);
-                /*table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost:C}");*/
                 table.Cell().Element(CellStyle).AlignCenter().Text(string.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", item.UnitCost));
                 table.Cell().Element(CellStyle).AlignCenter().Text(string.Format(new System.Globalization.CultureInfo("en-US"), "{0:C}", item.TotalCost));
-                /*table.Cell().Element(CellStyle).AlignCenter().Text($"{item.UnitCost * item.Quantity:C}");*/
                 static IContainer CellStyle(IContainer container) =>
                     container.BorderBottom(1).BorderTop(1).BorderRight(1).BorderLeft(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
             }

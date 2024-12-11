@@ -76,7 +76,7 @@ public class PurchaseRequestService {
             }
         }
 
-        input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+        input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         return input;
     }
     public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
@@ -135,9 +135,9 @@ public class PurchaseRequestService {
             return false;
         }
         if (input.Status == PrStatus.NeedsApproval) {
-            input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+            input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         } else {
-            input.PrUrl=$"http://172.20.4.207/action/{input.Id.ToString()}/{(int)PrUserAction.ORDER}";
+            input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.ORDER}";
         }
         if (string.IsNullOrEmpty(input.RequesterEmail) || string.IsNullOrEmpty(input.ApproverEmail)) {
             this._logger.LogError("Error updating purchase request, Approver or Requester were missing emails");
@@ -266,7 +266,7 @@ public class PurchaseRequestService {
         
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
         if (approved) {
-            request.PrUrl = $"http://localhost:5015/action/{request._id.ToString()}/{(int)PrUserAction.ORDER}";
+            request.PrUrl = $"http://purchasing.seti.com/action/{request._id.ToString()}/{(int)PrUserAction.ORDER}";
         }
         
         var success=await this._requestDataService.UpdateOne(request);
@@ -375,7 +375,7 @@ public class PurchaseRequestService {
         return await this._authApiService.GetUserEmails();
     }
     
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role) {
-        return await this._requestDataService.GetPurchaseRequests(username,role);
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string email) {
+        return await this._requestDataService.GetPurchaseRequests(username,role,email);
     }
 }

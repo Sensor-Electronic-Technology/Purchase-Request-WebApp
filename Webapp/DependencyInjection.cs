@@ -76,6 +76,7 @@ public static class DependencyInjection {
         app.UseAntiforgery();
         app.MapHub<MessagingHub>("/messagehub");
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+        //app.Urls.Add("http://172.20.4.207");
         return app;
     }
 

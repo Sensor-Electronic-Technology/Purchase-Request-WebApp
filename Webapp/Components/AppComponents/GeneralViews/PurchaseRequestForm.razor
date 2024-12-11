@@ -11,8 +11,6 @@
 @using Webapp.Services
 @using QuestPDF.Fluent
 @inherits UserActionComponent
-
-
 <RadzenCard Variant="Variant.Filled" Style="padding: 0.3rem;">
     <RadzenStack>
         @if (!(this._approvers.Count > 0)) {
@@ -73,7 +71,6 @@
     [Inject] private FileService _fileService { get; set; }
     [Parameter] public EditMode Mode { get; set; }
     [Parameter] public bool RepeatEdit { get; set; }
-    
     
     private RadzenSteps _steps;
     private int _selectedStepIndex = 0;

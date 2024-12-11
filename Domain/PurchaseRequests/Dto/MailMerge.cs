@@ -20,6 +20,15 @@ public class ApproveMailMerge {
     public string ApprovalComments { get; set; }
 }
 
+public class PoMailMerge {
+    public string PrAction { get; set; }
+    public string Title { get; set; }
+    public string Requester { get; set; }
+    public string Approver { get; set; }
+    public string CommentsTitle { get; set; }
+    public string Comments { get; set; }
+}
+
 public class ReceiveMailMerge {
     public string PrAction { get; set; }
     public string Title { get; set; }
