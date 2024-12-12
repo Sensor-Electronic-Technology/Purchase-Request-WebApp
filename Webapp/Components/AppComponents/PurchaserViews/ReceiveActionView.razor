@@ -112,13 +112,12 @@
 @code {
     [Inject] private ILogger<ReceiveActionView> _logger { get; set; }
     [Inject] private AppTimeProvider _timeProvider { get; set; }
-    private DxRichEdit? _richEdit;
+    private DxRichEdit _richEdit;
     private bool _emailsLoaded = false;
     private bool _docLoaded = false;
     private List<string> _ccList = [];
     private List<string> _emailList = [];
     private byte[] _documentContent;
-    private byte[] _mailDocument;
     private string? _comments { get; set; }
     private List<ReceiveMailMerge> MailMerge { get; set; } = [];
     private ReceiveRequestInput _receiveRequestInput = new();
@@ -176,7 +175,6 @@
     }
     
     private Task UpdateMailMerge() {
-        this.MailMerge.Clear();
         var merge = new ReceiveMailMerge() { 
             Title = this.PurchaseRequest?.Title ?? "", 
             Requester = this.PurchaseRequest?.Requester.Name ?? "",
@@ -184,12 +182,23 @@
             ReceiveComments=this._comments ?? "",
             PrAction = "Items Checked-In"
         };
-
+        /*if(this._receiveRequestInput.ItemDelivery.Count==1) {
+            merge.SetItem(0, this._receiveRequestInput.ItemDelivery[0].Item ?? "", 
+                this._receiveRequestInput.ItemDelivery[0].Location ?? "",
+                this._receiveRequestInput.ItemDelivery[0].Received);
+        } else {
+            for(var i=0;i<this._receiveRequestInput.ItemDelivery.Count;i++) {
+                merge.SetItem(i, this._receiveRequestInput.ItemDelivery[i].Item ?? "", 
+                    this._receiveRequestInput.ItemDelivery[i].Location ?? "",
+                    this._receiveRequestInput.ItemDelivery[i].Received);
+            }
+        }*/
         for(var i=0;i<this._receiveRequestInput.ItemDelivery.Count;i++) {
             merge.SetItem(i, this._receiveRequestInput.ItemDelivery[i].Item ?? "", 
                 this._receiveRequestInput.ItemDelivery[i].Location ?? "",
                 this._receiveRequestInput.ItemDelivery[i].Received);
         }
+        
         this.MailMerge = [merge];
         StateHasChanged();
         return Task.CompletedTask;
@@ -197,8 +206,9 @@
     
     private async Task DocumentLoadedHandler(Document obj) {
         await this.UpdateMailMerge();
-        this._receiveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
         this._docLoaded = true;
+        //this._receiveRequestInput.EmailDocument=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
+        //this._documentContent = await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.OpenXml);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -294,11 +304,11 @@
             }
             this._alerts.Sort();
             this._alerts.Reverse();
-            await this.UpdateMailMerge();
+            
         }else{
             this._docLoaded = false;
         }
-
+        await this.UpdateMailMerge();
         //await InvokeAsync(StateHasChanged);
     }
 }

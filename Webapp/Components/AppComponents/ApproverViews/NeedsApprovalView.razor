@@ -68,20 +68,20 @@
                         <RadzenCard Variant="Variant.Outlined" class="area-header">
                             <RadzenText Text="Email Preview" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
                         </RadzenCard>
-                        <DxRichEdit @ref="@this._richEdit"
-                                    @bind-DocumentContent="@this._documentContent"
-                                    DocumentLoaded="@this.DocumentLoadedHandler"
-                                    DocumentFormat="DocumentFormat.OpenXml"
-                                    BarMode="BarMode.None"
-                                    ViewType="ViewType.Simple"
-                                    ReadOnly="false" CssClass="w-100">
-                            <MailMergeSettings>
-                                <DxMailMergeSettings Data="@this.MailMerge"
-                                                     ViewMergedData="true"
-                                                     ActiveRecord="1"/>
-                            </MailMergeSettings>
-                        </DxRichEdit>
 
+                            <DxRichEdit @ref="@this._richEdit"
+                                        @bind-DocumentContent="@this._documentContent"
+                                        DocumentLoaded="@this.DocumentLoadedHandler"
+                                        DocumentFormat="DocumentFormat.OpenXml"
+                                        BarMode="BarMode.None"
+                                        ViewType="ViewType.Simple"
+                                        ReadOnly="false" CssClass="w-100">
+                                <MailMergeSettings>
+                                    <DxMailMergeSettings Data="@this.MailMerge"
+                                                         ViewMergedData="true"
+                                                         ActiveRecord="1"/>
+                                </MailMergeSettings>
+                            </DxRichEdit>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenStepsItem>

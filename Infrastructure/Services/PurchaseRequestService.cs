@@ -375,7 +375,7 @@ public class PurchaseRequestService {
         return await this._authApiService.GetUserEmails();
     }
     
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string email) {
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string? email) {
         return await this._requestDataService.GetPurchaseRequests(username,role,email);
     }
 }

@@ -298,26 +298,27 @@
         if (PurchaseRequestRole.TryFromName(this.UserProfile.Role, out PurchaseRequestRole requestRole)) {
             switch (requestRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
-                    List<ContextMenuItem> menuList;
-                    if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
-                         menuList= [
-                            new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
-                            new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
-                        ];
-                        this._contextMenuService.Open(args, menuList, (e) => {
-                                this.ContextActionHandler(args, e).Wait();
-                            }
-                        );
-                    }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
-                        menuList = [
-                            new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
-                        ];
-                        this._contextMenuService.Open(args, menuList, (e) => {
-                                this.ContextActionHandler(args, e).Wait();
-                            }
-                        );
+                    if (this.UserProfile._id == args.Data.Requester.Username) {
+                        List<ContextMenuItem> menuList;
+                        if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
+                            menuList= [
+                                new ContextMenuItem() { Text = "Modify Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+                                new ContextMenuItem() { Text = "Cancel Request", Value = PrUserAction.CANCEL, Icon = "highlight_off" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }
                     }
-
                     break;
                 }
                 case nameof(PurchaseRequestRole.Approver): {

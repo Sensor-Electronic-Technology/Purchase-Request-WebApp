@@ -26,7 +26,7 @@ public class PurchaseRequestDataService {
     public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
         return await this._purchaseRequestCollection.Find(pr => pr._id == id).FirstOrDefaultAsync();
     }
-    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string email) {
+    public async Task<List<PurchaseRequest>> GetPurchaseRequests(string username, string role,string? email) {
         if(PurchaseRequestRole.TryFromName(role, out var prRole)) {
             switch (prRole.Name) {
                 case nameof(PurchaseRequestRole.Requester): {
@@ -45,9 +45,17 @@ public class PurchaseRequestDataService {
         return [];
     }
 
-    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequests(string username,string email) {
+    private async IAsyncEnumerable<PurchaseRequest> GetRequesterRequests(string username,string? email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
-        using var cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username || e.EmailCopyList.Contains(email),findOptions);
+        
+        var filter=Builders<PurchaseRequest>.Filter.Or(Builders<PurchaseRequest>.Filter.Eq(e=>e.Requester.Username,username),Builders<PurchaseRequest>.Filter.AnyEq(e=>e.EmailCopyList,email));
+        using IAsyncCursor<PurchaseRequest>? cursor=await this._purchaseRequestCollection.FindAsync(filter,findOptions);
+        /*if (string.IsNullOrEmpty(email)) {
+            cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username,findOptions);
+        } else {
+            cursor = await this._purchaseRequestCollection.FindAsync(e => e.Requester.Username==username || e.EmailCopyList.Contains(email),findOptions);
+        }*/
+        
         while (await cursor.MoveNextAsync()) {
             var batch = cursor.Current;
             foreach (var item in batch) {
@@ -66,16 +74,20 @@ public class PurchaseRequestDataService {
         }
     }
     
-    private async IAsyncEnumerable<PurchaseRequest> GetPurchaserRequests(string username,string email) {
+    private async IAsyncEnumerable<PurchaseRequest> GetPurchaserRequests(string username,string? email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
-        using var cursor = await this._purchaseRequestCollection.FindAsync(pr => pr.Status>=PrStatus.Approved && pr.Status!=PrStatus.Rejected,findOptions);
+        /*using var cursor = await this._purchaseRequestCollection.FindAsync(pr => pr.Status>=PrStatus.Approved && pr.Status!=PrStatus.Rejected,findOptions);*/
+        var byPurchaser=Builders<PurchaseRequest>.Filter.And(Builders<PurchaseRequest>.Filter.Gte(e=>e.Status,PrStatus.Approved),Builders<PurchaseRequest>.Filter.Ne(e=>e.Status,PrStatus.Rejected));
+        var byRequester=Builders<PurchaseRequest>.Filter.Or(Builders<PurchaseRequest>.Filter.Eq(e=>e.Requester.Username,username),Builders<PurchaseRequest>.Filter.AnyEq(e=>e.EmailCopyList,email));
+        var filter=Builders<PurchaseRequest>.Filter.Or(byPurchaser,byRequester);
+        using IAsyncCursor<PurchaseRequest>? cursor=await this._purchaseRequestCollection.FindAsync(filter,findOptions);
         while (await cursor.MoveNextAsync()) {
             var batch = cursor.Current;
             foreach (var item in batch) {
                 if (item.Status == PrStatus.Approved) {
                     yield return item;
                 }else if (item.Status>=PrStatus.Ordered) {
-                    if (item.Purchaser?.Username != username) continue;
+                    //if (item.Purchaser?.Username != username) continue;
                     if (item.Status == PrStatus.Delivered) {
                         if(this._timeProvider.DaysSince(item.ReceivedDate) <= 7) {
                             yield return item;
@@ -90,7 +102,12 @@ public class PurchaseRequestDataService {
     
     private async IAsyncEnumerable<PurchaseRequest> GetApproverRequests(string username,string email) {
         var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
-        using var cursor = await this._purchaseRequestCollection.FindAsync(pr =>pr.Approver.Username == username,findOptions);
+       // using var cursor = await this._purchaseRequestCollection.FindAsync(pr =>pr.Approver.Username == username,findOptions);
+        var filter=Builders<PurchaseRequest>.Filter.Or(
+            Builders<PurchaseRequest>.Filter.Eq(e=>e.Approver.Username,username),
+            Builders<PurchaseRequest>.Filter.Eq(e=>e.Requester.Username,username),
+            Builders<PurchaseRequest>.Filter.AnyEq(e=>e.EmailCopyList,email));
+        using IAsyncCursor<PurchaseRequest>? cursor=await this._purchaseRequestCollection.FindAsync(filter,findOptions);
         while (await cursor.MoveNextAsync()) {
             var batch = cursor.Current;
             foreach (var item in batch) {
