@@ -93,6 +93,7 @@
         this._departments = await this._purchaseRequestService.GetDepartments();
         if (this.Mode == EditMode.NEW) {
             this._purchaseReqInput = await this._purchaseRequestService.CreatePrInput(this.UserProfile);
+            //await this.GeneratePurchaseRequest();
             var approverAccount=this._approvers.FirstOrDefault(a => a.Username == this._purchaseReqInput.ApproverId);
             this._selectedApprover = approverAccount?.FirstName;
         } else {
