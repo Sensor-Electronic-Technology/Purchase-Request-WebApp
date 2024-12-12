@@ -113,13 +113,16 @@ foreach(var type in FileDisplayType.List) {
 } else {
     
 }*/
+//await DeleteAllPoNumbers();
 
+/*
 string? first = "Andrew";
 string? last = "Elmendorf";
 string init=first?.Substring(0,1) ?? "" + last?.Substring(0,1) ?? "";
 Console.WriteLine($"Init: {init}");
 Console.WriteLine($"First Sub(0,1): {first.Substring(0,1)}");
 Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
+*/
 
 
 async Task GeneratePurchaseRequests() {

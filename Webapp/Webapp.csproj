@@ -165,9 +165,6 @@
         <Content Update="wwwroot\images\avatars\male-man-old-svgrepo-com.svg">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <Content Update="wwwroot\Procedure - Purchase Request.pdf">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
     </ItemGroup>
 
     <ItemGroup>
