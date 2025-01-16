@@ -1,67 +1,86 @@
 ﻿@using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using Webapp.Data
+@using IntlTelInputBlazor
+@using PSC.CSharp.Library.CountryData
+@using PSC.CSharp.Library.CountryData.SVGImages
+@using FlagType = PSC.Blazor.Components.Icons.FlagType
+@using PSC.Blazor.Components.Icons
+<style>
+    .iti_flag{
+        background-color: aqua !important;
+    }
+    
+    input[type="tel"] {
+        background-color: var(--rz-base) !important;
+    }
+    .iti__country-list{
+        background-color: var(--rz-base) !important;
+    }
+    .rz-fieldset-content-wrapper{
+        overflow: visible;
+        height: -webkit-fill-available !important;
+    }
+    
+</style>
+
 
 @if (this.Vendor == null) {
     <RadzenText Text="No Vendor Selected" TextStyle="TextStyle.H5"/>
 } else {
-    <RadzenTemplateForm TItem="Vendor" Data="@this.Vendor" 
+    <RadzenTemplateForm TItem="Vendor" Data="@this.Vendor"
                         Style="@($"min-width:{this.Width};")"
-                        Submit="@this.SaveHandler" 
+                        Submit="@this.SaveHandler"
                         InvalidSubmit="@this.InvalidSubmit">
         <RadzenFieldset Text="Vendor Info">
             <RadzenRow>
                 <RadzenColumn Size="5">
-                    <RadzenFieldset Text="Info">
-                        <RadzenStack>
-                            <RadzenRow AlignItems="AlignItems.Center">
-                                <RadzenColumn Size="12" SizeMD="2">
-                                    <RadzenLabel Text="Name" Component="VendorName"/>
-                                </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenTextBox Style="width: 100%;" 
-                                                   Name="VendorName" 
-                                                   @bind-Value="@this.Vendor.Name"
-                                                   ReadOnly="@this.IsReadOnly()"/>
-                                    <RadzenRequiredValidator Component="VendorName" Text="Vendor name is required"/>
-                                </RadzenColumn>
-                            </RadzenRow>
-                            <RadzenRow AlignItems="AlignItems.Center" class="rz-text-wrap">
-                                <RadzenColumn Size="12" SizeMD="4">
-                                    <RadzenLabel Text="Contact/Website"  Component="VendorContact"/>
-                                </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="8">
-                                    <RadzenTextBox Style="width: 100%;" 
-                                                   Name="VendorContact" 
-                                                   @bind-Value="@this.Vendor.Attention"
-                                                   ReadOnly="@this.IsReadOnly()"/>
-                                </RadzenColumn>
-                            </RadzenRow>
-                            <RadzenRow AlignItems="AlignItems.Center">
-                                <RadzenColumn Size="12" SizeMD="2">
-                                    <RadzenLabel Text="Phone" Component="VendorPhone"/>
-                                </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenMask Mask="(***) ***-**** x****" CharacterPattern="[0-9]"
-                                                Placeholder="(000) 000-0000 x0000" Name="VendorPhone"
-                                                @bind-Value="@this.Vendor.Phone"
-                                                ReadOnly="@this.IsReadOnly()"
-                                                Style="width: 100%;" aria-label="Phone"/>
-                                </RadzenColumn>
-                            </RadzenRow>
-                            <RadzenRow AlignItems="AlignItems.Center">
-                                <RadzenColumn Size="12" SizeMD="2">
-                                    <RadzenLabel Text="Fax" Component="VendorFax"/>
-                                </RadzenColumn>
-                                <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenMask Mask="(***) ***-****" CharacterPattern="[0-9]"
-                                                Placeholder="(000) 000-0000" Name="VendorFax"
-                                                @bind-Value="@this.Vendor.Fax"
-                                                ReadOnly="@this.IsReadOnly()"
-                                                Style="width: 100%;" aria-label="Fax"/>
-                                </RadzenColumn>
-                            </RadzenRow>
-                        </RadzenStack>
+                    <RadzenFieldset Text="Info" Style="height: 100%; overflow: visible">
+                        <ChildContent>
+                            <RadzenStack>
+                                <RadzenRow AlignItems="AlignItems.Center">
+                                    <RadzenColumn Size="12" SizeMD="2">
+                                        <RadzenLabel Text="Name" Component="VendorName"/>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="10">
+                                        <RadzenTextBox Style="width: 100%;"
+                                                       Name="VendorName"
+                                                       @bind-Value="@this.Vendor.Name"
+                                                       ReadOnly="@this.IsReadOnly()"/>
+                                        <RadzenRequiredValidator Component="VendorName" Text="Vendor name is required"/>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow AlignItems="AlignItems.Center" class="rz-text-wrap">
+                                    <RadzenColumn Size="12" SizeMD="3">
+                                        <RadzenLabel Text="Contact/Website" Component="VendorContact"/>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="9">
+                                        <RadzenTextBox Style="width: 100%;"
+                                                       Name="VendorContact"
+                                                       @bind-Value="@this.Vendor.Attention"
+                                                       ReadOnly="@this.IsReadOnly()"/>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                <RadzenRow AlignItems="AlignItems.Center">
+                                    <RadzenColumn Size="12" SizeMD="2">
+                                        <RadzenLabel Text="Phone" Component="VendorPhone"/>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="10">
+                                        <IntlTelInput @bind-Value="@this.VendorPhone"/>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                <RadzenRow AlignItems="AlignItems.Center">
+                                    <RadzenColumn Size="12" SizeMD="2">
+                                        <RadzenLabel Text="Fax" Component="VendorFax"/>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="12" SizeMD="10">
+                                        <IntlTelInput @bind-Value="@this.VendorFax"/>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenStack>
+                        </ChildContent>
+                        
                     </RadzenFieldset>
                 </RadzenColumn>
                 <RadzenColumn Size="7">
@@ -72,10 +91,28 @@
                                     <RadzenLabel Text="Country" Component="Country"/>
                                 </RadzenColumn>
                                 <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenTextBox @bind-Value="@this.Vendor.Country" 
-                                                   AutoCompleteType="AutoCompleteType.Country"
-                                                   Style="width: 100%"
-                                                   ReadOnly="@this.IsReadOnly()"/>
+                                    <RadzenDropDown @bind-Value="@this.Vendor.Country" 
+                                                    TValue="string"
+                                                    Data="@this._countries" 
+                                                    TextProperty="@nameof(Country.CountryName)" 
+                                                    ValueProperty="@nameof(Country.CountryShortCode)"
+                                                    VirtualizationOverscanCount="10"
+                                                    AllowFiltering="true"
+                                                    Chips="true"
+                                                    FilterAsYouType="true"
+                                                    AllowVirtualization="true"
+                                                    Style="width: 400px;" Name="DropDownTemplate">
+                                        <Template Context="CountryContext">
+                                            @{
+                                                var country = (CountryContext as Country);
+                                                <RadzenStack Orientation="Orientation.Horizontal">
+                                                    <SVGFlag Height="24" Width="32" CountryCode="@country?.CountryShortCode" FlagType="FlagType.Square"/>
+                                                    <RadzenText>@country?.CountryName</RadzenText>
+                                                </RadzenStack>
+                                                
+                                            }
+                                        </Template>
+                                    </RadzenDropDown>
                                 </RadzenColumn>
                             </RadzenRow>
                             <RadzenRow AlignItems="AlignItems.Center">
@@ -93,7 +130,7 @@
                                     <RadzenLabel Text="Address" Component="Address"/>
                                 </RadzenColumn>
                                 <RadzenColumn Size="12" SizeMD="10">
-                                    <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress" 
+                                    <RadzenTextBox @bind-Value="@this.Vendor.StreetAddress"
                                                    AutoCompleteType="AutoCompleteType.StreetAddress"
                                                    Style="width: 100%"
                                                    ReadOnly="@this.IsReadOnly()"/>
@@ -104,7 +141,7 @@
                                     <RadzenLabel Text="State / Province / Region" Component="State"/>
                                 </RadzenColumn>
                                 <RadzenColumn Size="12" SizeMD="7">
-                                    <RadzenTextBox @bind-Value="@this.Vendor.State" 
+                                    <RadzenTextBox @bind-Value="@this.Vendor.State"
                                                    AutoCompleteType="AutoCompleteType.State"
                                                    Style="width: 100%"
                                                    ReadOnly="@this.IsReadOnly()"/>
@@ -129,7 +166,7 @@
                 <RadzenRow JustifyContent="JustifyContent.Center" Gap="5" RowGap="5" class="rz-w-100">
                     <RadzenCard Variant="Variant.Text" class="rz-p-1 rz-m-1">
                         <RadzenText TextAlign="TextAlign.Center">Email</RadzenText>
-                        <RadzenText TextAlign="TextAlign.Center">Seperatre emails with a comma</RadzenText>
+                        <RadzenText TextAlign="TextAlign.Center">Separate emails with a comma</RadzenText>
                     </RadzenCard>
                     <RadzenTextBox Style="width: 100%;"
                                    @bind-Value="@this.Vendor.Email"
@@ -155,7 +192,6 @@
             </RadzenFieldset>
         </RadzenFieldset>
     </RadzenTemplateForm>
-    
 }
 
 @code {
@@ -163,32 +199,63 @@
     [Inject] private NotificationService _notificationService { get; set; }
     [Inject] private ContactDataService _dataService { get; set; }
     [Parameter] public Vendor? Vendor { get; set; } = new();
-    [Parameter] public string Width { get; set; } ="600px";
+    [Parameter] public string Width { get; set; } = "600px";
+
     /*[Parameter] public EventCallback<Vendor> VendorChanged { get; set; }*/
     [Parameter] public EventCallback<Vendor> VendorUpdated { get; set; }
     [Parameter] public EditMode Mode { get; set; }
-    
-    private bool _switchValue=false;
-    private string _label="Enable";
+    private CountryHelper _countryHelper = new CountryHelper();
 
-    protected override Task OnParametersSetAsync() {
-        if(this.Mode == EditMode.NEW) {
-            this.Vendor = this.Vendor ?? new Vendor();
-        }
-        return base.OnParametersSetAsync();
+    private IntlTel _vendorPhone;
+    private IntlTel _vendorFax;
+
+    public IntlTel VendorPhone { get=>this._vendorPhone; set=>this._vendorPhone=value; } 
+    public IntlTel VendorFax { get=>this._vendorFax; set=>this._vendorFax=value; } 
+    
+    private bool _switchValue = false;
+    private string _label = "Enable";
+    private IEnumerable<Country> _countries;
+
+    protected override Task OnInitializedAsync() {
+        this._countries=this._countryHelper.GetCountryData();
+        return base.OnInitializedAsync();
     }
 
+    protected override Task OnParametersSetAsync() {
+        if (this.Mode == EditMode.NEW) {
+            this.Vendor = this.Vendor ?? new Vendor();
+        } else {
+            if (this.Vendor != null) {
+                if (!string.IsNullOrEmpty(this.Vendor.Phone)) {
+                    this.VendorPhone = new IntlTel() { Number = this.Vendor.Phone, IsValid = true };
+                } else {
+                    this.VendorPhone = new IntlTel() { Number = "", IsValid = false };
+                }
+                
+                if (!string.IsNullOrEmpty(this.Vendor.Fax)) {
+                    this.VendorFax = new IntlTel() { Number = this.Vendor.Fax, IsValid = true };
+                } else {
+                    this.VendorFax = new IntlTel() { Number = "", IsValid = true };
+                }
+            }
+        }
+
+        return base.OnParametersSetAsync();
+    }
+    
     private bool IsReadOnly() {
         return this.Mode == EditMode.VIEW;
     }
 
     private async Task SaveHandler() {
-        if(this.Vendor == null) {
+        if (this.Vendor == null) {
             return;
         }
+        this.Vendor.Phone = this.VendorPhone?.Number ?? "";
+        this.Vendor.Fax = this.VendorFax?.Number ?? "";
         switch (this.Mode) {
             case EditMode.NEW:
-                this.Vendor=await this._dataService.InsertOneV2(this.Vendor);
+                this.Vendor = await this._dataService.InsertOneV2(this.Vendor);
                 break;
             case EditMode.EDIT:
                 await this._dataService.Update(this.Vendor);
@@ -200,19 +267,21 @@
     }
 
     private Task InvalidSubmit() {
-        this._notificationService.Notify(NotificationSeverity.Error,"Input Error(s)","There are errors in the form, please correct them before submitting.");
+        //Console.WriteLine($"Number: {this._vendorPhone.Number}");
+        this._notificationService.Notify(NotificationSeverity.Error, "Input Error(s)", "There are errors in the form, please correct them before submitting.");
         return Task.CompletedTask;
     }
-    
+
     private Task Cancel() {
         this._dialogService.Close();
         return Task.CompletedTask;
     }
-    
+
     void OnChange(bool? value, string name) {
         if (value.HasValue) {
             this._switchValue = value.Value;
             this._label = value.Value ? "Disable" : "Enable";
         }
     }
+
 }

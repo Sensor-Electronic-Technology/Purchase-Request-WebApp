@@ -17,7 +17,7 @@
         <PackageReference Include="System.DirectoryServices.AccountManagement" Version="9.0.0-rc.2.24473.5" />
         <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.0-rc.2.24473.5" />
         <PackageReference Include="SETiFileClient" Version="1.3.18" />
-        
+        <PackageReference Include="PSC.CSharp.Library.CountryData" Version="8.0.3" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Domain\Domain.csproj" />

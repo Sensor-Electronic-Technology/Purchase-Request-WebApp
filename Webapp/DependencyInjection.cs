@@ -105,6 +105,7 @@ public static class DependencyInjection {
         builder.Services.AddCascadingAuthenticationState();
         builder.Services.AddBlazorDownloadFile(ServiceLifetime.Scoped);
         builder.Services.AddHttpClient();
+        builder.Services.RegisterIntlTelInput();
         return builder;
     }
     

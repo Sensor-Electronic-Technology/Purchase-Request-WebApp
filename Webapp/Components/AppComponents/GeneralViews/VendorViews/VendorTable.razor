@@ -1,6 +1,7 @@
 ﻿@using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using Webapp.Data
+@using IntlTelInputBlazor
 
 <RadzenCard class="info-area">
     <RadzenCard class="area-header">
@@ -38,10 +39,7 @@
                         Density="Density.Compact"
                         PageSize="@this._pageCount"
                         AllowPaging="true"
-                        EditMode="@editMode"
                         Data="@this._vendors"
-                        RowUpdate="@OnUpdateRow"
-                        RowCreate="@OnCreateRow"
                         Sort="@Reset"
                         Page="@Reset"
                         Filter="@Reset"
@@ -182,7 +180,16 @@
             Reset();
         }
         itemsToUpdate.Add(vendor);
-        await _vendorsGrid.EditRow(vendor);
+        await this._dialogService.OpenAsync<VendorView>("Edit Vendor",
+            new Dictionary<string, object> {
+                { "Mode", EditMode.EDIT },
+                { "Vendor", vendor },
+                {"Width", "900px"},
+                {"VendorUpdated", EventCallback.Factory.Create<Vendor>(this, VendorUpdatedHandler)}
+            },new DialogOptions() {
+                Width = "fit-content",
+            });
+        //await _vendorsGrid.EditRow(vendor);
     }
 
     void OnUpdateRow(Vendor vendor) {

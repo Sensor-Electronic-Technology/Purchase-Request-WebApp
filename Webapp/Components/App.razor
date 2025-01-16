@@ -14,11 +14,6 @@
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css"/>
     <link rel="stylesheet" href="app.css"/>
     <link rel="stylesheet" href="Webapp.styles.css"/>
-    @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/dark.css">
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-dark.css">
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-dark.css">
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark.css">
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/humanistic-dark.css">*@
     <link href=@AppendVersion("_content/DevExpress.Blazor.Themes/blazing-dark.bs5.min.css") rel="stylesheet" />
     @DxResourceManager.RegisterScripts()
     <link rel="stylesheet" href=@AppendVersion("_content/DevExpress.Blazor.Reporting.Viewer/css/dx-blazor-reporting-components.css")>
@@ -28,58 +23,9 @@
           crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" 
           rel="stylesheet" />
+    <link rel="stylesheet" href="./_content/IntlTelInputBlazor/css/intlTelInput.css">
     <link href="_content/Blazor.Bootstrap/blazor.bootstrap.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="/images/seti_logo.png"/>
-    @*<link rel="icon" type="image/svg" href="/images/avatars/actor-chaplin-comedy-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/addicted-draw-love-svgrepo-com.svg">
-    <link rel="icon" type="image/svg" href="/images/avatars/afro-avatar-male-2-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/afro-avatar-male-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/afro-boy-child-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/afro-female-person-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/alien-avatar-space-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/animal-avatar-bear-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/animal-avatar-mutton-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/anime-away-face-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/apple-avatar-illness-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/artist-avatar-marilyn-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-avocado-food-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-bad-breaking-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-batman-comics-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-boy-kid-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-boy-male-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-bug-insect-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-child-girl-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-cloud-crying-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-coffee-cup-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-dead-monster-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-einstein-professor-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-elderly-grandma-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-female-girl-svgrepo-com.svg"/>
-
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-female-portrait-2-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-female-portrait-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-geisha-japanese-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-hindi-indian-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-joker-squad-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-lazybones-sloth-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-male-man-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-male-ozzy-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-man-muslim-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-man-person-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-muslim-paranja-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-nun-sister-svgrepo-com.svg"/>
-
-    <link rel="icon" type="image/svg" href="/images/avatars/avatar-person-pilot-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/baby-child-kid-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/beard-hipster-male-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/builder-helmet-worker-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/builder-helmet-worker-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/child-girl-kid-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/christmas-clous-santa-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/fighter-luchador-man-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/friday-halloween-jason-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/indian-male-man-svgrepo-com.svg"/>
-    <link rel="icon" type="image/svg" href="/images/avatars/indian-man-sikh-svgrepo-com.svg"/>*@
     
     <RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
@@ -89,6 +35,7 @@
 <body>
     <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
+    <script src="./_content/IntlTelInputBlazor/js/intlTelInput.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" i

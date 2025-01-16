@@ -32,6 +32,7 @@ using SetiFileStore.Domain.Contracts.Responses;
 using SetiFileStore.FileClient;
 using Department = Domain.PurchaseRequests.Model.Department;
 using TimeProvider = Infrastructure.Services.TimeProvider;
+using PSC.CSharp.Library.CountryData;
 
 //Console.WriteLine($"Address: {HttpClientConstants.LoginApiUrl}");
 //await TestMongoIdString();
@@ -123,6 +124,46 @@ Console.WriteLine($"Init: {init}");
 Console.WriteLine($"First Sub(0,1): {first.Substring(0,1)}");
 Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 */
+
+await FixVendorCountry();
+
+async Task FixVendorCountry() {
+    CountryHelper countryHelper = new CountryHelper();
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var contactCollection = database.GetCollection<Contact>("contacts");
+    var countries = countryHelper.GetCountryData();
+    var contacts = await contactCollection.OfType<Vendor>().Find(_ => true).ToListAsync();
+    
+    foreach (var contact in contacts) {
+        if ((!string.IsNullOrEmpty(contact.Country)) && contact.Country.Length <= 2) {
+            var country = countries?.FirstOrDefault(e => e.CountryShortCode.Contains(contact.Country ?? ""));
+            if (country != null) {
+                Console.WriteLine($"Contact: {contact.Name} Country: {contact.Country} CountryCode: {country.CountryName}");
+                var update = Builders<Contact>.Update
+                    .Set(e => e.Country, country.CountryShortCode);
+                await contactCollection.UpdateOneAsync(e=>e._id==contact._id,update);
+            }else {
+                var update=Builders<Contact>.Update.Set(e => e.Country, string.Empty);
+                await contactCollection.UpdateOneAsync(e=>e._id==contact._id,update);
+            }
+        } else if((!string.IsNullOrEmpty(contact.Country)) && contact.Country.Length > 2) {
+            var country=countries?.FirstOrDefault(e => e.CountryName.Contains(contact.Country ?? ""));
+            if (country != null) {
+                Console.WriteLine($"Contact: {contact.Name} Country: {contact.Country} CountryCode: {country.CountryName}");
+                var update = Builders<Contact>.Update
+                    .Set(e => e.Country, country.CountryShortCode);
+                await contactCollection.UpdateOneAsync(e=>e._id==contact._id,update);
+            } else {
+                var update=Builders<Contact>.Update.Set(e => e.Country, string.Empty);
+                await contactCollection.UpdateOneAsync(e=>e._id==contact._id,update);
+            }
+        } else {
+            var update=Builders<Contact>.Update.Set(e => e.Country, string.Empty);
+            await contactCollection.UpdateOneAsync(e=>e._id==contact._id,update);
+        }
+    }
+}
 
 
 async Task GeneratePurchaseRequests() {
