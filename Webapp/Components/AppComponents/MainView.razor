@@ -11,6 +11,7 @@
 @using Webapp.Services
 @using Webapp.Services.Authentication
 @using Webapp.Components.AppComponents.PurchaserViews
+@implements IAsyncDisposable
 
 <div>
 <RadzenTabs class="rz-p-0 rz-m-0" SelectedIndex="@this._selectedIndex" 
@@ -49,13 +50,6 @@
             @if (this._userProfile != null) {
                 @switch (this._userAction) {
                     case PrUserAction.MODIFY:
-                        @*@if (this._actionRequest?.Status == PrStatus.Ordered) {
-                            <OrderActionView PurchaseRequest="@this._actionRequest"
-                                             UserProfile="@this._userProfile"
-                                             ActionCompleted="@this.CompletedHandler"/>
-                        } else {
-
-                        }*@
                         <PurchaseRequestForm PurchaseRequest="@this._actionRequest"
                                              Mode="@EditMode.EDIT"
                                              RepeatEdit="false"
@@ -109,7 +103,6 @@
 @code {
     [Inject] private PurchaseRequestService _purchaseRequestService { get; set; }
     [Inject] private NotificationService _notificationService { get; set; }
-    [Inject] private DialogService _dialogService { get; set; }
     [Inject] private UserService _userService { get; set; }
     [Inject] private PrEditingTracker EditingTracker { get; set; }
     [Inject] private ILogger<MainView> _logger { get; set; }

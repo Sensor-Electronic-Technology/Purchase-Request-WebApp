@@ -10,6 +10,9 @@
         <ContainerImageTag>dev</ContainerImageTag>
         <LangVersion>13</LangVersion>
         <AssemblyName>PrWebApp</AssemblyName>
+      <ServerGarbageCollection>false</ServerGarbageCollection>
+      <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
+      <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
     
     <ItemGroup>

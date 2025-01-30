@@ -309,7 +309,16 @@
                                     this.ContextActionHandler(args, e).Wait();
                                 }
                             );
-                        }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                        }else if (args.Data.Status is PrStatus.Ordered) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" },
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if(args.Data.Status is  PrStatus.Delivered or PrStatus.Rejected) {
                             menuList = [
                                 new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                             ];

@@ -21,7 +21,16 @@
                                 <RadzenButton Size="ButtonSize.Medium" ButtonStyle="ButtonStyle.Info"
                                               Text="Cancel" Icon="highlight_off"
                                               Click="@(() => this.UserActionHandler(PrUserAction.CANCEL))"/>
-                            } else if (this.PurchaseRequest?.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                            }else if (this.PurchaseRequest?.Status is PrStatus.Ordered) {
+                                <RadzenButton Size="ButtonSize.Medium"
+                                              ButtonStyle="ButtonStyle.Info"
+                                              Text="Check-in Order"
+                                              Icon="input"
+                                              Click="@(() => this.UserActionHandler(PrUserAction.CHECKIN))"/>
+                                <RadzenButton Text="Repeat Request" ButtonStyle="ButtonStyle.Info"
+                                              Icon="repeat_one"
+                                              Click="@(() => this.UserActionHandler(PrUserAction.REPEAT))"/>
+                            } else if (this.PurchaseRequest?.Status is PrStatus.Delivered or PrStatus.Rejected) {
                                 <RadzenButton Text="Repeat Request" ButtonStyle="ButtonStyle.Info"
                                               Icon="repeat_one"
                                               Click="@(() => this.UserActionHandler(PrUserAction.REPEAT))"/>
