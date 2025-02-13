@@ -368,7 +368,7 @@
         this.EditingTracker.FinishEditing(id);
         if (this.Action.HasValue && !string.IsNullOrWhiteSpace(this.Id)) {
             this._notificationService.Notify(NotificationSeverity.Info,"Info","Action completed successfully, Navigating");
-            this._navigationManager.NavigateTo("/");
+            this._navigationManager.NavigateTo("/",forceLoad:true);
         } else {
             await this.Load();
         }
