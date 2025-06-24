@@ -344,17 +344,24 @@ public class PurchaseRequestService {
     public async Task<List<QuotesDto>> GetQuotes() {
         var quotes=await this._requestDataService.GetQuotes();
         foreach(var quote in quotes) {
-            var fileData=await this._fileService.GetFileInfo(quote.FileId,this._configuration["AppDomain"] ?? "purchase_request");
-            if (fileData != null) {
-                quote.Filename = fileData.Filename;
+            try {
+                var fileData=await this._fileService.GetFileInfo(quote.FileId,this._configuration["AppDomain"] ?? "purchase_request");
+                if (fileData != null) {
+                    quote.Filename = fileData.Filename;
+                }
+                quote.Url = this._configuration["FileServiceUrl"];
+                if (!string.IsNullOrWhiteSpace(quote.Url)) {
+                    quote.Url=quote.Url.Remove(quote.Url.Length);
+                    quote.Url+=HttpConstants.FileDownloadInlinePath
+                        .Replace("{appDomain}","purchase_request")
+                        .Replace("{fileId}",quote.FileId);   
+                }
+            } catch (Exception e) {
+                this._logger.LogError(e,"Error getting quote file info. Filename: {FileName} PurchaseRequest: {Request}",quote.Filename,quote.PrTitle);
+                quote.Url = "";
+                continue;
             }
-            quote.Url = this._configuration["FileServiceUrl"];
-            if (!string.IsNullOrWhiteSpace(quote.Url)) {
-                quote.Url=quote.Url.Remove(quote.Url.Length);
-                quote.Url+=HttpConstants.FileDownloadInlinePath
-                    .Replace("{appDomain}","purchase_request")
-                    .Replace("{fileId}",quote.FileId);   
-            }
+
         }
         return quotes;
     }

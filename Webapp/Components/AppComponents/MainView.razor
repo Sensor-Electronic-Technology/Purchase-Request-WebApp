@@ -184,14 +184,22 @@
                         break;
                     case PrUserAction.APPROVE:
                         if(role==nameof(PurchaseRequestRole.Approver)) {
-                            await this.ApproveRequestHandler();
+                            if (this._selectedRequest.Status==PrStatus.NeedsApproval) {
+                                await this.ApproveRequestHandler();
+                            } else {
+                                this._notificationService.Notify(NotificationSeverity.Warning,"Warning","Purchase request is approved");
+                            }
                         } else {
                             this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
                         }
                         break;
                     case PrUserAction.ORDER:
                         if(role==nameof(PurchaseRequestRole.Purchaser)) {
-                            await this.OrderRequestHandler();
+                            if (this._selectedRequest.Status==PrStatus.Approved) {
+                                await this.OrderRequestHandler();
+                            } else {
+                                this._notificationService.Notify(NotificationSeverity.Warning,"Warning","Purchase request is already ordered or not approved");
+                            }
                         } else {
                             this._notificationService.Notify(NotificationSeverity.Error,"Error","You are not authorized to perform this action");
                         }
