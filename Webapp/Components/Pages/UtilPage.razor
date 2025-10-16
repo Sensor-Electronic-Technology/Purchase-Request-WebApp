@@ -1,6 +1,16 @@
 ﻿@page "/vendors"
+@using Domain.Authentication
 
-<VendorTable/>
+<AuthorizeView Roles="@this.GetRoles()">
+    <Authorized>
+        <VendorTable/>
+    </Authorized>
+    <NotAuthorized>
+        <Login/>
+    </NotAuthorized>
+</AuthorizeView>
+
+
 @*
 <RadzenTabs>
     <Tabs>
@@ -21,5 +31,13 @@
 *@
 
 @code {
-    
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private string GetRoles() {
+        return $"{PurchaseRequestRole.Purchaser.Name}," +
+               $"{PurchaseRequestRole.Approver.Name}," +
+               $"{PurchaseRequestRole.Requester.Name}," +
+               $"{PurchaseRequestRole.Admin.Name}";
+    }
 }

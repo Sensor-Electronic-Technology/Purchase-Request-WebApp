@@ -42,11 +42,17 @@ public class ContactDataService {
         return false;
     }
     
+    public async Task Delete<T>(T contact) where T:Contact {
+        await this._contactCollection.OfType<T>().DeleteOneAsync(e=>e._id == contact._id);
+    }
+    
     public async Task<List<Vendor>> GetVendors() {
         return await this._contactCollection.OfType<Vendor>().Find(_=>true).ToListAsync();
     }
 
     public async Task<InternalContact> GetInternalContact(InternalContactType type) {
-        return await this._contactCollection.OfType<InternalContact>().Find(ic => ic.Type == type).FirstOrDefaultAsync();
+        return await this._contactCollection.OfType<InternalContact>()
+            .Find(ic => ic.Type == type)
+            .FirstOrDefaultAsync();
     }
 }

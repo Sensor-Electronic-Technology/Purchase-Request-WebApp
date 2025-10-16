@@ -1,6 +1,8 @@
-﻿@using Domain.PurchaseRequests.Model
+﻿@using Domain.Authentication
+@using Domain.PurchaseRequests.Model
 @using Infrastructure.Services
 @using Webapp.Data
+@using Webapp.Services.Authentication
 @using IntlTelInputBlazor
 
 <RadzenCard class="info-area">
@@ -119,10 +121,13 @@
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
                                       Variant="Variant.Flat" Size="ButtonSize.Medium"
                                       Click="@(args => EditRow(vendorItem))" @onclick:stopPropagation="true"/>
-                        @*<RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
-                                      Variant="Variant.Flat" Shade="Shade.Lighter"
-                                      Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                      Click="@(args => DeleteRow(vendorItem))" @onclick:stopPropagation="true"/>*@
+                        @if (this._userService.GetUserRole() == nameof(PurchaseRequestRole.Purchaser)) {
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                          Variant="Variant.Flat" Shade="Shade.Lighter"
+                                          Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                          Click="@(args => DeleteRow(vendorItem))" @onclick:stopPropagation="true"/>
+                        }
+
                     </Template>
                     <EditTemplate Context="vendorItem">
                         <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
@@ -132,11 +137,14 @@
                         <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
                                       Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
                                       Click="@((args) => CancelEdit(vendorItem))" aria-label="Cancel"/>
+                        @if (this._userService.GetUserRole() == nameof(PurchaseRequestRole.Purchaser)) {
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
+                                          Variant="Variant.Flat" Shade="Shade.Lighter"
+                                          Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
+                                          Click="@(args => DeleteRow(vendorItem))" aria-label="Delete"/>
+                        }
 
-                        @*<RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete"
-                                      Variant="Variant.Flat" Shade="Shade.Lighter"
-                                      Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1"
-                                      Click="@(args => DeleteRow(vendorItem))" aria-label="Delete"/>*@
+
                     </EditTemplate>
                 </RadzenDataGridColumn>
             </Columns>
@@ -152,6 +160,7 @@
 @code {
     [Inject] public ContactDataService _contactDataService { get; set; }
     [Inject] public DialogService _dialogService { get; set; }
+    [Inject] private UserService _userService { get; set; }
     RadzenDataGrid<Vendor> _vendorsGrid;
     private List<Vendor> _vendors = [];
     List<Vendor> itemsToInsert = [];
@@ -209,8 +218,14 @@
     async Task DeleteRow(Vendor vendor) {
         this.Reset(vendor);
         if(this._vendors.Contains(vendor)) {
-            this._vendors.Remove(vendor);
-            await this._vendorsGrid.Reload();
+            var response=await this._dialogService.Confirm("Are you sure you want to delete this vendor?", 
+                "Delete Vendor", 
+                new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+            if (response.HasValue && response.Value) {
+                this._vendors.Remove(vendor);
+                await this._contactDataService.Delete(vendor);
+                await this._vendorsGrid.Reload();
+            }
         } else {
             this._vendorsGrid.CancelEditRow(vendor);
         }
