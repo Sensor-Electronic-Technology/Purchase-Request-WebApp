@@ -300,7 +300,7 @@ public class PurchaseRequestService {
         }
         List<string> to = [request.Requester.Email];
         List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Approver.Email];
-        if (request.EmailCopyList?.Any() == true) {
+        if (request.EmailCopyList.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
         var document = new PurchaseOrderDocument(request.ToPurchaseOrderDto(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));

@@ -125,7 +125,39 @@ Console.WriteLine($"First Sub(0,1): {first.Substring(0,1)}");
 Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 */
 
-await FixVendorCountry();
+//await FixVendorCountry();
+
+async Task ChangeApprover(string requester,string oldApprover,string approver) {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
+    var userCollection=database.GetCollection<UserProfile>("user_profiles");
+    var requests=await prCollection.Find(e =>
+            e.Approver.Username == oldApprover && e.Requester.Username == requester && e.ApprovalResult == null && e.Receiver==null)
+        .ToListAsync();
+    var user = await userCollection.Find(e=>e._id==approver).FirstOrDefaultAsync();
+    if (user != null) {
+        Console.WriteLine($"Requests: {string.Join(',', requests.Select(e => e.Title))}");
+        List<WriteModel<PurchaseRequest>> updates=new List<WriteModel<PurchaseRequest>>(requests.Count);
+        
+        foreach (var request in requests) {
+            var filter=Builders<PurchaseRequest>.Filter.And(
+                Builders<PurchaseRequest>.Filter.Eq(e => e.Requester.Username, requester),
+                Builders<PurchaseRequest>.Filter.Eq(e => e.Approver.Username, oldApprover),
+                Builders<PurchaseRequest>.Filter.Eq(e => e.ApprovalResult, null),
+                Builders<PurchaseRequest>.Filter.Eq(e => e.Receiver, null),
+                Builders<PurchaseRequest>.Filter.Eq(e => e.Title,request.Title));
+            var update = Builders<PurchaseRequest>.Update.Set(e => e.Approver, new PrApprover() {
+                Email = user.Email,
+                Name = $"{user.FirstName} {user.LastName}",
+                Username = user._id
+            });
+            updates.Add(new UpdateOneModel<PurchaseRequest>(filter,update));
+        }
+        await prCollection.BulkWriteAsync(updates);
+        Console.WriteLine("Completed , check database");
+    }
+}
 
 async Task FixVendorCountry() {
     CountryHelper countryHelper = new CountryHelper();
