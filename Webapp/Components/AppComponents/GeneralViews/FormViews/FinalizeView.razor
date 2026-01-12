@@ -125,8 +125,12 @@
     }
 
     protected override Task OnParametersSetAsync() {
+        string PrAction = "Approval Requested";
+        if (!this.RepeatEdit) {
+            PrAction = this.Mode != EditMode.EDIT ? "Approval Requested" : "Approval Requested - Modified";
+        }
         this.MailMerge = [new RequestMailMerge() {
-            PrAction = this.Mode!=EditMode.EDIT ? "Approval Requested":"Approval Requested - Modified",
+            PrAction = PrAction,
             Title = this.PurchaseRequestInput?.Title ?? "",
             Approver = this.PurchaseRequestInput?.ApproverName ?? "",
             Requester = this.PurchaseRequestInput?.RequesterName ?? "",
@@ -134,6 +138,7 @@
             Description = this.PurchaseRequestInput?.Description ?? "",
             AdditionalComments = this.PurchaseRequestInput?.AdditionalComments ?? "",
         }];
+
         return base.OnParametersSetAsync();
     }
 
