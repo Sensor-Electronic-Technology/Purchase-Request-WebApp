@@ -36,6 +36,13 @@
                 </RadzenText>
             </RadzenCard>
             <RadzenCard>
+                <RadzenToggleButton ButtonStyle="ButtonStyle.Success" 
+                                    ToggleButtonStyle="ButtonStyle.Danger" 
+                                    ToggleShade="Shade.Default" 
+                                    Click=@ToggleButtonHandler
+                                    Text="@this._toggleText" 
+                                    Value="@this._showAllUsers"
+                                    InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Button" }})" />
                 <RadzenDataGrid @ref="@this._dataGrid"
                                 TItem="PurchaseRequest"
                                 Data="@this.PurchaseRequests"
@@ -60,7 +67,7 @@
                         <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
                                      AlertStyle="@(this.GetAlertStyle((PrStatus)Enum.Parse(typeof(PrStatus), context.Data.Key.ToString())))"
                                      AllowClose="false"
-                                     Size="AlertSize.ExtraSmall" />
+                                     Size="AlertSize.ExtraSmall"/>
                     </GroupHeaderTemplate>
                     <HeaderTemplate>
                         <RadzenStack Orientation="Orientation.Horizontal">
@@ -185,6 +192,8 @@
     private bool _viewPainCollapsed = true;
     private string _viewPaneSize = "50%";
     private bool _queueCollapsed = false;
+    private string _toggleText = "Show All Users";
+    private bool _showAllUsers = false;
 
     private async Task SelectedChangedHandler(IList<PurchaseRequest> obj) {
         if (obj.Count > 0) {
@@ -499,4 +508,14 @@
                             Value="@(this._dataGrid.ColumnsCollection.Where(c => c.GetVisible()))"
                             Change=@(args => { var checkedColumns = ((IEnumerable<object>)args).Cast<RadzenDataGridColumn<PurchaseRequest>>(); this._dataGrid.ColumnsCollection.ToList().ForEach(c => c.Visible = checkedColumns.Contains(c)); })/>
         );
+    
+    private void ToggleButtonHandler() {
+        if (this._showAllUsers) {
+            this._showAllUsers = false;
+            this._toggleText = "Show All Users";
+        } else {
+            this._showAllUsers = true;
+            this._toggleText = "Show Only My Requests";
+        }
+    }
 }

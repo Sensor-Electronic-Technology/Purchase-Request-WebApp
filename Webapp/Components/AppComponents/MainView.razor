@@ -122,6 +122,7 @@
     private string _tabIcon="autorenew";
     private int _selectedIndex = 0;
     private PrUserAction _userAction = PrUserAction.MODIFY;
+
     
     private Dictionary<PrUserAction, TabTemplate> _tabTemplates=new() { 
         { PrUserAction.MODIFY, new TabTemplate("Modify Request", "autorenew") }, 
@@ -171,7 +172,8 @@
         await base.OnParametersSetAsync();
         var role=this._userService.GetUserRole();
         if (!string.IsNullOrWhiteSpace(this.Id) && this.Action.HasValue && this._userProfile != null) {
-            this._selectedRequest = this._purchaseRequests.FirstOrDefault(e => e._id.ToString() == this.Id);
+            this._selectedRequest = await this._purchaseRequestService.GetPurchaseRequest(this.Id);
+            //this._selectedRequest = this._purchaseRequests.FirstOrDefault(e => e._id.ToString() == this.Id);
             if (this._selectedRequest != null) {
                 this._userAction = (PrUserAction)this.Action.Value;
                 switch(this._userAction) {

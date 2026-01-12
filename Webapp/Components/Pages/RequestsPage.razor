@@ -273,13 +273,19 @@
                 return AlertStyle.Info;
         }
     }
+    
+    private Task ContextActionHandler(DataGridCellMouseEventArgs<PurchaseRequest> args, MenuItemEventArgs e) {
+        this._contextMenuService.Close();
+        this._navigationManager.NavigateTo($"/action/{args.Data._id}/{(int)PrUserAction.REPEAT}", true);
+        return Task.CompletedTask;
+    }
 
     private void ContextMenuHandle(DataGridCellMouseEventArgs<PurchaseRequest> args) {
         List<ContextMenuItem> menuList = [
-            new() { Text = "Repeat Request", Value = PrUserAction.MODIFY, Icon = "autorenew" },
+            new() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "autorenew" },
         ];
         this._contextMenuService.Open(args, menuList, (e) => {
-            this._navigationManager.NavigateTo($"/action/{args.Data._id}/{(int)PrUserAction.REPEAT}", true);
+            this.ContextActionHandler(args, e).Wait();
         });
     }
     

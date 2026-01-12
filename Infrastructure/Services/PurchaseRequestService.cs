@@ -49,9 +49,14 @@ public class PurchaseRequestService {
         this._logger = logger;
         this._timeProvider = timeProvider;
     }
-    public async Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
-        return await this._requestDataService.GetPurchaseRequest(id);
+    public Task<PurchaseRequest> GetPurchaseRequest(ObjectId id) {
+        return this._requestDataService.GetPurchaseRequest(id);
     }
+
+    public Task<PurchaseRequest> GetPurchaseRequest(string id) {
+        return this._requestDataService.GetPurchaseRequest(ObjectId.Parse(id));
+    }
+    
     public async Task<PurchaseRequestInput> CreatePrInput(UserProfile requester) {
         var input= new PurchaseRequestInput() {
             Id=ObjectId.GenerateNewId(),
