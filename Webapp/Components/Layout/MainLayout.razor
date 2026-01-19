@@ -88,7 +88,7 @@
                         <RadzenPanelMenuItem Text="Dashboard"
                                              MouseEnter="@((args) => ShowTooltip(args, "Dashboard"))"
                                              Image="images/seti_logo.png"
-                                             Path="/"/>
+                                             Click="@(() => navManager.NavigateTo("/",forceLoad:true))"/>
                         <RadzenPanelMenuItem Text="Requests Query"
                                              Icon="event_seat"
                                              Path="/requests"
