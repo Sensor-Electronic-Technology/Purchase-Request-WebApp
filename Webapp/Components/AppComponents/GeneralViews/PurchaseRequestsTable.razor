@@ -352,7 +352,16 @@
                                     this.ContextActionHandler(args, e).Wait();
                                 }
                             );
-                        }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                        }else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered) {
+                            menuList = [
+                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" },
+                                new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
+                            ];
+                            this._contextMenuService.Open(args, menuList, (e) => {
+                                    this.ContextActionHandler(args, e).Wait();
+                                }
+                            );
+                        }else if(args.Data.Status is PrStatus.Rejected) {
                             menuList = [
                                 new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                             ];
@@ -364,10 +373,7 @@
                     }else if (args.Data.Approver.Username == this.UserProfile._id) {
                         if (args.Data.Status is PrStatus.NeedsApproval or PrStatus.Approved) {
                             menuList = [
-                                new ContextMenuItem() { 
-                                    Text = "Approve/Reject Request", 
-                                    Value = PrUserAction.APPROVE, 
-                                    Icon = "done_all" 
+                                new ContextMenuItem() { Text = "Approve/Reject Request", Value = PrUserAction.APPROVE, Icon = "done_all" 
                                 }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
@@ -376,7 +382,6 @@
                             );
                         } else if(args.Data.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
                             menuList = [
-                                new ContextMenuItem() { Text = "Check-in Order", Value = PrUserAction.CHECKIN, Icon = "input" },
                                 new ContextMenuItem() { Text = "Repeat Request", Value = PrUserAction.REPEAT, Icon = "repeat_one" }
                             ];
                             this._contextMenuService.Open(args, menuList, (e) => {
