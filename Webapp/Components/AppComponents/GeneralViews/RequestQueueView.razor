@@ -109,6 +109,8 @@
                                         <RadzenSplitButtonItem Text="Cancel" Icon="highlight_off"
                                                                Value="@nameof(PrUserAction.CANCEL)"/>
                                     } else if (status.Status is PrStatus.Ordered or PrStatus.Delivered or PrStatus.Rejected) {
+                                        <RadzenSplitButtonItem Text="Check-in Order" Icon="input"
+                                                               Value="@nameof(PrUserAction.CHECKIN)"/>
                                         <RadzenSplitButtonItem Text="Repeat Request" Icon="repeat_one"
                                                                Value="@nameof(PrUserAction.REPEAT)"/>
                                     }
