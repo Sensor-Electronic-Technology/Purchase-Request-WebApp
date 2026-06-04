@@ -66,7 +66,7 @@ public class PurchaseRequest {
     
     public PurchaseRequestInput Repeat(UserProfile user) {
         return new PurchaseRequestInput {
-            Id = _id,
+            Id = ObjectId.GenerateNewId(),
             Title = this.Title,
             Description = this.Description,
             RequesterUsername = user._id,
