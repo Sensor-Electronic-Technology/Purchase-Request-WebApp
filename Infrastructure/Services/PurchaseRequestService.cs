@@ -304,7 +304,7 @@ public class PurchaseRequestService {
             return false;
         }
         List<string> to = [request.Requester.Email];
-        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Approver.Email];
+        List<string> cc = [request.Purchaser?.Email ?? "dglover@s-et.com",request.Approver.Email];
         if (request.EmailCopyList.Any() == true) {
             cc.AddRange(request.EmailCopyList);
         }
@@ -327,7 +327,7 @@ public class PurchaseRequestService {
             return false;
         }
         List<string> to = [request.Requester.Email];
-        List<string> cc = [request.Purchaser?.Email ?? "space@s-et.com",request.Approver.Email];
+        List<string> cc = [request.Purchaser?.Email ?? "dglover@s-et.com",request.Approver.Email];
         //List<string> cc = [request.Approver.Email];
         if (request.EmailCopyList?.Any() == true) {
             cc.AddRange(request.EmailCopyList);
