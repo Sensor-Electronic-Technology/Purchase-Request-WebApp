@@ -2,6 +2,7 @@
 USER root
 WORKDIR /app
 EXPOSE 8080
+EXPOSE 8443
 #RUN apt-get update \
 #  && apt-get install -y curl 
 #USER $APP_UID
