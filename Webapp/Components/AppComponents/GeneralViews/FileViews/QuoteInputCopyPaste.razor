@@ -13,22 +13,32 @@
 
 @code {
     [Inject] public DialogService _dialogService { get; set; }
+    [Inject] public NotificationService _notifyServise { get; set; }
     [Inject] public IClipLazor _clipBoard { get; set; }
     [Parameter] public EventCallback<TempFileData> FileCopied { get; set; }
     private TempFileData? FileData { get; set; }
-    
+
     async Task FileNameUpdateHandler(string fileName) {
         if (this.FileData != null) {
             this.FileData.Filename = fileName + ".png";
             await this.FileCopied.InvokeAsync(this.FileData);
         }
+
         await InvokeAsync(StateHasChanged);
     }
 
-
     private async Task CopyFromClipboardHandler() {
-        var stream = await this._clipBoard.ReadDataStreamAsync("image/png");
-        if (stream != null) {
+        Stream? stream;
+        try {
+            stream = await this._clipBoard.ReadDataStreamAsync("image/png");
+            if (stream == null) {
+                stream = await this._clipBoard.ReadDataStreamAsync("image/jpeg");
+                if (stream == null) {
+                    this._notifyServise.Notify(NotificationSeverity.Error, "Clipboard Error", detail: "Clipboard was empty or the data was not in image format");
+                    return;
+                }
+            }
+
             using var streamContent = new StreamContent(stream);
             FileData = new TempFileData() {
                 Data = await streamContent.ReadAsByteArrayAsync()
@@ -40,6 +50,8 @@
                 }, new DialogOptions() {
                     Width = "480px",
                 });
+        } catch(Exception ex) {
+            this._notifyServise.Notify(NotificationSeverity.Error, "Clipboard Exception", detail: $"{ex.Message}");
         }
     }
 
