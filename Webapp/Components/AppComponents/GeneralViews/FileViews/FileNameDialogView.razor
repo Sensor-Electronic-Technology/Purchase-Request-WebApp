@@ -1,0 +1,43 @@
+@using Webapp.Data
+
+
+<RadzenTemplateForm TItem="Model" Submit="@SubmitHandler" Data="@_model">
+    <RadzenStack>
+        <RadzenFormField Text="Filename">
+            <ChildContent>
+                <RadzenTextBox @bind-Value="@this._model.Filename" Name="FileNameComp"/>
+            </ChildContent>
+            <Helper>
+                <RadzenRequiredValidator Component="FileNameComp" Text="Filename is required"/>
+                <RadzenRegexValidator Component="FileNameComp" Text="Only letters are allowed" Pattern="^[a-zA-Z]*$" />
+            </Helper>
+        </RadzenFormField>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                     JustifyContent="JustifyContent.End" Gap="5">
+            <RadzenButton Text="Submit" ButtonType="ButtonType.Submit"
+                          Icon="save" ButtonStyle="ButtonStyle.Success"/>
+            <RadzenButton Text="Cancel" Click="@(() => this._dialogService.Close())"
+                          Icon="cancel" ButtonStyle="ButtonStyle.Danger"/>
+        </RadzenStack>
+
+    </RadzenStack>
+
+</RadzenTemplateForm>
+
+
+
+@code {
+    [Inject] public DialogService _dialogService { get; set; }
+    [Parameter] public EventCallback<string> FileNameSaved { get; set; }
+    private Model _model = new Model();
+
+    private async Task SubmitHandler(Model model) {
+        await this.FileNameSaved.InvokeAsync(this._model.Filename);
+        this._dialogService.Close();
+    }
+
+    class Model {
+        public string? Filename { get; set; }
+    }
+
+}

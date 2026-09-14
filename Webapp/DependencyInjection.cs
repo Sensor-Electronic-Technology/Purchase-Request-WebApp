@@ -1,4 +1,5 @@
 ﻿using BlazorDownloadFile;
+using ClipLazor.Extensions;
 using Domain;
 using Infrastructure;
 using Infrastructure.Hubs;
@@ -81,6 +82,7 @@ public static class DependencyInjection {
     }
 
     public static IHostApplicationBuilder AddBlazorComponents(this IHostApplicationBuilder builder) {
+        builder.Services.AddClipboard();
         builder.Services.AddMetrics(builder);
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()

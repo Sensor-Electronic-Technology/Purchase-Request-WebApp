@@ -1,27 +1,39 @@
 ﻿@using Webapp.Data
 @if (this.File != null) {
-    <RadzenStack Orientation="Orientation.Horizontal" 
-                 JustifyContent="JustifyContent.Center" 
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 JustifyContent="JustifyContent.Center"
                  AlignItems="AlignItems.Center">
         @if (!this._fileSelected) {
-            <RadzenUpload @ref="@this._upload" 
-                          Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" 
-                          Change="@OnChangeHandler" 
-                          Auto="false"
-                          class="rz-w-25"
-                          Multiple="false" @onclick:stopPropagation="true"/>
+            <RadzenTabs class="rz-w-50">
+                <Tabs>
+                    <RadzenTabsItem Text="Select File">
+                        <RadzenUpload @ref="@this._upload"
+                                      Accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                      Change="@OnChangeHandler"
+                                      Auto="false"
+                                      class="rz-w-100"
+                                      Multiple="false" @onclick:stopPropagation="true"/>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Copy Image From Clipboard">
+                        <QuoteInputCopyPaste FileCopied="@FileCopiedHandler"/>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
         } else {
             <RadzenCard class="rz-border-radius-6 rz-min-w-50 rz-max-w-75 rz-background-color-info-light rz-p-3">
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+                             AlignItems="AlignItems.Center">
                     <RadzenText TextStyle="TextStyle.Body1" TextAlign="TextAlign.Center">
                         <RadzenIcon Icon="@FileDisplayType.FromExtension(Path.GetExtension(this._fileName)).Icon"
-                                    Style="font-weight: 700"/>    @this._fileName
+                                    Style="font-weight: 700"/> @this._fileName
                     </RadzenText>
-                    <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success" Click="PreviewQuoteHandler" @onclick:stopPropagation="true"/>
+                    <RadzenButton Icon="preview" Text="Preview" ButtonStyle="ButtonStyle.Success"
+                                  Click="PreviewQuoteHandler" @onclick:stopPropagation="true"/>
                 </RadzenStack>
             </RadzenCard>
         }
-        <RadzenButton Icon="close" Click="@(()=>this.RemoveFile.InvokeAsync(this.Index))" @onclick:stopPropagation="true"/>
+        <RadzenButton Icon="close" Click="@(() => this.RemoveFile.InvokeAsync(this.Index))"
+                      @onclick:stopPropagation="true"/>
     </RadzenStack>
 }
 
@@ -31,32 +43,32 @@
     [Inject] public DialogService _dialogService { get; set; }
     [Parameter] public TempFileData? File { get; set; }
     [Parameter] public int Index { get; set; }
-    [Parameter] public EventCallback<(TempFileData file,int index)> AddFile { get; set; }
+    [Parameter] public EventCallback<(TempFileData file, int index)> AddFile { get; set; }
     [Parameter] public EventCallback<int> RemoveFile { get; set; }
-    
+
     private string _fileName = string.Empty;
     private byte[]? _fileData = null;
     private long? _fileSize = 0;
     private RadzenUpload _upload = new();
     bool _fileSelected = false;
-    
+
     protected override Task OnParametersSetAsync() {
         this._fileData = this.File?.Data;
         this._fileName = this.File?.Filename ?? string.Empty;
         this._fileSize = this.File?.Size ?? 0;
-        if (this._fileData!=null && this._fileData.Any()) {
+        if (this._fileData != null && this._fileData.Any()) {
             this._fileSelected = true;
         }
         
         return base.OnParametersSetAsync();
     }
-    
+
     private async Task PreviewQuoteHandler() {
         await this._dialogService.OpenSideAsync<QuotePreview>("Quote Preview", new Dictionary<string, object>() {
             { "FileBytes", this._fileData },
             { "FileName", this._fileName },
             { "SetMaxHeight", false }
-        },new SideDialogOptions() {
+        }, new SideDialogOptions() {
             Width = "50%",
             ShowClose = true,
             ShowTitle = true
@@ -64,13 +76,13 @@
     }
 
     private Task FileChangeHandler(byte[]? data, string? fileName, long? fileSize) {
-        if(data==null || fileName==null || fileSize==null) {
-             return this.RemoveFile.InvokeAsync(this.Index);
+        if (data == null || fileName == null || fileSize == null) {
+            return this.RemoveFile.InvokeAsync(this.Index);
         } else {
-            this.File.Data=data;
-            this.File.Filename=fileName;
-            this.File.Size=fileSize.Value;
-            return this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File,this.Index));
+            this.File.Data = data;
+            this.File.Filename = fileName;
+            this.File.Size = fileSize.Value;
+            return this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File, this.Index));
         }
     }
 
@@ -80,32 +92,47 @@
         return "file";
     }
 
+    private async Task FileCopiedHandler(TempFileData file) {
+        long maxSize = 10 * 1024 * 1024;
+        if (file.Size > maxSize) {
+            this._notifyService.Notify(NotificationSeverity.Error,
+                "File too large",
+                $"The file({file.Filename}) is too large." +
+                " Files must be less than or equal to 10MB." +
+                $"File size: {Math.Round(file.Size.Value / 1E6, 2)}MB", duration: 10000);
+            
+        } else {
+            this.File = file;
+            await this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File, this.Index));
+            this._fileSelected = true;
+        }
+    }
+
     private async Task OnChangeHandler(UploadChangeEventArgs obj) {
-        if (obj.Files.Any()) {
-            var file=obj.Files.First();
-            long maxSize = 10* 1024 * 1024;
-            if(file.Size>maxSize) {
+        if (obj.Files != null && obj.Files.Any()) {
+            var file = obj.Files.First();
+            long maxSize = 10 * 1024 * 1024;
+            if (file.Size > maxSize) {
                 this._notifyService.Notify(NotificationSeverity.Error,
                     "File too large",
                     $"The file({file.Name}) is too large." +
                     " Files must be less than or equal to 10MB." +
-                    $"File size: {Math.Round(file.Size/1E6,2)}MB",duration:10000);
+                    $"File size: {Math.Round(file.Size / 1E6, 2)}MB", duration: 10000);
                 await this._upload.RemoveFile(file.Name);
             } else {
-                await using var stream=file.OpenReadStream(maxSize);
+                await using var stream = file.OpenReadStream(maxSize);
                 using var streamContent = new StreamContent(stream);
                 this.File.Filename = file.Name;
-                this.File.Data=await streamContent.ReadAsByteArrayAsync();
-                this.File.Size=file.Size;
-                await this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File,this.Index));
+                this.File.Data = await streamContent.ReadAsByteArrayAsync();
+                this.File.Size = file.Size;
+                await this.AddFile.InvokeAsync(new ValueTuple<TempFileData, int>(this.File, this.Index));
                 this._fileSelected = true;
             }
         } else {
-            this._fileSelected=false;
+            this._fileSelected = false;
             await this.RemoveFile.InvokeAsync(this.Index);
         }
     }
-
 
 
 }

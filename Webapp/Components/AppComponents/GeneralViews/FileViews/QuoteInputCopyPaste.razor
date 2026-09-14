@@ -1,0 +1,79 @@
+@using ClipLazor.Components
+@using Webapp.Data
+
+<RadzenFieldset Text="Press button to copy image from clipboard">
+    <RadzenStack AlignItems="AlignItems.Center">
+        <RadzenButton Text="Copy Image"
+                      Icon="content_copy"
+                      ButtonStyle="ButtonStyle.Success"
+                      class="rz-w-50"
+                      Click="@CopyFromClipboardHandler"/>
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    [Inject] public DialogService _dialogService { get; set; }
+    [Inject] public IClipLazor _clipBoard { get; set; }
+    [Parameter] public EventCallback<TempFileData> FileCopied { get; set; }
+    private TempFileData? FileData { get; set; }
+    
+    async Task FileNameUpdateHandler(string fileName) {
+        if (this.FileData != null) {
+            this.FileData.Filename = fileName + ".png";
+            await this.FileCopied.InvokeAsync(this.FileData);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task CopyFromClipboardHandler() {
+        var stream = await this._clipBoard.ReadDataStreamAsync("image/png");
+        if (stream != null) {
+            using var streamContent = new StreamContent(stream);
+            FileData = new TempFileData() {
+                Data = await streamContent.ReadAsByteArrayAsync()
+            };
+            this.FileData.Size = this.FileData.Data.Length;
+            await this._dialogService.OpenAsync<FileNameDialogView>("Enter Filename",
+                new Dictionary<string, object?> {
+                    { "FileNameSaved", EventCallback.Factory.Create<string>(this, FileNameUpdateHandler) }
+                }, new DialogOptions() {
+                    Width = "480px",
+                });
+        }
+    }
+
+    /*private async Task HandlePaste(ClipboardPasteEventArgs e) {
+        if (e.HasImage) {
+            /*byte[] imageBytes = e.ImageData.ToArray();#1#
+            FileData = new TempFileData() {
+                Data = e.ImageData.ToArray(),
+                Size = e.ImageData.Length,
+                Filename = "SomeFileName",
+            };
+            await this._dialogService.OpenAsync<FileNameDialogView>("Enter Filename",
+                new Dictionary<string, object?> {
+                    { "FileNameSaved", EventCallback.Factory.Create<string>(this, FileNameUpdateHandler) }
+                }, new DialogOptions() {
+                    Width = "480px",
+                });
+        }
+    }
+
+    private async Task ImagePastedHandler(ReadOnlyMemory<byte> imageData) {
+        /*byte[] imageBytes = e.ImageData.ToArray();#1#
+        FileData = new TempFileData() {
+            Data = imageData.ToArray(),
+            Size = imageData.Length,
+        };
+        await this._dialogService.OpenAsync<FileNameDialogView>("Enter Filename",
+            new Dictionary<string, object?> {
+                { "FileNameSaved", EventCallback.Factory.Create<string>(this, FileNameUpdateHandler) }
+            }, new DialogOptions() {
+                Width = "480px",
+            });
+        // Process screenshot or dropped image
+    }*/
+
+}
+
