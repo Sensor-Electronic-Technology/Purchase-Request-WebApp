@@ -72,7 +72,7 @@
     private List<RequestMailMerge> MailMerge { get; set; } = [];
 
     protected override async Task OnInitializedAsync() { 
-        await base.OnInitializedAsync();
+        //await base.OnInitializedAsync();
         if (this.PurchaseRequest != null) {
             this.PurchaseRequest.PurchaseOrder = new PurchaseOrder();
             this._emailList.Add(this.PurchaseRequest.Requester?.Email ?? "");

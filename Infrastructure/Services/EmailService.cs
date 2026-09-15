@@ -51,9 +51,17 @@ public class EmailService {
             var builder = new BodyBuilder { 
                 HtmlBody = html
             };
-            builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
+            /*builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
             foreach (var attachment in prInput.Attachments) { 
                 builder.Attachments.Add(attachment.Name, attachment.Data);
+            }*/
+            if (prInput.TempFile != null) {
+                using var prStream = new MemoryStream(prInput.TempFile);
+                await builder.Attachments.AddAsync($"{prInput.Title}-PurchaseRequest.pdf",prStream);
+            }
+            foreach (var attachment in prInput.Attachments) { 
+                using var attachStream = new MemoryStream(attachment.Data);
+                await builder.Attachments.AddAsync(attachment.Name, attachStream);
             }
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);

@@ -2,8 +2,6 @@
 @using Domain.PurchaseRequests.Dto
 @using Domain.PurchaseRequests.Model
 @using Domain.PurchaseRequests.TypeConstants
-@using SETiAuth.Domain.Shared.Authentication
-@using Webapp.Services.Authentication
 @using Webapp.Data
 @using Domain.Users
 @inject TooltipService tooltipService
@@ -203,7 +201,7 @@
             //Purposly not awaiting. It appears with the datagrid select you cannot switch rows when you await here. 
             try {
                 _ = this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request",
-                    new Dictionary<string, object> {
+                    new Dictionary<string, object?> {
                         { "PurchaseRequest", this.SelectedPurchaseRequest }, 
                         { "UserProfile", this.UserProfile }, 
                         { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) }
@@ -228,7 +226,7 @@
             //Okay to await here, I think this is because of how the event callbacks are handler.
             //the event callback on the selected row must not operate on a seperate thread??
             await this._dialogService.OpenSideAsync<PurchaseRequestDialogView>("Purchase Request", 
-                new Dictionary<string, object> {
+                new Dictionary<string, object?> {
                     { "PurchaseRequest", this.SelectedPurchaseRequest },
                     { "UserProfile", this.UserProfile },
                     { "UserAction", EventCallback.Factory.Create<UserActionEventArg>(this, this.UserActionHandler) }

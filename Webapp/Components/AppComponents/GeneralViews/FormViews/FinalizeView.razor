@@ -104,7 +104,7 @@
     [Parameter] public EventCallback SaveClicked { get; set; }
     [Parameter] public EventCallback CancelClicked { get; set; }
     
-    DxRichEdit _richEdit;
+    private DxRichEdit? _richEdit;
     
     private List<RequestMailMerge> MailMerge { get; set; } = [];
     private List<string> _emailList = [];
@@ -112,12 +112,12 @@
 
     
     protected override async Task OnInitializedAsync() {
-        await base.OnInitializedAsync();
         this.DocumentContent=await File.ReadAllBytesAsync($"{this._environment.WebRootPath}/MailTemplateFiles/RequestTemplate.docx");
         if(this.PurchaseRequestInput != null) {
             this._emailList.Add(this.PurchaseRequestInput.RequesterEmail ?? "Requester Email");
             this._emailList.Add(this.PurchaseRequestInput.ApproverEmail ?? "Approver Email");
         }
+        //await base.OnInitializedAsync();
     }
 
     protected override Task OnParametersSetAsync() {
@@ -135,7 +135,7 @@
             AdditionalComments = this.PurchaseRequestInput?.AdditionalComments ?? "",
         }];
 
-        return base.OnParametersSetAsync();
+        return Task.CompletedTask;
     }
 
     private string GetSubmitButtonText() {

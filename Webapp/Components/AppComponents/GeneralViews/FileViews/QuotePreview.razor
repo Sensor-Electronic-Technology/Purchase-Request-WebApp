@@ -20,7 +20,7 @@
                               Image="/images/download-icon.svg"
                               @onclick:stopPropagation="true"/>
             </RadzenRow>
-            <PdfViewer Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="@this.GetStyle()"/>
+            <PdfViewer Id="pdf-viewer" Url="@this._embeddedSrc" Class="rz-m-0 rz-p-1 rz-overflow-scroll" Style="@this.GetStyle()"/>
         </RadzenStack>
     }else if (FileDisplayType.DOC.Extensions.Contains(extension)) {
         <RadzenStack>
@@ -70,19 +70,20 @@
     [Parameter] public bool SetMaxHeight { get; set; } = true;
     private bool _prNull = true;
     private string _embeddedSrc = string.Empty;
+    private string _extension;
     private FileDisplayType _fileDisplayType = FileDisplayType.OTHER;
     
     
-    protected override async Task OnInitializedAsync() {
+    /*protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
-    }
+    }*/
 
     public string GetStyle() {
         return this.SetMaxHeight ? "max-height:700px;" : string.Empty;
     }
 
-    protected override async Task OnParametersSetAsync() {
-        var extension = Path.GetExtension(this.FileName);
+    protected override Task OnParametersSetAsync() {
+        this._extension = Path.GetExtension(this.FileName);
         if (FileBytes is { Length: > 0 }) {
             if (this._prNull) {
                 this._embeddedSrc = "data:application/pdf;base64," + Convert.ToBase64String(this.FileBytes);
@@ -92,7 +93,9 @@
             this._prNull = true;
             this._embeddedSrc = string.Empty;
         }
-        await base.OnParametersSetAsync();
+
+        return Task.CompletedTask;
+        //await base.OnParametersSetAsync();
     }
     
     private async Task DownloadHandler() {

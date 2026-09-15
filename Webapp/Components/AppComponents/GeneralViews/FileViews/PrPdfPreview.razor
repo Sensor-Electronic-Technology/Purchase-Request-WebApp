@@ -1,8 +1,7 @@
-﻿@using Domain.PurchaseRequests.Dto
-@using Domain.PurchaseRequests.Pdf
+﻿@using Domain.PurchaseRequests.Pdf
 @using QuestPDF.Fluent
 
-@if (this.PurchaseRequestInput?.TempFile != null) {
+@if (this.PurchaseRequestInput?.TempFile != null && this.PurchaseRequestInput!=null) {
     <QuotePreview FileBytes="@this.PurchaseRequestInput.TempFile" FileName="PurchaseRequest.pdf"/>
 }
 
@@ -11,21 +10,19 @@
     [Inject] private IWebHostEnvironment _environment { get; set; }
     [Parameter] public PurchaseRequestInput? PurchaseRequestInput { get; set; }
     private bool _prNull = true;
-    private byte[]? _fileBytes;
-    protected override async Task OnInitializedAsync() {
-        await base.OnInitializedAsync();
-    }
 
-    protected override async Task OnParametersSetAsync() {
-        await base.OnParametersSetAsync();
+    protected override Task OnParametersSetAsync() {
+        //await base.OnParametersSetAsync();
         if(this.PurchaseRequestInput != null ) {
             if (this._prNull) {
                 var document = new PurchaseRequestDocument(this.PurchaseRequestInput,Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
-                this.PurchaseRequestInput.TempFile=document.GeneratePdf();
+                this.PurchaseRequestInput.TempFile = document.GeneratePdf();
                 this._prNull = false;
             }
         } else {
             this._prNull = true;
         }
+
+        return Task.CompletedTask;
     }
 }

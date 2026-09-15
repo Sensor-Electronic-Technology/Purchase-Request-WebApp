@@ -100,7 +100,7 @@
                     <RadzenTabs>
                         <Tabs>
                             <RadzenTabsItem Text="Purchase Request" class="rz-ripple tab-color-3">
-                                <PrPdfPreview PurchaseRequestInput="@this.PurchaseRequest?.ToInput()"/>
+                                <PrPdfPreview PurchaseRequestInput="@this._prInput"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Purchase Order" class="rz-ripple tab-color-4"
                                             Visible="@(this.PurchaseRequest.Status >= PrStatus.Ordered && this.PurchaseRequest.Status != PrStatus.Rejected)">
@@ -123,6 +123,7 @@
     [Parameter] public EventCallback<PurchaseRequest?> PurchaseRequestChanged { get; set; }
     [Parameter] public EditMode Mode { get; set; } = EditMode.VIEW;
 
+    private PurchaseRequestInput? _prInput;
     private List<Department> _departments = [];
     private string _columnWidth = "width: 100%";
     private ObjectId _prId = ObjectId.Empty;
@@ -130,7 +131,7 @@
     private int _parentTabIndex = 0;
 
     protected override async Task OnInitializedAsync() {
-        await base.OnInitializedAsync();
+        //await base.OnInitializedAsync();
         this._departments = await this._purchaseRequestService.GetDepartments();
     }
 
@@ -146,8 +147,10 @@
                 this._parentTabIndex = 0;
                 this._prId = this.PurchaseRequest._id;
             }
+            this._prInput = this.PurchaseRequest?.ToInput();
         }
-        return base.OnParametersSetAsync();
+        return Task.CompletedTask;
+        //return base.OnParametersSetAsync();
     }
 
     private string GetAlertTitle() {

@@ -28,20 +28,24 @@
     }
 
     private async Task CopyFromClipboardHandler() {
-        Stream? stream;
+        
         try {
-            stream = await this._clipBoard.ReadDataStreamAsync("image/png");
-            if (stream == null) {
-                stream = await this._clipBoard.ReadDataStreamAsync("image/jpeg");
-                if (stream == null) {
+            /*Stream? stream;*/
+            ReadOnlyMemory<byte> data=ReadOnlyMemory<byte>.Empty;
+            data = await this._clipBoard.ReadDataAsync("image/png");
+            //stream = await this._clipBoard.ReadDataStreamAsync("image/png");
+            if (data.IsEmpty) {
+                //stream = await this._clipBoard.ReadDataStreamAsync("image/jpeg");
+                data = await this._clipBoard.ReadDataAsync("image/jpeg");
+                if (data.IsEmpty) {
                     this._notifyServise.Notify(NotificationSeverity.Error, "Clipboard Error", detail: "Clipboard was empty or the data was not in image format");
                     return;
                 }
             }
 
-            using var streamContent = new StreamContent(stream);
+            //using var streamContent = new StreamContent(stream);
             FileData = new TempFileData() {
-                Data = await streamContent.ReadAsByteArrayAsync()
+                Data = data.ToArray()
             };
             this.FileData.Size = this.FileData.Data.Length;
             await this._dialogService.OpenAsync<FileNameDialogView>("Enter Filename",
