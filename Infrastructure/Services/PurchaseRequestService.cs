@@ -81,7 +81,7 @@ public class PurchaseRequestService {
             }
         }
 
-        input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+        input.PrUrl=$"https://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         return input;
     }
     public async Task<bool> CreatePurchaseRequest(PurchaseRequestInput input) {
@@ -110,7 +110,7 @@ public class PurchaseRequestService {
             PurchaseItems = input.PurchaseItems,
             EmailCopyList = input.EmailCcList
         };
-        input.PrUrl=$"http://172.20.4.207/action/{purchaseRequest._id.ToString()}/{(int)PrUserAction.APPROVE}";
+        input.PrUrl=$"https://purchasing.seti.com/action/{purchaseRequest._id.ToString()}/{(int)PrUserAction.APPROVE}";
         purchaseRequest.PrUrl = input.PrUrl;
         if (string.IsNullOrEmpty(input.RequesterEmail) || string.IsNullOrEmpty(input.ApproverEmail)) {
             this._logger.LogError("Error creating purchase request, Approver or Requester were missing emailsr");
@@ -140,9 +140,9 @@ public class PurchaseRequestService {
             return false;
         }
         if (input.Status == PrStatus.NeedsApproval) {
-            input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
+            input.PrUrl=$"https://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.APPROVE}";
         } else {
-            input.PrUrl=$"http://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.ORDER}";
+            input.PrUrl=$"https://purchasing.seti.com/action/{input.Id.ToString()}/{(int)PrUserAction.ORDER}";
         }
         if (string.IsNullOrEmpty(input.RequesterEmail) || string.IsNullOrEmpty(input.ApproverEmail)) {
             this._logger.LogError("Error updating purchase request, Approver or Requester were missing emails");
@@ -271,7 +271,7 @@ public class PurchaseRequestService {
         
         request.Status = approved ? PrStatus.Approved : PrStatus.Rejected;
         if (approved) {
-            request.PrUrl = $"http://purchasing.seti.com/action/{request._id.ToString()}/{(int)PrUserAction.ORDER}";
+            request.PrUrl = $"https://purchasing.seti.com/action/{request._id.ToString()}/{(int)PrUserAction.ORDER}";
         }
         
         var success=await this._requestDataService.UpdateOne(request);
