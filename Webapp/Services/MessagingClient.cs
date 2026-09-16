@@ -1,7 +1,10 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Infrastructure.Hubs;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Options;
+using Webapp.Data;
 
 namespace Webapp.Services;
 
@@ -13,60 +16,18 @@ public class ReceiveMessageEventArgs : EventArgs {
 public class MessagingClient : IAsyncDisposable {
     private readonly ILogger<MessagingClient> _logger;
     private readonly NavigationManager _navigationManager;
+    private readonly KestrelCustomSettings _certSettings;
     public HubConnection HubConnection { get; private set; }
     public bool IsConnected => HubConnection.State == HubConnectionState.Connected;
     private bool _isStarted;
 
-    public MessagingClient(IConfiguration configuration, ILogger<MessagingClient> logger,
+    public MessagingClient(IOptions<KestrelCustomSettings> options, ILogger<MessagingClient> logger,
         NavigationManager navigationManager) {
         this._navigationManager = navigationManager;
+        this._certSettings = options.Value;
         //not cert path defined in kubernetes deployment
-        var companyRootCA = new X509Certificate2("/secrets/certs/tls.crt");
-        /*HubConnection = new HubConnectionBuilder()
-            .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), options => {
-                options.HttpMessageHandlerFactory = (innerHandler) => {
-                    if (innerHandler is HttpClientHandler clientHandler) {
-                        clientHandler.ServerCertificateCustomValidationCallback =
-                            (message, cert, chain, sslPolicyErrors) => true; // Bypasses chain & name errors
-                    }
-
-                    return innerHandler;
-                };
-                options.WebSocketConfiguration = (webSocketOptions) => {
-                    webSocketOptions.RemoteCertificateValidationCallback =
-                        (sender, certificate, chain, sslPolicyErrors) => true; // Forces trust on the WebSocket
-                };
-            })
-            .WithAutomaticReconnect()
-            .Build();*/
         HubConnection = new HubConnectionBuilder()
-            .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), options => {
-                Func<object, X509Certificate?, X509Chain?, System.Net.Security.SslPolicyErrors, bool>
-                    customValidator =
-                        (sender, certificate, chain, sslPolicyErrors) => {
-                            if (chain == null || certificate == null) return false;
-                            chain.ChainPolicy.ExtraStore.Add(companyRootCA);
-                            chain.ChainPolicy.VerificationFlags =
-                                X509VerificationFlags.AllowUnknownCertificateAuthority;
-                            var element = new X509Certificate2(certificate);
-                            bool isValidChain = chain.Build(element);
-                            bool matchesCompanyRoot = chain.ChainElements[^1].Certificate.Thumbprint ==
-                                                      companyRootCA.Thumbprint;
-                            return isValidChain && matchesCompanyRoot;
-                        };
-                options.HttpMessageHandlerFactory = (innerHandler) => {
-                    if (innerHandler is HttpClientHandler clientHandler) {
-                        clientHandler.ServerCertificateCustomValidationCallback =
-                            (m, c, ch, e) => customValidator(m, c, ch, e);
-                    }
-
-                    return innerHandler;
-                };
-                options.WebSocketConfiguration = (webSocketOptions) => {
-                    webSocketOptions.RemoteCertificateValidationCallback =
-                        (s, c, ch, e) => customValidator(s, c, ch, e);
-                };
-            })
+            .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), SignalRCertVerification)
             .WithAutomaticReconnect()
             .Build();
         /*  For development
@@ -77,6 +38,37 @@ public class MessagingClient : IAsyncDisposable {
         */
         this._logger = logger;
         this._isStarted = false;
+    }
+
+    //var companyRootCA = new X509Certificate2("/secrets/certs/tls.crt");
+    private void SignalRCertVerification(HttpConnectionOptions options) {
+        /*X509Certificate2 companyRootCA=X509CertificateLoader.LoadCertificateFromFile("/secrets/certs/tls.crt");*/
+        X509Certificate2 companyRootCA = X509CertificateLoader.LoadCertificateFromFile(
+            this._certSettings.Certificates.Default.Path ?? "/secrets/certs/tls.crt");
+        Func<object, X509Certificate?, X509Chain?, System.Net.Security.SslPolicyErrors, bool>
+            customValidator =
+                (sender, certificate, chain, sslPolicyErrors) => {
+                    if (chain == null || certificate == null) return false;
+                    chain.ChainPolicy.ExtraStore.Add(companyRootCA);
+                    chain.ChainPolicy.VerificationFlags =
+                        X509VerificationFlags.AllowUnknownCertificateAuthority;
+                    var element = new X509Certificate2(certificate);
+                    bool isValidChain = chain.Build(element);
+                    bool matchesCompanyRoot =
+                        chain.ChainElements[^1].Certificate.Thumbprint == companyRootCA.Thumbprint;
+                    return isValidChain && matchesCompanyRoot;
+                };
+        options.HttpMessageHandlerFactory = (innerHandler) => {
+            if (innerHandler is HttpClientHandler clientHandler) {
+                clientHandler.ServerCertificateCustomValidationCallback =
+                    (m, c, ch, e) => customValidator(m, c, ch, e);
+            }
+            return innerHandler;
+        };
+        options.WebSocketConfiguration = (webSocketOptions) => {
+            webSocketOptions.RemoteCertificateValidationCallback =
+                (s, c, ch, e) => customValidator(s, c, ch, e);
+        };
     }
 
     public async Task StartAsync() {
@@ -122,3 +114,22 @@ public class MessagingClient : IAsyncDisposable {
         return HubConnection.DisposeAsync();
     }
 }
+
+
+/*HubConnection = new HubConnectionBuilder()
+    .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), options => {
+        options.HttpMessageHandlerFactory = (innerHandler) => {
+            if (innerHandler is HttpClientHandler clientHandler) {
+                clientHandler.ServerCertificateCustomValidationCallback =
+                    (message, cert, chain, sslPolicyErrors) => true; // Bypasses chain & name errors
+            }
+
+            return innerHandler;
+        };
+        options.WebSocketConfiguration = (webSocketOptions) => {
+            webSocketOptions.RemoteCertificateValidationCallback =
+                (sender, certificate, chain, sslPolicyErrors) => true; // Forces trust on the WebSocket
+        };
+    })
+    .WithAutomaticReconnect()
+    .Build();*/
