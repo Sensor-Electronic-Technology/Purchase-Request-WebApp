@@ -43,8 +43,12 @@ public class MessagingClient : IAsyncDisposable {
     //var companyRootCA = new X509Certificate2("/secrets/certs/tls.crt");
     private void SignalRCertVerification(HttpConnectionOptions options) {
         /*X509Certificate2 companyRootCA=X509CertificateLoader.LoadCertificateFromFile("/secrets/certs/tls.crt");*/
+        var certPath = this._certSettings.Certificates.Default.Path;
+        if (certPath != null) {
+            Console.WriteLine($"Certificate path: {certPath}");
+        }
         X509Certificate2 companyRootCA = X509CertificateLoader.LoadCertificateFromFile(
-            this._certSettings.Certificates.Default.Path ?? "/secrets/certs/tls.crt");
+            certPath ?? "/secrets/certs/tls.crt");
         Func<object, X509Certificate?, X509Chain?, System.Net.Security.SslPolicyErrors, bool>
             customValidator =
                 (sender, certificate, chain, sslPolicyErrors) => {

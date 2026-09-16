@@ -10,13 +10,16 @@ builder.Services.Configure<KestrelCustomSettings>(
     builder.Configuration.GetSection(KestrelCustomSettings.SectionName)
 );
 
-builder.Services.AddOptions<KestrelCustomSettings>()
+builder.Services.Configure<KestrelCustomSettings>(
+    builder.Configuration.GetSection(KestrelCustomSettings.SectionName)
+);
+/*builder.Services.AddOptions<KestrelCustomSettings>()
     .Bind(builder.Configuration.GetSection(KestrelCustomSettings.SectionName))
     .ValidateDataAnnotations()
     .Validate(settings => {
         var certs = settings.Certificates?.Default;
         return certs == null || !certs.PathsExist();
-    }).ValidateOnStart();
+    }).ValidateOnStart();*/
 
 builder.AddBlazorComponents();
 builder.AddPurchaseRequestWebApp();
