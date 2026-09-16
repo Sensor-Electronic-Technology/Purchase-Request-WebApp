@@ -6,6 +6,8 @@ using Infrastructure.Hubs;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
 using MongoDB.Driver;
 using OpenTelemetry;
@@ -97,6 +99,16 @@ public static class DependencyInjection {
         builder.Services.AddDevExpressBlazor(options => {
             options.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5;
             options.SizeMode = DevExpress.Blazor.SizeMode.Small;
+        });
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(@"/secrets/dataprotection"));
+        
+        builder.Services.Configure<ForwardedHeadersOptions>(options => {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+            // Clear known networks and proxies so it accepts headers from your Kubernetes cluster
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
         });
         builder.Services.AddLocalization();
         builder.Services.AddMvc();

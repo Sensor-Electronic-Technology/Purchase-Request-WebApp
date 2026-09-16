@@ -20,6 +20,7 @@ public class MessagingClient : IAsyncDisposable {
     public MessagingClient(IConfiguration configuration, ILogger<MessagingClient> logger,
         NavigationManager navigationManager) {
         this._navigationManager = navigationManager;
+        //not cert path defined in kubernetes deployment
         var companyRootCA = new X509Certificate2("/secrets/certs/tls.crt");
         /*HubConnection = new HubConnectionBuilder()
             .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), options => {
@@ -68,6 +69,12 @@ public class MessagingClient : IAsyncDisposable {
             })
             .WithAutomaticReconnect()
             .Build();
+        /*  For development
+         HubConnection = new HubConnectionBuilder()
+            .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl))
+            .WithAutomaticReconnect()
+            .Build();
+        */
         this._logger = logger;
         this._isStarted = false;
     }
