@@ -46,7 +46,7 @@ public class PurchaseRequestDocument : IDocument {
                     def.RelativeColumn();
                 });
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Date Of Request:").SemiBold();
-                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(DateTime.Now.ToString("MM/dd/yyyy"));
+                table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.Created.ToString("MM/dd/yyyy"));
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Requester:").SemiBold();
                 table.Cell().Border(1).Padding(2).PaddingLeft(5).AlignLeft().Text(this._model.RequesterName ?? "");
                 table.Cell().Border(1).Padding(2).AlignLeft().Text("Department:").SemiBold();

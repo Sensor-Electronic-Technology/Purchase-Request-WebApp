@@ -31,7 +31,7 @@ public class PurchaseRequestInput {
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
     public List<FileInput> Attachments { get; set; } = [];
-    public DateTime Created { get; set; }
+    public DateTime Created { get; set; } = DateTime.Now;
     public DateTime ApprovedDate { get; set; }
     public DateTime RejectedDate { get; set; }
     public DateTime OrderedDate { get; set; }
