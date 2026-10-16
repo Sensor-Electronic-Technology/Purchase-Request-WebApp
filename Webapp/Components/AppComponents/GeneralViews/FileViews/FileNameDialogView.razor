@@ -9,7 +9,7 @@
             </ChildContent>
             <Helper>
                 <RadzenRequiredValidator Component="FileNameComp" Text="Filename is required"/>
-                <RadzenRegexValidator Component="FileNameComp" Text="Only letters are allowed" Pattern="^[a-zA-Z]*$" />
+                <RadzenRegexValidator Component="FileNameComp" Text="Only letters are allowed" Pattern="^[a-zA-Z0-9_-]+$" />
             </Helper>
         </RadzenFormField>
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
