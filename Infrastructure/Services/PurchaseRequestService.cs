@@ -335,7 +335,7 @@ public class PurchaseRequestService {
         var document = new PurchaseOrderDocument(request.ToPurchaseOrderDto(),Path.Combine($"{this._environment.WebRootPath}","images/seti_logo.png"));
         await this._emailService.SendReceivedEmail(input.EmailDocument ?? [],request.Title ?? "Not Titled",
             document.GeneratePdf(),
-            request.Status==PrStatus.Delivered,
+            !input.Complete,
             [],
             to,
             cc);
