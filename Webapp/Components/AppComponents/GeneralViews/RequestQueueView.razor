@@ -245,7 +245,8 @@
     }
 
     async Task StatusClickedHandler(RadzenSplitButtonItem? item, string id) {
-        if (item != null) {
+        if (item != null) { 
+            
             if (Enum.TryParse(typeof(PrUserAction), item.Value, out var action)) {
                 await this.UserAction.InvokeAsync(new UserActionEventArg((PrUserAction)action, id));
             }

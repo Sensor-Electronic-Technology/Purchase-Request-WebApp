@@ -102,6 +102,8 @@ public static class DependencyInjection {
         });
         builder.Services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(@"/secrets/dataprotection"));
+        /*builder.Services.AddDataProtection()
+            .UseEphemeralDataProtectionProvider();*/
         
         builder.Services.Configure<ForwardedHeadersOptions>(options => {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;

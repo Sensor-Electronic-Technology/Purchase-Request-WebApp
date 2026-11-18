@@ -41,7 +41,7 @@
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="6">
-                <RadzenTabs>
+                <RadzenTabs RenderMode="TabRenderMode.Client">
                     <Tabs>
                         <RadzenTabsItem Text="Email Preview" class="tab-color-1 rz-ripple">
                             <RadzenStack>
@@ -160,8 +160,9 @@
         }
         this.DocLoaded = true;
         this.PurchaseRequestInput.EmailTemplate=await this._richEdit.DocumentAPI.MailMergeAsync(DocumentFormat.Html);
-        await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
         await this.DocLoadedChanged.InvokeAsync(this.DocLoaded);
+        await this.PurchaseRequestInputChanged.InvokeAsync(this.PurchaseRequestInput);
+        
         await InvokeAsync(StateHasChanged);
     }
 

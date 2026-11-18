@@ -38,6 +38,18 @@ public class AppTimeProvider:System.TimeProvider{
         return (this.Now()-adjusted).Days;
     } 
     
+    public double MinutesSince(DateTime other) {
+        var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 
+        return (this.Now()-adjusted).TotalMinutes;
+    } 
+    
+    public double HoursSince(DateTime other) {
+        var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 
+        return (this.Now()-adjusted).TotalHours;
+    }
+    
     public DateTime ToLocal(DateTime other) {
         return TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
             TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 

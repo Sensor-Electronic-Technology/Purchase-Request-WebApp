@@ -30,12 +30,11 @@ public class MessagingClient : IAsyncDisposable {
             .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl), SignalRCertVerification)
             .WithAutomaticReconnect()
             .Build();
-        /*  For development
-         HubConnection = new HubConnectionBuilder()
+        //For development
+         /*HubConnection = new HubConnectionBuilder()
             .WithUrl(this._navigationManager.ToAbsoluteUri(HubConstants.HubUrl))
             .WithAutomaticReconnect()
-            .Build();
-        */
+            .Build();*/
         this._logger = logger;
         this._isStarted = false;
     }

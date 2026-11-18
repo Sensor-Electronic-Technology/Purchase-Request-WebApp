@@ -61,6 +61,7 @@ public class EmailService {
             }
             foreach (var attachment in prInput.Attachments) { 
                 using var attachStream = new MemoryStream(attachment.Data);
+                //builder.Attachments.Add(attachment.Name, attachStream);
                 await builder.Attachments.AddAsync(attachment.Name, attachStream);
             }
             message.Body = builder.ToMessageBody();
@@ -207,6 +208,36 @@ public class EmailService {
             foreach (var attachment in attachments) { 
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }
+            message.Body = builder.ToMessageBody();
+            await client.SendAsync(message);
+        } catch (Exception ex) {
+            this._logger.LogError("Mail Failed, Exception: \\n {ExMessage}", ex.Message);
+        } finally {
+            await client.DisconnectAsync(true);
+        }
+    }
+
+    public async Task SendReminderEmail(string prTitle, string prLink, string remindType, string recipient) {
+        var client = new SmtpClient();
+        try {
+            client.CheckCertificateRevocation = false;
+            client.ServerCertificateValidationCallback = CertValidationCallback;
+            await client.ConnectAsync(this._emailSettings.ServerSettings?.Host ?? "10.92.3.215",
+                this._emailSettings.ServerSettings?.Port ?? 25, false);
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress($"Purchase Request", FromAddress));
+            message.To.Add(new MailboxAddress(recipient, recipient));
+
+            message.Subject = $"Purchase Request Reminder-{remindType} Needed";
+            var filePath=$"{this._environment.WebRootPath}/MailTemplateFiles/ReminderEmailTemplate.html";
+            var htmlText=await File.ReadAllTextAsync(filePath);
+            htmlText=htmlText.Replace("{{ pr_title }}", prTitle)
+                .Replace("{{ reminder_type }}", remindType.ToLower())
+                .Replace("{{ pr_link }}", prLink);
+            
+            var builder = new BodyBuilder { 
+                HtmlBody = htmlText
+            };
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {

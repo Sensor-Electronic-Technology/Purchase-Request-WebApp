@@ -33,6 +33,7 @@ public class PurchaseRequest {
     public DateTime RejectedDate { get; set; }
     public DateTime OrderedDate { get; set; }
     public DateTime ReceivedDate { get; set; }
+    public DateTime ReminderDate { get; set; } = DateTime.MinValue;
 
     public PurchaseRequestInput ToInput() {
         return new PurchaseRequestInput {

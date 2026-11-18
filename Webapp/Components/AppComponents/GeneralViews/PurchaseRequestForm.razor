@@ -48,7 +48,8 @@
                                                 @bind-AdditionalComments="@this._purchaseReqInput.AdditionalComments"/>
                         </RadzenStepsItem>
                         <RadzenStepsItem Text="Finalize" PreviousText="Comments & Quotes" NextText="">
-                            <FinalizeView @bind-PurchaseRequestInput="@this._finalizeDataInput"
+                            <FinalizeView PurchaseRequestInput="@this._finalizeDataInput"
+                                          PurchaseRequestInputChanged="Callback"
                                           CanSave="@this._canSave"
                                           Mode="@this.Mode"
                                           RepeatEdit="@this.RepeatEdit"
@@ -353,6 +354,11 @@
         this._purchaseReqInput.ApproverName=approverAccount?.FirstName+" "+approverAccount?.LastName;
         this._purchaseReqInput.ApproverEmail=approverAccount?.Email;
         this._purchaseReqInput.ApproverId=approverAccount?.Username;
+    }
+
+    private Task Callback(PurchaseRequestInput prInput) {
+        this._finalizeDataInput=prInput;
+        return Task.CompletedTask;
     }
 
 }

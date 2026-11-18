@@ -127,6 +127,51 @@ Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 
 //await FixVendorCountry();
 
+//await CountCheckIn();
+
+await TestReminder();
+
+async Task TestReminder() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db_dev");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
+    string id = "6afdfdc16c5b7d99c941f7c6";
+    var _id = ObjectId.Parse(id);
+    var filter = Builders<PurchaseRequest>.Filter.Eq(e => e._id, _id);
+    var update=Builders<PurchaseRequest>.Update.Set(e => e.ReminderDate, TimeProvider.Now().AddDays(-1));
+    await prCollection.UpdateOneAsync(filter, update);
+    /*var prItem=await prCollection.Find(filter).FirstOrDefaultAsync();
+    if (prItem != null) {
+        prItem.ReminderDate = 
+    }*/
+}
+
+async Task CountCheckIn() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
+    var now = TimeProvider.Now();
+    
+    var filter=Builders<PurchaseRequest>.Filter.Eq(e => e.Status,PrStatus.Ordered);
+    var findOptions = new FindOptions<PurchaseRequest>() { BatchSize = 10 };
+    using IAsyncCursor<PurchaseRequest>? cursor=await prCollection.FindAsync(filter,findOptions);
+    int count=0;
+    while (await cursor.MoveNextAsync()) {
+        foreach (var item in cursor.Current) {
+            
+            /*if (_timeProvider.MinutesSince(item.Created)>1) {
+                yield return item;
+            }*/
+            if (TimeProvider.DaysSince(item.OrderedDate) >=120) {
+                //yield return item;
+                count++;
+            }
+        }
+    }
+
+    Console.WriteLine($"Count: {count}");
+}
+
 async Task ChangeApprover(string requester,string oldApprover,string approver) {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
