@@ -9,7 +9,7 @@ namespace Infrastructure.Services;
 public class ReminderHostedService(
     ILogger<ReminderHostedService> logger, 
     IServiceScopeFactory scopeFactory) : BackgroundService {
-    private readonly TimeSpan _period = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _period = TimeSpan.FromMinutes(30);
 
     public override async Task StartAsync(CancellationToken cancellationToken) {
         logger.LogInformation("Reminder service started, performing initial check");
