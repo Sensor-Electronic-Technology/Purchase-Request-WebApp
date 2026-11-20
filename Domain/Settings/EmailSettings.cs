@@ -1,6 +1,7 @@
 ﻿namespace Domain.Settings;
 
 public class EmailSettings {
+    public const string SectionName = "EmailSettings";
     public TemplateKeys? TemplateKeys { get; set; }
     public ServerSettings? ServerSettings { get; set; }
     public string? TemplatePath { get; set; }

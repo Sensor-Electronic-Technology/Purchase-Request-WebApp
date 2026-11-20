@@ -1,6 +1,7 @@
 ﻿using BlazorDownloadFile;
 using ClipLazor.Extensions;
 using Domain;
+using Domain.Settings;
 using Infrastructure;
 using Infrastructure.Hubs;
 using Infrastructure.Services;
@@ -16,66 +17,55 @@ using OpenTelemetry.Trace;
 using Radzen;
 using SetiFileStore.FileClient;
 using Webapp.Components;
+using Webapp.Data;
 using Webapp.Services;
 using Webapp.Services.Authentication;
 
 namespace Webapp;
 
 public static class DependencyInjection {
-    public static IServiceCollection AddMetrics(this IServiceCollection services,IHostApplicationBuilder builder) {
-        var otel =services.AddOpenTelemetry();
+    public static IServiceCollection AddMetrics(this IServiceCollection services, IHostApplicationBuilder builder) {
+        var otel = services.AddOpenTelemetry();
         otel.WithMetrics(metrics => {
             metrics.AddAspNetCoreInstrumentation();
             metrics.AddRuntimeInstrumentation();
             metrics.AddMeter("Microsoft.AspNetCore.Hosting");
             metrics.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
         });
-        otel.WithTracing(tracing => {
-            tracing.AddAspNetCoreInstrumentation();
-        });
-        
+        otel.WithTracing(tracing => { tracing.AddAspNetCoreInstrumentation(); });
         var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
         if (otlpEndpoint != null) {
             otel.UseOtlpExporter();
         }
+
         return services;
     }
 
-    public static WebApplication AddAssets(this WebApplication app,WebApplicationBuilder builder) {
-        List<string> paths = ["images/avatars","images","MailTemplateFiles"];
+    public static WebApplication AddAssets(this WebApplication app, WebApplicationBuilder builder) {
+        List<string> paths = ["images/avatars", "images", "MailTemplateFiles"];
         List<IFileProvider> fileProviders = [];
         foreach (var path in paths) {
             var provider = new PhysicalFileProvider(
                 Path.Combine(builder.Environment.WebRootPath, path));
             fileProviders.Add(provider);
         }
+
         fileProviders.Add(app.Environment.WebRootFileProvider);
         app.Environment.WebRootFileProvider = new CompositeFileProvider(fileProviders);
-        /*//app.Environment.WebRootFileProvider=new CompositeFileProvider()
-        var secondaryProvider = new PhysicalFileProvider(
-            Path.Combine(builder.Environment.WebRootPath, "images/avatars"));
-        
-        app.Environment.WebRootFileProvider = new CompositeFileProvider(
-            app.Environment.WebRootFileProvider, secondaryProvider);*/
         return app;
     }
 
     public static async Task<WebApplication> BuildApp(this WebApplicationBuilder builder) {
-
-        var app=builder.Build();
-        /*app.AddAssets(builder);*/
+        var app = builder.Build();
         app.UseRequestLocalization(new RequestLocalizationOptions()
             .AddSupportedCultures("en-us")
             .AddSupportedUICultures("en-us"));
-
-        /*await app.DownloadAssets();*/
         if (!app.Environment.IsDevelopment()) {
             app.UseExceptionHandler("/Error", createScopeForErrors: true);
         }
 
         app.MapControllers();
         app.MapStaticAssets();
-        //app.UseStaticFiles();
         app.UseAntiforgery();
         app.MapHub<MessagingHub>("/messagehub");
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
@@ -90,25 +80,24 @@ public static class DependencyInjection {
             .AddInteractiveServerComponents()
             .AddCircuitOptions(options => options.DetailedErrors = true)
             .AddHubOptions(options => options.MaximumReceiveMessageSize = 15 * 1024 * 1024);
-
         builder.Services.AddRadzenCookieThemeService(options => {
             options.Name = "app-theme"; // The name of the cookie
             options.Duration = TimeSpan.FromDays(365); // The duration of the cookie
         });
-
         builder.Services.AddDevExpressBlazor(options => {
             options.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5;
             options.SizeMode = DevExpress.Blazor.SizeMode.Small;
         });
-        builder.Services.AddDataProtection()
-            .PersistKeysToFileSystem(new DirectoryInfo(@"/secrets/dataprotection"));
-        /*builder.Services.AddDataProtection()
-            .UseEphemeralDataProtectionProvider();*/
-        
+        if (builder.Environment.IsDevelopment()) {
+            builder.Services.AddDataProtection()
+                .UseEphemeralDataProtectionProvider();
+        } else {
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(@"/secrets/dataprotection"));
+        }
+
         builder.Services.Configure<ForwardedHeadersOptions>(options => {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-
-            // Clear known networks and proxies so it accepts headers from your Kubernetes cluster
             options.KnownIPNetworks.Clear();
             options.KnownProxies.Clear();
         });
@@ -122,17 +111,40 @@ public static class DependencyInjection {
         builder.Services.AddBlazorDownloadFile(ServiceLifetime.Scoped);
         builder.Services.AddHttpClient();
         builder.Services.RegisterIntlTelInput();
-        
         return builder;
     }
-    
+
+    public static IHostApplicationBuilder ConfigurePurchaseRequest(this IHostApplicationBuilder builder) {
+        builder.Services.Configure<KestrelCustomSettings>(
+            builder.Configuration.GetSection(KestrelCustomSettings.SectionName)
+        );
+        builder.Services.Configure<KestrelCustomSettings>(
+            builder.Configuration.GetSection(KestrelCustomSettings.SectionName)
+        );
+        builder.Services.Configure<ReminderSettings>(
+            builder.Configuration.GetSection(ReminderSettings.SectionName)
+        );
+        builder.Services.Configure<DatabaseSettings>(
+            builder.Configuration.GetSection(DatabaseSettings.SectionName)
+        );
+        builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection(EmailSettings.SectionName)
+        );
+        /*builder.Services.AddSingleton<DatabaseSettings>((provider =>
+            builder.Configuration.GetSection(nameof(DatabaseSettings)).Get<DatabaseSettings>()));
+        builder.Services.AddSingleton<EmailSettings>((provider =>
+            builder.Configuration.GetSection(nameof(EmailSettings)).Get<EmailSettings>()));*/
+        return builder;
+    }
+
     public static IHostApplicationBuilder AddPurchaseRequestWebApp(this IHostApplicationBuilder builder) {
         builder.AddDomain();
         builder.Services.AddInfrastructure();
         builder.Services.AddSetiFileClient();
         builder.Services.AddScoped<SpinnerService>();
-        builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection") 
-                                                                    ?? "mongodb://172.20.3.41:27017"));
+        builder.Services.AddSingleton<IMongoClient>(new MongoClient(
+            builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? "mongodb://172.20.3.41:27017"));
         builder.Services.AddSingleton<PrEditingTracker>();
         builder.Services.AddScoped<ProtectedSessionStorage>();
         builder.Services.AddScoped<AuthenticationStateProvider, SetiAuthStateProvider>();
@@ -145,19 +157,20 @@ public static class DependencyInjection {
     private static async Task<IApplicationBuilder> DownloadAssets(this WebApplication app) {
         var logger = app.Services.GetService<ILogger<Program>>();
         var scopeFactory = app.Services.GetService<IServiceScopeFactory>();
-        if(scopeFactory==null) {
+        if (scopeFactory == null) {
             throw new Exception("Error: could not resolve IServiceScopeFactory");
         }
-        using (IServiceScope scope = scopeFactory.CreateScope()) {
-            var avatarDataService=scope.ServiceProvider.GetRequiredService<AvatarDataService>();
-            if (avatarDataService!=null && logger!=null) {
-                logger.LogInformation("Loading avatars");
-                await avatarDataService.LoadAvatars();
-                logger.LogInformation("Avatars loaded");
-            } else {
-                throw new Exception("Error: could not resolve AvatarDataService");
-            }
+
+        using IServiceScope scope = scopeFactory.CreateScope();
+        var avatarDataService = scope.ServiceProvider.GetRequiredService<AvatarDataService>();
+        if (avatarDataService != null && logger != null) {
+            logger.LogInformation("Loading avatars");
+            await avatarDataService.LoadAvatars();
+            logger.LogInformation("Avatars loaded");
+        } else {
+            throw new Exception("Error: could not resolve AvatarDataService");
         }
+
         return app;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Domain.PurchaseRequests.Model;
 using Domain.Settings;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -10,7 +11,8 @@ public class PoNumberService {
     private readonly IMongoCollection<PoNumber> _poNumberCollection;
     private readonly ILogger<PoNumberService> _logger;
     
-    public PoNumberService(IMongoClient client,DatabaseSettings settings,ILogger<PoNumberService> logger) {
+    public PoNumberService(IMongoClient client,IOptions<DatabaseSettings> dbSettings,ILogger<PoNumberService> logger) {
+        var settings = dbSettings.Value;
         var database = client.GetDatabase(settings.PurchaseRequestDatabase ?? "purchase_req_db");
         this._poNumberCollection = database.GetCollection<PoNumber>(settings.PoNumberCollection ?? "po_numbers");
         this._logger = logger;

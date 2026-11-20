@@ -18,4 +18,10 @@
         <PackageReference Include="Verify.QuestPDF" Version="2.3.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="MongoDB.Driver">
+        <HintPath>..\..\..\.nuget\packages\mongodb.driver\2.29.0\lib\netstandard2.1\MongoDB.Driver.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

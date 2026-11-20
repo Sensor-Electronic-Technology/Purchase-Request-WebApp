@@ -20,7 +20,7 @@ public class PurchaseRequest {
     public Department? Department { get; set; }
     public Vendor? Vendor { get; set; }
     public List<PurchaseItem> PurchaseItems { get; set; } = [];
-    public decimal TotalCost=>PurchaseItems.Sum(x=>x.TotalCost);
+    public decimal TotalCost => PurchaseItems.Sum(x => x.TotalCost);
     public List<string> EmailCopyList { get; set; } = [];
     public bool Urgent { get; set; }
     public List<string> Quotes { get; set; } = [];
@@ -33,7 +33,9 @@ public class PurchaseRequest {
     public DateTime RejectedDate { get; set; }
     public DateTime OrderedDate { get; set; }
     public DateTime ReceivedDate { get; set; }
-    public DateTime ReminderDate { get; set; } = DateTime.MinValue;
+    public DateTime ApprovalRemindDate { get; set; } = DateTime.MinValue;
+    public DateTime OrderRemindDate { get; set; } = DateTime.MinValue;
+    public DateTime CheckInRemindDate { get; set; } = DateTime.MinValue;
 
     public PurchaseRequestInput ToInput() {
         return new PurchaseRequestInput {
@@ -64,7 +66,7 @@ public class PurchaseRequest {
             Status = this.Status
         };
     }
-    
+
     public PurchaseRequestInput Repeat(UserProfile user) {
         return new PurchaseRequestInput {
             Id = ObjectId.GenerateNewId(),
@@ -111,7 +113,7 @@ public class PurchaseRequest {
         this.Urgent = input.Urgent;
         this.Quotes = input.Quotes;
         this.Created = input.Created;
-        this.EmailCopyList=input.EmailCcList;
+        this.EmailCopyList = input.EmailCcList;
         this.ApprovedDate = input.ApprovedDate;
         this.RejectedDate = input.RejectedDate;
         this.OrderedDate = input.OrderedDate;
@@ -119,8 +121,8 @@ public class PurchaseRequest {
         this.Status = input.Status;
         return this;
     }
-    
-    public PurchaseOrderDto ToPurchaseOrderDto() { 
+
+    public PurchaseOrderDto ToPurchaseOrderDto() {
         return new PurchaseOrderDto {
             RequestId = this._id,
             Department = this.Department,

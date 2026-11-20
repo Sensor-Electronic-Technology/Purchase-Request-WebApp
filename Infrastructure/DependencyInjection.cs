@@ -16,6 +16,10 @@ public static class DependencyInjection {
         services.AddScoped<PoNumberService>();
         services.AddScoped<ChatRoomDataService>();
         services.AddSingleton<AppTimeProvider>();
+        services.AddTransient<PrReminderService>();
+        services.AddHostedService<ReminderHostedService>();
+        
+        
         /*services.AddScoped<PrReminderService>();
         services.AddHostedService<ReminderService>();*/
         return services;

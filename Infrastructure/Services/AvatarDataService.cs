@@ -1,6 +1,7 @@
 ﻿using Domain.Assets;
 using Domain.Settings;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SetiFileStore.FileClient;
 
@@ -19,12 +20,12 @@ public class AvatarDataService {
     public AvatarDataService(IMongoClient mongoClient,
         FileService fileService,
         IConfiguration configuration,
-        DatabaseSettings settings) {
-        this._settings = settings;
+        IOptions<DatabaseSettings> optionSettings) {
+        this._settings = optionSettings.Value;
         this._fileService = fileService;
         this._avatarDomain=configuration["AvatarDomain"] ?? "avatar";
-        var database = mongoClient.GetDatabase(settings.AvatarDatabase);
-        this._avatarsCollection = database.GetCollection<Avatar>(settings.AvatarCollection);
+        var database = mongoClient.GetDatabase(this._settings.AvatarDatabase);
+        this._avatarsCollection = database.GetCollection<Avatar>(this._settings.AvatarCollection);
     }
     
     public IEnumerable<string> GetAvatars() {

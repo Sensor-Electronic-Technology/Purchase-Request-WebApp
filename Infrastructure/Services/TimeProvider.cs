@@ -44,6 +44,12 @@ public class AppTimeProvider:System.TimeProvider{
         return (this.Now()-adjusted).TotalMinutes;
     } 
     
+    public double MinutesSince(DateTime now,DateTime other) {
+        var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
+        return (now-adjusted).TotalMinutes;
+    } 
+    
     public double HoursSince(DateTime other) {
         var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
             TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 

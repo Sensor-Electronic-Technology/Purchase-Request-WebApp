@@ -6,6 +6,7 @@ using Domain.PurchaseRequests.TypeConstants;
 using Domain.Settings;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using SetiFileStore.FileClient;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
@@ -17,18 +18,17 @@ public class EmailService {
     private EmailSettings _emailSettings;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<EmailService> _logger;
-    
-    public EmailService(EmailSettings emailSettings,IWebHostEnvironment environment,ILogger<EmailService> logger) {
-        _emailSettings = emailSettings;
+
+    public EmailService(IOptions<EmailSettings> emailSettings, IWebHostEnvironment environment, ILogger<EmailService> logger) {
+        _emailSettings = emailSettings.Value;
         this._environment = environment;
-        this._logger=logger;
-    }
-    
-    public EmailService() {
-        
+        this._logger = logger;
     }
 
-    public async Task SendRequestEmail(byte[] htmlBody,PurchaseRequestInput prInput,List<string> to, List<string> toCC) {
+    public EmailService() { }
+
+    public async Task SendRequestEmail(byte[] htmlBody, PurchaseRequestInput prInput, List<string> to,
+        List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -40,30 +40,34 @@ public class EmailService {
             foreach (var recipient in to) {
                 message.To.Add(new MailboxAddress(recipient, recipient));
             }
+
             foreach (var recipient in toCC) {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
+
             message.Subject = $"{prInput.Title}-Purchase Request";
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            html = html.Replace("{prLink}",$"<a href=\"{prInput.PrUrl}\">Request Link</a>");
-            var builder = new BodyBuilder { 
+            html = html.Replace("{prLink}", $"<a href=\"{prInput.PrUrl}\">Request Link</a>");
+            var builder = new BodyBuilder {
                 HtmlBody = html
             };
             /*builder.Attachments.Add($"{prInput.Title}-PurchaseRequest.pdf", prInput.TempFile);
-            foreach (var attachment in prInput.Attachments) { 
+            foreach (var attachment in prInput.Attachments) {
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }*/
             if (prInput.TempFile != null) {
                 using var prStream = new MemoryStream(prInput.TempFile);
-                await builder.Attachments.AddAsync($"{prInput.Title}-PurchaseRequest.pdf",prStream);
+                await builder.Attachments.AddAsync($"{prInput.Title}-PurchaseRequest.pdf", prStream);
             }
-            foreach (var attachment in prInput.Attachments) { 
+
+            foreach (var attachment in prInput.Attachments) {
                 using var attachStream = new MemoryStream(attachment.Data);
                 //builder.Attachments.Add(attachment.Name, attachStream);
                 await builder.Attachments.AddAsync(attachment.Name, attachStream);
             }
+
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {
@@ -72,8 +76,8 @@ public class EmailService {
             await client.DisconnectAsync(true);
         }
     }
-    
-    public async Task SendCancellationEmail(byte[] htmlBody,string title,List<string> to, List<string> toCC) {
+
+    public async Task SendCancellationEmail(byte[] htmlBody, string title, List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -85,14 +89,16 @@ public class EmailService {
             foreach (var recipient in to) {
                 message.To.Add(new MailboxAddress(recipient, recipient));
             }
+
             foreach (var recipient in toCC) {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
+
             message.Subject = $"{title}-Purchase Request Cancellation";
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            var builder = new BodyBuilder { 
+            var builder = new BodyBuilder {
                 HtmlBody = html
             };
             message.Body = builder.ToMessageBody();
@@ -103,12 +109,12 @@ public class EmailService {
             await client.DisconnectAsync(true);
         }
     }
-    
+
     public async Task SendApprovalEmail(byte[] htmlBody,
         string title,
-        bool approved,string? url,
+        bool approved, string? url,
         byte[] prDoc,
-        List<FileData> attachments,List<string> to, List<string> toCC) {
+        List<FileData> attachments, List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -120,24 +126,28 @@ public class EmailService {
             foreach (var recipient in to) {
                 message.To.Add(new MailboxAddress(recipient, recipient));
             }
+
             foreach (var recipient in toCC) {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
+
             message.Subject = $"{title}-Purchase Request {(approved ? "Approved" : "Rejected")}";
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
             //html=html.Replace("<body>", "<body style=\"background-color: rgb(89, 174, 207);\">");
             if (approved && !string.IsNullOrWhiteSpace(url)) {
-                html = html.Replace("{prLink}",$"<a href=\"{url}\">Order Link</a>");
+                html = html.Replace("{prLink}", $"<a href=\"{url}\">Order Link</a>");
             }
-            var builder = new BodyBuilder { 
+
+            var builder = new BodyBuilder {
                 HtmlBody = html
             };
             builder.Attachments.Add($"{title}-PR.pdf", prDoc);
-            foreach (var attachment in attachments) { 
+            foreach (var attachment in attachments) {
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }
+
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {
@@ -146,8 +156,9 @@ public class EmailService {
             await client.DisconnectAsync(true);
         }
     }
-    
-    public async Task SendOrderEmail(byte[] htmlBody, string title, byte[] prDoc, List<FileData> attachments,List<string> to, List<string> toCC) {
+
+    public async Task SendOrderEmail(byte[] htmlBody, string title, byte[] prDoc, List<FileData> attachments,
+        List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -159,20 +170,23 @@ public class EmailService {
             foreach (var recipient in to) {
                 message.To.Add(new MailboxAddress(recipient, recipient));
             }
+
             foreach (var recipient in toCC) {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
+
             message.Subject = $"{title}-Purchase Request Ordered";
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            var builder = new BodyBuilder { 
+            var builder = new BodyBuilder {
                 HtmlBody = html
             };
             builder.Attachments.Add($"{title}-PR.pdf", prDoc);
-            foreach (var attachment in attachments) { 
+            foreach (var attachment in attachments) {
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }
+
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {
@@ -181,8 +195,9 @@ public class EmailService {
             await client.DisconnectAsync(true);
         }
     }
-    
-    public async Task SendReceivedEmail(byte[] htmlBody, string title, byte[] prDoc,bool isPartial, List<FileData> attachments,List<string> to, List<string> toCC) {
+
+    public async Task SendReceivedEmail(byte[] htmlBody, string title, byte[] prDoc, bool isPartial,
+        List<FileData> attachments, List<string> to, List<string> toCC) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
@@ -194,20 +209,23 @@ public class EmailService {
             foreach (var recipient in to) {
                 message.To.Add(new MailboxAddress(recipient, recipient));
             }
+
             foreach (var recipient in toCC) {
                 message.Cc.Add(new MailboxAddress(recipient, recipient));
             }
+
             message.Subject = $"{title}-Purchase Request Delivery {(isPartial ? "Partial" : "Complete")}";
             using var stream = new MemoryStream(htmlBody);
             using var reader = new StreamReader(stream);
             var html = await reader.ReadToEndAsync();
-            var builder = new BodyBuilder { 
+            var builder = new BodyBuilder {
                 HtmlBody = html
             };
             builder.Attachments.Add($"{title}-PR.pdf", prDoc);
-            foreach (var attachment in attachments) { 
+            foreach (var attachment in attachments) {
                 builder.Attachments.Add(attachment.Name, attachment.Data);
             }
+
             message.Body = builder.ToMessageBody();
             await client.SendAsync(message);
         } catch (Exception ex) {
@@ -217,36 +235,23 @@ public class EmailService {
         }
     }
 
-    public async Task SendReminderEmail(string prTitle, string prLink, string remindType, string recipient) {
+    public async Task SendReminderEmails(List<MimeMessage> messages) {
         var client = new SmtpClient();
         try {
             client.CheckCertificateRevocation = false;
             client.ServerCertificateValidationCallback = CertValidationCallback;
             await client.ConnectAsync(this._emailSettings.ServerSettings?.Host ?? "10.92.3.215",
                 this._emailSettings.ServerSettings?.Port ?? 25, false);
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress($"Purchase Request", FromAddress));
-            message.To.Add(new MailboxAddress(recipient, recipient));
-
-            message.Subject = $"Purchase Request Reminder-{remindType} Needed";
-            var filePath=$"{this._environment.WebRootPath}/MailTemplateFiles/ReminderEmailTemplate.html";
-            var htmlText=await File.ReadAllTextAsync(filePath);
-            htmlText=htmlText.Replace("{{ pr_title }}", prTitle)
-                .Replace("{{ reminder_type }}", remindType.ToLower())
-                .Replace("{{ pr_link }}", prLink);
-            
-            var builder = new BodyBuilder { 
-                HtmlBody = htmlText
-            };
-            message.Body = builder.ToMessageBody();
-            await client.SendAsync(message);
+            foreach (var message in messages) {
+                await client.SendAsync(message);
+            }
         } catch (Exception ex) {
-            this._logger.LogError("Mail Failed, Exception: \\n {ExMessage}", ex.Message);
+            this._logger.LogError("Failed to send reminder messages, Exception: \\n {ExMessage}", ex.Message);
         } finally {
             await client.DisconnectAsync(true);
         }
     }
-    
+
     public async Task SendTestEmail(string to) {
         var client = new SmtpClient();
         try {
@@ -269,30 +274,31 @@ public class EmailService {
             await client.DisconnectAsync(true);
         }
     }
-    
-    
-    private async Task<string> GenerateMessage(string approver,string requester,string prLink,string linkText,string title, string description, string additional) {
+
+
+    private async Task<string> GenerateMessage(string approver, string requester, string prLink, string linkText,
+        string title, string description, string additional) {
         using StreamReader reader = new($"{this._environment.WebRootPath}/{this._emailSettings.TemplatePath}");
         Console.WriteLine($"{this._environment.WebRootPath}/{this._emailSettings.TemplatePath}");
-        var template=await reader.ReadToEndAsync();
-        template=template.Replace(this._emailSettings.TemplateKeys?.ApproverKey ?? "{approver}",approver)
-            .Replace(this._emailSettings.TemplateKeys?.RequesterKey ?? "{requester}",requester)
-            .Replace(this._emailSettings.TemplateKeys?.PrLinkKey ?? "{pr_link}",prLink)
-            .Replace(this._emailSettings.TemplateKeys?.LinkTextKey ?? "{link_text}",linkText)
+        var template = await reader.ReadToEndAsync();
+        template = template.Replace(this._emailSettings.TemplateKeys?.ApproverKey ?? "{approver}", approver)
+            .Replace(this._emailSettings.TemplateKeys?.RequesterKey ?? "{requester}", requester)
+            .Replace(this._emailSettings.TemplateKeys?.PrLinkKey ?? "{pr_link}", prLink)
+            .Replace(this._emailSettings.TemplateKeys?.LinkTextKey ?? "{link_text}", linkText)
             .Replace(this._emailSettings.TemplateKeys?.TitleKey ?? "{title}", title)
             .Replace(this._emailSettings.TemplateKeys?.DescriptionKey ?? "{description}", description)
             .Replace(this._emailSettings.TemplateKeys?.AdditionalKey ?? "{additional}", additional);
         return template;
     }
 
-    private bool CertValidationCallback (object sender, 
-        X509Certificate certificate, 
-        X509Chain chain, 
+    private bool CertValidationCallback(object sender,
+        X509Certificate certificate,
+        X509Chain chain,
         SslPolicyErrors sslPolicyErrors) {
         if (sslPolicyErrors == SslPolicyErrors.None)
             return true;
         if (certificate is X509Certificate2 certificate2) {
-            var cn = certificate2.GetNameInfo (X509NameType.SimpleName, false);
+            var cn = certificate2.GetNameInfo(X509NameType.SimpleName, false);
             var fingerprint = certificate2.Thumbprint;
             var serial = certificate2.SerialNumber;
             var issuer = certificate2.Issuer;
@@ -302,6 +308,7 @@ public class EmailService {
             Console.WriteLine($"Issuer: {issuer}");
             return true;
         }
+
         return true;
     }
 }

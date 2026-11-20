@@ -19,6 +19,7 @@ using Domain.Assets;
 using Domain.PurchaseRequests.Dto;
 using Domain.PurchaseRequests.Pdf;
 using Domain.PurchaseRequests.TypeConstants;
+using Domain.Settings;
 using Microsoft.AspNetCore.Http;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
@@ -128,28 +129,80 @@ Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 //await FixVendorCountry();
 
 //await CountCheckIn();
+//await UpdateAllWithReminders();
+//await TestReminder();
+//await CleanUpReminderData();
+//await MigrateDatabase();
 
-await TestReminder();
 
-async Task TestReminder() {
+var client=new MongoClient("mongodb://172.20.3.41:27017");
+var database = client.GetDatabase("purchase_req_db");
+var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
+Builders<PurchaseRequest>.Sort.Descending(e => e.Created);
+var first=await prCollection.Find(_ => true).Sort(Builders<PurchaseRequest>.Sort.Descending(e => e.Created)).FirstAsync();
+Console.WriteLine($"Created: {first.Created.ToString()}");
+/*var cursor=await prCollection.FindAsync(e => e.Status == PrStatus.Ordered);
+
+int count=0;
+while (await cursor.MoveNextAsync()) {
+    foreach (var item in cursor.Current) {
+            
+        /*if (_timeProvider.MinutesSince(item.Created)>1) {
+            yield return item;
+        }#1#
+        if (TimeProvider.DaysSince(item.OrderedDate) >=60) {
+            //yield return item;
+            count++;
+        }
+    }
+}
+
+Console.WriteLine($"Count: {count}");
+*/
+
+async Task CleanUpReminderData() {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
-    var database = client.GetDatabase("purchase_req_db_dev");
-    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
-    string id = "6afdfdc16c5b7d99c941f7c6";
-    var _id = ObjectId.Parse(id);
-    var filter = Builders<PurchaseRequest>.Filter.Eq(e => e._id, _id);
-    var update=Builders<PurchaseRequest>.Update.Set(e => e.ReminderDate, TimeProvider.Now().AddDays(-1));
-    await prCollection.UpdateOneAsync(filter, update);
-    /*var prItem=await prCollection.Find(filter).FirstOrDefaultAsync();
-    if (prItem != null) {
-        prItem.ReminderDate = 
-    }*/
+    var database = client.GetDatabase("purchase_req_db");
+    var prCollection=database.GetCollection<BsonDocument>("purchase_requests_dev");
+    var filter = Builders<BsonDocument>.Filter.Exists("ReminderDate");
+    var items=await prCollection.Find(filter).ToListAsync();
+    foreach (var pr in items) {
+        Console.WriteLine($"{pr.ToString()}");
+    }
+}
+
+async Task MigrateDatabase() {
+    await RemoveAllBadField();
+    await UpdateAllWithReminders();
+}
+
+async Task RemoveAllBadField() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var prCollection=database.GetCollection<BsonDocument>("purchase_requests_dev");
+    var filter = Builders<BsonDocument>.Filter.Exists("ReminderDate");
+    var update = Builders<BsonDocument>.Update.Unset("ReminderDate");
+    await prCollection.UpdateManyAsync(filter, update);
+    Console.WriteLine("Check database");
+}
+
+async Task UpdateAllWithReminders() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
+    var update=Builders<PurchaseRequest>.Update
+        .Set(e => e.ApprovalRemindDate,DateTime.MinValue)
+        .Set(e => e.OrderRemindDate,DateTime.MinValue)
+        .Set(e => e.CheckInRemindDate,DateTime.MinValue);
+    
+    await prCollection.UpdateManyAsync(_ => true, update);
+    Console.WriteLine("Check Database");
 }
 
 async Task CountCheckIn() {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
     var now = TimeProvider.Now();
     
     var filter=Builders<PurchaseRequest>.Filter.Eq(e => e.Status,PrStatus.Ordered);
@@ -162,7 +215,7 @@ async Task CountCheckIn() {
             /*if (_timeProvider.MinutesSince(item.Created)>1) {
                 yield return item;
             }*/
-            if (TimeProvider.DaysSince(item.OrderedDate) >=120) {
+            if (TimeProvider.DaysSince(item.OrderedDate) >=14) {
                 //yield return item;
                 count++;
             }
