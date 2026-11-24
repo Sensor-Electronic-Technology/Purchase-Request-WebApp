@@ -34,7 +34,8 @@
     <link href="_content/Blazor.Bootstrap/blazor.bootstrap.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="/images/seti_logo.png"/>
     
-    <RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>
+    <RadzenTheme Theme="standard-dark" Wcag="false" @rendermode="@InteractiveServer"/>
+
     <HeadOutlet @rendermode="new InteractiveServerRenderMode(prerender: false)" />
     <title>Purchase Request System</title>
 </head>

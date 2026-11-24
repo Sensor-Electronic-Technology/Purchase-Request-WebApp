@@ -128,11 +128,11 @@ Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 
 //await FixVendorCountry();
 
-//await CountCheckIn();
+await CountCheckIn();
 //await UpdateAllWithReminders();
 //await TestReminder();
 //await CleanUpReminderData();
-await MigrateDatabase();
+//await MigrateDatabase(true);
 //await CreateRemindConfig();
 
 /*var client=new MongoClient("mongodb://172.20.3.41:27017");
@@ -200,7 +200,7 @@ async Task UpdateAllWithReminders(bool prod=false) {
 async Task CountCheckIn() {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
+    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests");
     var now = TimeProvider.Now();
     
     var filter=Builders<PurchaseRequest>.Filter.Eq(e => e.Status,PrStatus.Ordered);

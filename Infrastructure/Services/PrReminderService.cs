@@ -172,8 +172,8 @@ public class PrReminderService {
                 var now = _timeProvider.Now();
                 var repeat = prItem.OrderRemindDate > DateTime.MinValue;
                 var deltaMin = repeat
-                    ? _timeProvider.MinutesSince(now, prItem.OrderRemindDate)
-                    : _timeProvider.MinutesSince(now, prItem.ApprovedDate);
+                    ? _timeProvider.HoursSince(now, prItem.OrderRemindDate)
+                    : _timeProvider.HoursSince(now, prItem.ApprovedDate);
                 var needReminder = repeat
                     ? deltaMin >= config.OrderTimeRepeatHrs
                     : deltaMin >= config.OrderTimeHrs;
