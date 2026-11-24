@@ -1,0 +1,23 @@
+@page "/remind-config"
+@using Domain.Authentication
+
+<AuthorizeView Roles="@this.GetRoles()">
+    <Authorized>
+        <ReminderSettings/>
+    </Authorized>
+    <NotAuthorized>
+        <Login/>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private string GetRoles() {
+        return $"{PurchaseRequestRole.Purchaser.Name}," +
+               $"{PurchaseRequestRole.Approver.Name}," +
+               $"{PurchaseRequestRole.Admin.Name}";
+    }
+}

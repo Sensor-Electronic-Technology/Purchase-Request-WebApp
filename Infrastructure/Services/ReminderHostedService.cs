@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -32,7 +31,7 @@ public class ReminderHostedService(
         }
     }
 
-    public async Task ExecuteStart(CancellationToken ct = default) {
+    private async Task ExecuteStart(CancellationToken ct = default) {
         try {
             await using var scope = scopeFactory.CreateAsyncScope();
             var remindService=scope.ServiceProvider.GetRequiredService<PrReminderService>();

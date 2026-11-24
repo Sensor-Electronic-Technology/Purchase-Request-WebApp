@@ -132,33 +132,31 @@ Console.WriteLine($"Last Sub(0,1): {last.Substring(0,1)}");
 //await UpdateAllWithReminders();
 //await TestReminder();
 //await CleanUpReminderData();
-//await MigrateDatabase();
+await MigrateDatabase();
+//await CreateRemindConfig();
 
-
-var client=new MongoClient("mongodb://172.20.3.41:27017");
+/*var client=new MongoClient("mongodb://172.20.3.41:27017");
 var database = client.GetDatabase("purchase_req_db");
 var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
 Builders<PurchaseRequest>.Sort.Descending(e => e.Created);
 var first=await prCollection.Find(_ => true).Sort(Builders<PurchaseRequest>.Sort.Descending(e => e.Created)).FirstAsync();
-Console.WriteLine($"Created: {first.Created.ToString()}");
-/*var cursor=await prCollection.FindAsync(e => e.Status == PrStatus.Ordered);
+Console.WriteLine($"Created: {first.Created.ToString()}");*/
 
-int count=0;
-while (await cursor.MoveNextAsync()) {
-    foreach (var item in cursor.Current) {
-            
-        /*if (_timeProvider.MinutesSince(item.Created)>1) {
-            yield return item;
-        }#1#
-        if (TimeProvider.DaysSince(item.OrderedDate) >=60) {
-            //yield return item;
-            count++;
-        }
-    }
+async Task CreateRemindConfig() {
+    var client=new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("purchase_req_db");
+    var remindCollection = database.GetCollection<RemindConfig>("remind_settings");
+    await remindCollection.InsertOneAsync(new RemindConfig() {
+        _id = ObjectId.GenerateNewId(),
+        ApprovalTimeHrs = 24,
+        ApprovalTimeRepeatHrs = 24,
+        OrderTimeHrs = 24,
+        OrderTimeRepeatHrs = 24,
+        CheckInTimeDays = 14,
+        CheckInTimeRepeatDays = 7,
+    });
+    Console.WriteLine("Check Database");
 }
-
-Console.WriteLine($"Count: {count}");
-*/
 
 async Task CleanUpReminderData() {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
@@ -171,25 +169,25 @@ async Task CleanUpReminderData() {
     }
 }
 
-async Task MigrateDatabase() {
-    await RemoveAllBadField();
-    await UpdateAllWithReminders();
+async Task MigrateDatabase(bool prod=false) {
+    await RemoveAllBadField(prod);
+    await UpdateAllWithReminders(prod);
 }
 
-async Task RemoveAllBadField() {
+async Task RemoveAllBadField(bool prod=false) {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var prCollection=database.GetCollection<BsonDocument>("purchase_requests_dev");
+    var prCollection=database.GetCollection<BsonDocument>(prod ? "purchase_requests":"purchase_requests_dev");
     var filter = Builders<BsonDocument>.Filter.Exists("ReminderDate");
     var update = Builders<BsonDocument>.Update.Unset("ReminderDate");
     await prCollection.UpdateManyAsync(filter, update);
     Console.WriteLine("Check database");
 }
 
-async Task UpdateAllWithReminders() {
+async Task UpdateAllWithReminders(bool prod=false) {
     var client=new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("purchase_req_db");
-    var prCollection=database.GetCollection<PurchaseRequest>("purchase_requests_dev");
+    var prCollection=database.GetCollection<PurchaseRequest>(prod ? "purchase_requests":"purchase_requests_dev");
     var update=Builders<PurchaseRequest>.Update
         .Set(e => e.ApprovalRemindDate,DateTime.MinValue)
         .Set(e => e.OrderRemindDate,DateTime.MinValue)

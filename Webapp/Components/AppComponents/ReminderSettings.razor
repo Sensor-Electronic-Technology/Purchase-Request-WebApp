@@ -1,0 +1,166 @@
+@using Domain.Settings
+@using Infrastructure.Services
+<RadzenRow class="rz-w-75 rz-pl-3">
+    <RadzenStack>
+        <RadzenCard class="rz-background-color-info-light rz-border-radius-6">
+            <RadzenText TextStyle="TextStyle.H5" TextAlign="TextAlign.Center" class="rz-color-on-info-light">
+                Reminder Settings
+            </RadzenText>
+        </RadzenCard>
+        <RadzenCard>
+            <RadzenTemplateForm TItem="RemindConfig" Data="@_remindConfigEdit" Submit="SubmitHandler">
+                <RadzenStack>
+                    <RadzenFieldset Text="Approval Reminders">
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Approval Time(Hrs)">
+                                    <ChildContent>
+                                        <RadzenNumeric @bind-value="@_remindConfigEdit.ApprovalTimeHrs" Min="12"
+                                                       Max="120" ShowUpDown="false"/>
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Approval Time(Days)">
+                                    <RadzenNumeric Value="@(Math.Round(_remindConfigEdit.ApprovalTimeHrs / 24, 2))"
+                                                   ReadOnly="true" Disabled="true" ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Approval Repeat Time(Hrs)">
+                                    <ChildContent>
+                                        <RadzenNumeric @bind-value="@_remindConfigEdit.ApprovalTimeRepeatHrs" Min="12"
+                                                       Max="120" ShowUpDown="false"/>
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Approval Repeat Time(Days)">
+                                    <RadzenNumeric
+                                        Value="@(Math.Round(_remindConfigEdit.ApprovalTimeRepeatHrs / 24, 2))"
+                                        ReadOnly="true" Disabled="true" ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Order Reminders">
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Order Time(Hrs)">
+                                    <ChildContent>
+                                        <RadzenNumeric @bind-value="@_remindConfigEdit.OrderTimeHrs" Min="12" Max="120"
+                                                       ShowUpDown="false"/>
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Order Time(Days)">
+                                    <RadzenNumeric Value="@(Math.Round(_remindConfigEdit.OrderTimeHrs / 24, 2))"
+                                                   ReadOnly="true" Disabled="true" ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Order Repeat Time(Hrs)">
+                                    <ChildContent>
+                                        <RadzenNumeric @bind-value="@_remindConfigEdit.OrderTimeRepeatHrs" Min="12"
+                                                       Max="120" ShowUpDown="false"/>
+                                    </ChildContent>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Order Repeat Time(Days)">
+                                    <RadzenNumeric Value="@(Math.Round(_remindConfigEdit.OrderTimeRepeatHrs / 24, 2))"
+                                                   ReadOnly="true" Disabled="true" ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Check-In Reminders">
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Check-In Time(Days)">
+                                    <RadzenNumeric @bind-value="@_remindConfigEdit.CheckInTimeDays" Min="3" Max="45"
+                                                   ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Check-In Repeat Time(Days)">
+                                    <RadzenNumeric @bind-value="@_remindConfigEdit.CheckInTimeRepeatDays" Min="3"
+                                                   Max="45" ShowUpDown="false"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Save">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceEvenly">
+                            <RadzenButton Text="Save" Icon="save" ButtonType="ButtonType.Submit"
+                                          ButtonStyle="ButtonStyle.Success" Shade="Shade.Light" 
+                                          Disabled="@IsChnaged" class="rz-w-50"/>
+                            <RadzenButton Text="Cancel" Icon="cancel" Click="@CancelHandler"
+                                          ButtonStyle="ButtonStyle.Danger" Shade="Shade.Light" 
+                                          Disabled="@IsChnaged" class="rz-w-50"/>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    </RadzenStack>
+
+</RadzenRow>
+
+
+@code {
+    [Inject] private RemindDataService _remindDataService { get; set; }
+    [Inject] private DialogService _dialogService { get; set; }
+    [Inject] private NotificationService _notifyService { get; set; }
+
+    private bool IsChnaged => _remindConfig.Equals(_remindConfigEdit);
+
+    private RemindConfig _remindConfig = new();
+    private RemindConfig _remindConfigEdit = new();
+
+    protected override Task OnInitializedAsync() {
+        return this.LoadAsync();
+    }
+
+
+    private async Task SubmitHandler(RemindConfig remindConfig) {
+        if (this._remindConfig.Equals(_remindConfigEdit)) {
+            this._notifyService.Notify(NotificationSeverity.Info, 
+                "No Changes To Save", 
+                "No Changes To Save", 
+                duration: 5000);
+            return;
+        }
+
+        var success = await this._remindDataService.UpdateRemindConfig(remindConfig);
+        if (!success) {
+            this._notifyService.Notify(NotificationSeverity.Error, "Save Failed",
+                "Failed to save reminder settings. Reverting to default",
+                duration: 5000);
+        } else {
+            this._notifyService.Notify(NotificationSeverity.Success,
+                "Reminder Settings Saved",
+                "Reminder Settings Saved, setting will take affect on next check",
+                duration: 5000);
+        }
+
+        await this.LoadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadAsync() {
+        this._remindConfig = await this._remindDataService.GetRemindConfigAsync();
+        this._remindConfigEdit = this._remindConfig.Clone();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task CancelHandler() {
+        return LoadAsync();
+    }
+
+}

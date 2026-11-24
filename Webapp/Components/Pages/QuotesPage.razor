@@ -4,7 +4,7 @@
 @using SetiFileStore.FileClient
 
 
-<RadzenCard Style="width: 100%;" class="rz-max-h-75 rz-overflow-scroll">
+<RadzenCard Style="width: 100%;">
     <RadzenStack Gap="1">
         <RadzenCard Variant="Variant.Outlined" class="area-header">
             <RadzenStack>
@@ -31,7 +31,9 @@
                             SelectionMode="DataGridSelectionMode.Single"
                             Value="@this._selectedQuotes"
                             ValueChanged="@this.SelectedQuoteChangedHandler"
-                            AllowRowSelectOnRowClick="true">
+                            AllowRowSelectOnRowClick="true"
+                            Style="max-height: 700px;"
+                            class=" rz-overflow-scroll">
                 <Columns>
                     <RadzenDataGridColumn Property="@nameof(QuotesDto.FileId)" Title="Id"/>
                     <RadzenDataGridColumn Property="@nameof(QuotesDto.Filename)" Title="Filename"/>

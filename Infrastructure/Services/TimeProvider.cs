@@ -37,6 +37,11 @@ public class AppTimeProvider:System.TimeProvider{
             TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 
         return (this.Now()-adjusted).Days;
     } 
+    public double DaysSince(DateTime now,DateTime other) {
+        var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
+        return (now-adjusted).TotalDays;
+    }
     
     public double MinutesSince(DateTime other) {
         var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
@@ -54,6 +59,11 @@ public class AppTimeProvider:System.TimeProvider{
         var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
             TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time")); 
         return (this.Now()-adjusted).TotalHours;
+    }
+    public double HoursSince(DateTime now,DateTime other) {
+        var adjusted=TimeZoneInfo.ConvertTimeFromUtc(other.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
+        return (now-adjusted).TotalHours;
     }
     
     public DateTime ToLocal(DateTime other) {

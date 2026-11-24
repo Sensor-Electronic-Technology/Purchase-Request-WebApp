@@ -11,13 +11,13 @@ public class PrReminder {
     public string? PrLink { get; set; }
     public PrStatus Status { get; set; }
     public string StatusText { get; set; } = string.Empty;
-    public double DeltaMins { get; set; }
+    public double DeltaTime { get; set; }
     public DateTime Now { get; set; }
     public DateTime Previous { get; set; }
     public List<string> Recipients { get; set; } = [];
     public WriteModel<PurchaseRequest>? Update { get; set; }
 
-    public static PrReminder FromPurchaseRequest(PurchaseRequest pr, DateTime now, double deltaMins,
+    public static PrReminder FromPurchaseRequest(PurchaseRequest pr, DateTime now, double dt,
         List<string>? purchaserEmails = null) {
         var update = pr.Status switch {
             PrStatus.NeedsApproval => Builders<PurchaseRequest>.Update.Set(e => e.ApprovalRemindDate, now),
@@ -51,7 +51,7 @@ public class PrReminder {
                 PrStatus.Ordered => "Check In",
                 _ => "Status Error"
             },
-            DeltaMins = deltaMins,
+            DeltaTime = dt,
             Recipients = recipients,
             Update = new UpdateOneModel<PurchaseRequest>(Builders<PurchaseRequest>.Filter.Eq(e => e._id, pr._id),
                 update),
